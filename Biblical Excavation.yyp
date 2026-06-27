@@ -29,6 +29,7 @@
     {"id":{"name":"spr_contact","path":"sprites/spr_contact/spr_contact.yy",},},
     {"id":{"name":"spr_rock","path":"sprites/spr_rock/spr_rock.yy",},},
     {"id":{"name":"spr_skidsteer","path":"sprites/spr_skidsteer/spr_skidsteer.yy",},},
+    {"id":{"name":"Sprite6","path":"sprites/Sprite6/Sprite6.yy",},},
   ],
   "resourceType":"GMProject",
   "resourceVersion":"2.0",

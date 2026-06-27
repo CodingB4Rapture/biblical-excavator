@@ -9,5 +9,6 @@
     {"name":"spr_contact","order":6,"path":"sprites/spr_contact/spr_contact.yy",},
     {"name":"spr_rock","order":7,"path":"sprites/spr_rock/spr_rock.yy",},
     {"name":"spr_skidsteer","order":3,"path":"sprites/spr_skidsteer/spr_skidsteer.yy",},
+    {"name":"Sprite6","order":9,"path":"sprites/Sprite6/Sprite6.yy",},
   ],
 }
