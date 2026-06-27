@@ -1,8 +1,8 @@
 {
   "$GMSprite":"v2",
   "%Name":"spr_rock",
-  "bboxMode":0,
-  "bbox_bottom":15,
+  "bboxMode":2,
+  "bbox_bottom":12,
   "bbox_left":0,
   "bbox_right":15,
   "bbox_top":2,
