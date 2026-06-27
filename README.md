@@ -21,8 +21,7 @@ seth/skidsteer-movement
 jacob/warehouse-map
 jacob/player-collision
 seth/environment-art
-
-** Then: **
+Then: 
 
 Make one focused change.
 Test the game.
