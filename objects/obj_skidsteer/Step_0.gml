@@ -89,33 +89,50 @@ var hit_rock = instance_place(
 
 if (hit_rock == noone)
 {
-    // Nothing is blocking us, so movement is allowed.
+    // Nothing is blocking us.
     x = next_x;
     y = next_y;
+
+    // Leave crushing mode.
+    if (is_crushing)
+    {
+        is_crushing = false;
+
+        // Return to the normal visible skidsteer.
+        sprite_index = spr_skidsteer;
+        image_index = 0;
+        image_speed = 1;
+    }
 }
 else
 {
     // A rock is blocking us.
-    // Stop forward motion while crushing it.
     drive_speed = 0;
 
-    // Only begin crushing when driving forward.
-    if (move_x != 0 || move_y != 0)
+    // Only crush while pushing forward.
+    if (keyboard_check(ord("W")))
     {
-        if (keyboard_check(ord("W")))
+        // Begin the visible contact animation once.
+        if (!is_crushing)
         {
-            with (hit_rock)
-            {
-                // Only start once.
-                if (rock_state == 0)
-                {
-                    rock_state = 1;
+            is_crushing = true;
 
-                    // Begin the crushing animation.
-                    image_index = 0;
-                    image_speed = 3;
-                }
+            sprite_index = spr_contact;
+            image_index = 0;
+            image_speed = 1;
+        }
+
+        // Begin the rock animation.
+        with (hit_rock)
+        {
+            if (rock_state == 0)
+            {
+                rock_state = 1;
+
+                image_index = 0;
+                image_speed = 3;
             }
         }
     }
 }
+

@@ -12,7 +12,9 @@
   "Folders":[
     {"$GMFolder":"","%Name":"Background Assets","folderPath":"folders/Background Assets.yy","name":"Background Assets","resourceType":"GMFolder","resourceVersion":"2.0",},
   ],
-  "ForcedPrefabProjectReferences":[],
+  "ForcedPrefabProjectReferences":[
+    {"link":"io.gamemaker.gm_filter_colourise-1.0.0","name":"io.gamemaker.gm_filter_colourise-1.0.0","path":"io.gamemaker.gm_filter_colourise-1.0.0.yyp",},
+  ],
   "IncludedFiles":[],
   "isEcma":false,
   "LibraryEmitters":[],
@@ -28,9 +30,10 @@
     {"id":{"name":"initial_background","path":"sprites/initial_background/initial_background.yy",},},
     {"id":{"name":"skidsteer_4state_128x32","path":"sprites/skidsteer_4state_128x32/skidsteer_4state_128x32.yy",},},
     {"id":{"name":"spr_contact","path":"sprites/spr_contact/spr_contact.yy",},},
+    {"id":{"name":"spr_fancy_dirt","path":"sprites/spr_fancy_dirt/spr_fancy_dirt.yy",},},
     {"id":{"name":"spr_rock","path":"sprites/spr_rock/spr_rock.yy",},},
     {"id":{"name":"spr_skidsteer","path":"sprites/spr_skidsteer/spr_skidsteer.yy",},},
-    {"id":{"name":"Sprite6","path":"sprites/Sprite6/Sprite6.yy",},},
+    {"id":{"name":"spr_tree","path":"sprites/spr_tree/spr_tree.yy",},},
   ],
   "resourceType":"GMProject",
   "resourceVersion":"2.0",
