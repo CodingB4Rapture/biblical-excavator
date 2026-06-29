@@ -23,6 +23,7 @@
   "resources":[
     {"id":{"name":"obj_rock","path":"objects/obj_rock/obj_rock.yy",},},
     {"id":{"name":"obj_skidsteer","path":"objects/obj_skidsteer/obj_skidsteer.yy",},},
+    {"id":{"name":"obj_smoke_puff","path":"objects/obj_smoke_puff/obj_smoke_puff.yy",},},
     {"id":{"name":"Room1","path":"rooms/Room1/Room1.yy",},},
     {"id":{"name":"initial_background","path":"sprites/initial_background/initial_background.yy",},},
     {"id":{"name":"skidsteer_4state_128x32","path":"sprites/skidsteer_4state_128x32/skidsteer_4state_128x32.yy",},},

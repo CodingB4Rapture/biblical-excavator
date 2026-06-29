@@ -61,15 +61,61 @@ if (abs(turn_speed) < 0.01)
 
 image_angle += turn_speed;
 // MOVEMENT
-// Add 90 because the original sprite faces north.
+
+// The sprite faces north, while GameMaker's 0 degrees faces right.
 var movement_direction = image_angle + 90;
 
-x += lengthdir_x(
+// Calculate how far we want to move this Step.
+var move_x = lengthdir_x(
     drive_speed,
     movement_direction
 );
 
-y += lengthdir_y(
+var move_y = lengthdir_y(
     drive_speed,
     movement_direction
 );
+
+// Calculate the proposed new position.
+var next_x = x + move_x;
+var next_y = y + move_y;
+
+// Check whether that proposed position would touch a rock.
+var hit_rock = instance_place(
+    next_x,
+    next_y,
+    obj_rock
+);
+
+if (hit_rock == noone)
+{
+    // Nothing is blocking us, so movement is allowed.
+    x = next_x;
+    y = next_y;
+}
+else
+{
+    // A rock is blocking us.
+    // Stop forward motion while crushing it.
+    drive_speed = 0;
+
+    // Only begin crushing when driving forward.
+    if (move_x != 0 || move_y != 0)
+    {
+        if (keyboard_check(ord("W")))
+        {
+            with (hit_rock)
+            {
+                // Only start once.
+                if (rock_state == 0)
+                {
+                    rock_state = 1;
+
+                    // Begin the crushing animation.
+                    image_index = 0;
+                    image_speed = 3;
+                }
+            }
+        }
+    }
+}

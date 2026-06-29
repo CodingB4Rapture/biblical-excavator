@@ -5,6 +5,7 @@
   "ResourceOrderSettings":[
     {"name":"obj_rock","order":8,"path":"objects/obj_rock/obj_rock.yy",},
     {"name":"obj_skidsteer","order":5,"path":"objects/obj_skidsteer/obj_skidsteer.yy",},
+    {"name":"obj_smoke_puff","order":10,"path":"objects/obj_smoke_puff/obj_smoke_puff.yy",},
     {"name":"skidsteer_4state_128x32","order":4,"path":"sprites/skidsteer_4state_128x32/skidsteer_4state_128x32.yy",},
     {"name":"spr_contact","order":6,"path":"sprites/spr_contact/spr_contact.yy",},
     {"name":"spr_rock","order":7,"path":"sprites/spr_rock/spr_rock.yy",},
