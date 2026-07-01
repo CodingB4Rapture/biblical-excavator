@@ -1,5 +1,46 @@
 /// obj_skidsteer - Step Event
 
+if (exit_cooldown > 0)
+{
+    exit_cooldown -= 1;
+}
+
+if (keyboard_check_pressed(ord("E")) && has_driver && exit_cooldown <= 0)
+{
+    has_driver = false;
+    drive_speed = 0;
+    turn_speed = 0;
+
+    if (is_crushing)
+    {
+        is_crushing = false;
+        sprite_index = spr_skidsteer;
+        image_index = 0;
+        image_speed = 1;
+    }
+
+    var exit_direction = image_angle - 90;
+
+    driver_instance = instance_create_depth(
+        x + lengthdir_x(18, exit_direction),
+        y + lengthdir_y(18, exit_direction),
+        depth - 1,
+        obj_player
+    );
+
+    driver_instance.vehicle = id;
+    exit_cooldown = 8;
+    view_object[0] = obj_player;
+    exit;
+}
+
+if (!has_driver)
+{
+    drive_speed = 0;
+    turn_speed = 0;
+    exit;
+}
+
 // INPUT
 
 var throttle =

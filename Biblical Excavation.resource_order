@@ -3,6 +3,7 @@
     {"name":"Background Assets","order":2,"path":"folders/Background Assets.yy",},
   ],
   "ResourceOrderSettings":[
+    {"name":"obj_player","order":12,"path":"objects/obj_player/obj_player.yy",},
     {"name":"obj_rock","order":8,"path":"objects/obj_rock/obj_rock.yy",},
     {"name":"obj_skidsteer","order":5,"path":"objects/obj_skidsteer/obj_skidsteer.yy",},
     {"name":"obj_smoke_puff","order":10,"path":"objects/obj_smoke_puff/obj_smoke_puff.yy",},

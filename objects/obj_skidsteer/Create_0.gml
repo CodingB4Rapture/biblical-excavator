@@ -15,3 +15,7 @@ turn_acceleration  = 0.22;
 image_angle = 0;
 
 is_crushing = false;
+
+has_driver = true;
+driver_instance = noone;
+exit_cooldown = 0;

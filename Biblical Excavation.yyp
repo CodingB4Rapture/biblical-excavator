@@ -23,6 +23,7 @@
   },
   "name":"Biblical Excavation",
   "resources":[
+    {"id":{"name":"obj_player","path":"objects/obj_player/obj_player.yy",},},
     {"id":{"name":"obj_rock","path":"objects/obj_rock/obj_rock.yy",},},
     {"id":{"name":"obj_skidsteer","path":"objects/obj_skidsteer/obj_skidsteer.yy",},},
     {"id":{"name":"obj_smoke_puff","path":"objects/obj_smoke_puff/obj_smoke_puff.yy",},},
