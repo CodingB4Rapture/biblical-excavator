@@ -19,6 +19,8 @@ is_crushing = false;
 has_driver = true;
 driver_instance = noone;
 exit_cooldown = 0;
+last_blocking_log = noone;
+carry_full_hint_cooldown = 0;
 
 skidsteer_state = SkidsteerState.DRIVING;
 skidsteer_input = {

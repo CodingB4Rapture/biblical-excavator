@@ -21,3 +21,10 @@ enum NotificationStyle
     PROMPT
 }
 
+enum RockState
+{
+    WAITING,
+    STRUGGLING,
+    BREAKING
+}
+

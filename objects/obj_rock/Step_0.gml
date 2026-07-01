@@ -2,41 +2,54 @@
 
 switch (rock_state)
 {
-    // NORMAL ROCK
-    case 0:
+    case RockState.WAITING:
     {
-        // Wait for the skidsteer.
         break;
     }
 
-    // CRUSHING ANIMATION
-    case 1:
+    case RockState.STRUGGLING:
     {
-        // Has the animation reached its final frame?
-        if (image_index >= image_number - 1)
+        rock_tick_timer -= 1;
+
+        var base_frame = rock_stage_frame[rock_stage];
+        var frame_wobble = ((rock_tick_timer div 6) mod 2);
+        image_index = clamp(base_frame - frame_wobble, 0, image_number - 1);
+
+        if (rock_tick_timer <= 0)
         {
-            // Lock the animation onto its final frame.
-            image_index = image_number - 1;
-            image_speed = 0;
+            var break_chance = rock_stage_chance[rock_stage];
 
-            // Hold the final frame for one second.
-            hold_timer = game_get_speed(gamespeed_fps);
+            if (random(1) <= break_chance || rock_stage >= 2)
+            {
+                var xp_amount = rock_stage_xp[rock_stage];
 
-            // Enter the holding state.
-            rock_state = 2;
+                progress_award_rock(
+                    1,
+                    xp_amount,
+                    rock_reward_source
+                );
+
+                image_index = image_number - 1;
+                image_speed = 0;
+                rock_break_timer = 16;
+                rock_state = RockState.BREAKING;
+            }
+            else
+            {
+                rock_stage += 1;
+                rock_tick_timer = rock_tick_time;
+            }
         }
 
         break;
     }
 
-    // HOLD FINAL FRAME
-    case 2:
+    case RockState.BREAKING:
     {
-        hold_timer -= 1;
+        rock_break_timer -= 1;
 
-        if (hold_timer <= 0)
+        if (rock_break_timer <= 0)
         {
-            // Create several smoke/dust puffs.
             repeat (8)
             {
                 instance_create_depth(
@@ -47,10 +60,10 @@ switch (rock_state)
                 );
             }
 
-            // The rock is finally crushed.
             instance_destroy();
         }
 
         break;
     }
 }
+

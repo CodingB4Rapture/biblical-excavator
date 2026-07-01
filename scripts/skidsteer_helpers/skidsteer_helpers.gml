@@ -27,6 +27,11 @@ function skidsteer_update_cooldowns()
     {
         exit_cooldown -= 1;
     }
+
+    if (carry_full_hint_cooldown > 0)
+    {
+        carry_full_hint_cooldown -= 1;
+    }
 }
 
 function skidsteer_exit_vehicle()
@@ -53,6 +58,15 @@ function skidsteer_exit_vehicle()
     driver_instance.vehicle = id;
     exit_cooldown = 8;
     view_object[0] = obj_player;
+
+    if (instance_exists(last_blocking_log))
+    {
+        notification_show_hint(
+            last_blocking_log.inspect_hint,
+            last_blocking_log.notice_time,
+            true
+        );
+    }
 }
 
 function skidsteer_read_input()
@@ -95,6 +109,7 @@ function skidsteer_handle_log_contact(_log)
 {
     drive_speed = 0;
     skidsteer_start_contact_visual(SkidsteerState.CONTACT_BLOCKED);
+    last_blocking_log = _log;
 
     if (_log.notice_cooldown <= 0)
     {
@@ -103,6 +118,12 @@ function skidsteer_handle_log_contact(_log)
             id,
             _log.notice_time,
             NotificationStyle.MEMORY
+        );
+
+        notification_show_hint(
+            _log.blocked_hint,
+            _log.notice_time,
+            true
         );
 
         _log.notice_cooldown = _log.notice_time;
@@ -115,15 +136,36 @@ function skidsteer_handle_rock_contact(_rock, _input)
 
     if (_input.throttle > 0)
     {
+        if (!progress_can_collect_rocks(1) && _rock.rock_state == RockState.WAITING)
+        {
+            skidsteer_start_contact_visual(SkidsteerState.CONTACT_BLOCKED);
+
+            if (carry_full_hint_cooldown <= 0)
+            {
+                notification_show_hint(
+                    "Rock carry is full. Drop off at Homebase.",
+                    game_get_speed(gamespeed_fps) * 3,
+                    false
+                );
+
+                carry_full_hint_cooldown = game_get_speed(gamespeed_fps) * 2;
+            }
+
+            return;
+        }
+
         skidsteer_start_contact_visual(SkidsteerState.CRUSHING);
 
         with (_rock)
         {
-            if (rock_state == 0)
+            if (rock_state == RockState.WAITING)
             {
-                rock_state = 1;
+                rock_state = RockState.STRUGGLING;
+                rock_reward_source = other.id;
+                rock_stage = 0;
+                rock_tick_timer = rock_tick_time;
                 image_index = 0;
-                image_speed = 3;
+                image_speed = 0;
             }
         }
     }
