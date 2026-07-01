@@ -1,0 +1,189 @@
+/// Helper functions for obj_skidsteer.
+
+function skidsteer_reset_contact_visual()
+{
+    is_crushing = false;
+    sprite_index = spr_skidsteer;
+    image_index = 0;
+    image_speed = 1;
+}
+
+function skidsteer_start_contact_visual(_state)
+{
+    skidsteer_state = _state;
+
+    if (!is_crushing)
+    {
+        is_crushing = true;
+        sprite_index = spr_contact;
+        image_index = 0;
+        image_speed = 1;
+    }
+}
+
+function skidsteer_update_cooldowns()
+{
+    if (exit_cooldown > 0)
+    {
+        exit_cooldown -= 1;
+    }
+}
+
+function skidsteer_exit_vehicle()
+{
+    has_driver = false;
+    skidsteer_state = SkidsteerState.EMPTY;
+    drive_speed = 0;
+    turn_speed = 0;
+
+    if (is_crushing)
+    {
+        skidsteer_reset_contact_visual();
+    }
+
+    var exit_direction = image_angle - 90;
+
+    driver_instance = instance_create_depth(
+        x + lengthdir_x(18, exit_direction),
+        y + lengthdir_y(18, exit_direction),
+        depth - 1,
+        obj_player
+    );
+
+    driver_instance.vehicle = id;
+    exit_cooldown = 8;
+    view_object[0] = obj_player;
+}
+
+function skidsteer_read_input()
+{
+    return {
+        throttle: keyboard_check(ord("W")) - keyboard_check(ord("S")),
+        steering: keyboard_check(ord("D")) - keyboard_check(ord("A")),
+        exit_pressed: keyboard_check_pressed(ord("E"))
+    };
+}
+
+function skidsteer_update_tracks(_input)
+{
+    var left_track = clamp(_input.throttle + _input.steering, -1, 1);
+    var right_track = clamp(_input.throttle - _input.steering, -1, 1);
+
+    var target_drive_speed = ((left_track + right_track) * 0.5) * max_drive_speed;
+    var target_turn_speed = ((right_track - left_track) * 0.5) * max_turn_speed;
+
+    drive_speed = lerp(drive_speed, target_drive_speed, drive_acceleration);
+    turn_speed = lerp(turn_speed, target_turn_speed, turn_acceleration);
+
+    if (abs(drive_speed) < 0.01) drive_speed = 0;
+    if (abs(turn_speed) < 0.01) turn_speed = 0;
+}
+
+function skidsteer_find_log_contact(_next_x, _next_y)
+{
+    var hit_log = instance_nearest(_next_x, _next_y, obj_log);
+
+    if (hit_log != noone && point_distance(_next_x, _next_y, hit_log.x, hit_log.y) <= hit_log.block_radius)
+    {
+        return hit_log;
+    }
+
+    return noone;
+}
+
+function skidsteer_handle_log_contact(_log)
+{
+    drive_speed = 0;
+    skidsteer_start_contact_visual(SkidsteerState.CONTACT_BLOCKED);
+
+    if (_log.notice_cooldown <= 0)
+    {
+        notification_show_dialogue(
+            _log.blocked_message,
+            id,
+            _log.notice_time,
+            NotificationStyle.MEMORY
+        );
+
+        _log.notice_cooldown = _log.notice_time;
+    }
+}
+
+function skidsteer_handle_rock_contact(_rock, _input)
+{
+    drive_speed = 0;
+
+    if (_input.throttle > 0)
+    {
+        skidsteer_start_contact_visual(SkidsteerState.CRUSHING);
+
+        with (_rock)
+        {
+            if (rock_state == 0)
+            {
+                rock_state = 1;
+                image_index = 0;
+                image_speed = 3;
+            }
+        }
+    }
+    else
+    {
+        skidsteer_state = SkidsteerState.CONTACT_BLOCKED;
+    }
+}
+
+function skidsteer_try_move()
+{
+    image_angle += turn_speed;
+
+    // The sprite faces north, while GameMaker's 0 degrees faces right.
+    var movement_direction = image_angle + 90;
+    var move_x = lengthdir_x(drive_speed, movement_direction);
+    var move_y = lengthdir_y(drive_speed, movement_direction);
+    var next_x = x + move_x;
+    var next_y = y + move_y;
+
+    var hit_log = skidsteer_find_log_contact(next_x, next_y);
+    if (hit_log != noone)
+    {
+        skidsteer_handle_log_contact(hit_log);
+        return;
+    }
+
+    var hit_rock = instance_place(next_x, next_y, obj_rock);
+    if (hit_rock != noone)
+    {
+        skidsteer_handle_rock_contact(hit_rock, skidsteer_input);
+        return;
+    }
+
+    x = next_x;
+    y = next_y;
+
+    if (skidsteer_state != SkidsteerState.DRIVING || is_crushing)
+    {
+        skidsteer_state = SkidsteerState.DRIVING;
+        skidsteer_reset_contact_visual();
+    }
+}
+
+function skidsteer_update_driving()
+{
+    skidsteer_input = skidsteer_read_input();
+
+    if (skidsteer_input.exit_pressed && exit_cooldown <= 0)
+    {
+        skidsteer_exit_vehicle();
+        return;
+    }
+
+    skidsteer_update_tracks(skidsteer_input);
+    skidsteer_try_move();
+}
+
+function skidsteer_update_empty()
+{
+    drive_speed = 0;
+    turn_speed = 0;
+}
