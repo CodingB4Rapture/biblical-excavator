@@ -20,28 +20,16 @@ switch (player_state)
             }
         }
 
-        if (instance_exists(vehicle))
-        {
-            if (keyboard_check_pressed(ord("E")) && point_distance(x, y, vehicle.x, vehicle.y) <= enter_distance)
-            {
-                player_state = PlayerState.ENTERING_VEHICLE;
-
-                with (vehicle)
-                {
-                    has_driver = true;
-                    skidsteer_state = SkidsteerState.DRIVING;
-                    driver_instance = noone;
-                    exit_cooldown = 8;
-                }
-
-                view_object[0] = obj_skidsteer;
-                instance_destroy();
-            }
-        }
-        else
+        if (!instance_exists(vehicle))
         {
             vehicle = instance_nearest(x, y, obj_skidsteer);
         }
+
+        // Keep a carried winch cable within its readable maximum length.
+        winch_limit_cable_holder(id);
+
+        // Rocks, logs, the vehicle, and the wife all use this one E action.
+        player_update_interaction(id);
 
         break;
     }

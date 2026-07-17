@@ -1,6 +1,35 @@
 /// obj_gui_trip_status - Draw GUI Event
 
-progress_ensure_inventory();
+var game_state = game_state_ensure();
+var vehicle = progress_get_vehicle();
+
+var pocket_rocks = inventory_get_amount(
+    game_state.player_inventory,
+    ResourceId.FIELDSTONE
+);
+
+var vehicle_rocks = 0;
+var vehicle_capacity = 0;
+
+if (instance_exists(vehicle))
+{
+    vehicle_rocks = inventory_get_amount(
+        vehicle.cargo_inventory,
+        ResourceId.FIELDSTONE
+    );
+
+    vehicle_capacity = vehicle.cargo_inventory.capacity;
+}
+
+var home_rocks = inventory_get_amount(
+    game_state.home_inventory,
+    ResourceId.FIELDSTONE
+);
+
+var home_logs = inventory_get_amount(
+    game_state.home_inventory,
+    ResourceId.TIMBER_LOG
+);
 
 var panel_left = 22;
 var panel_top = 22;
@@ -30,15 +59,58 @@ draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 
 draw_set_color(accent_color);
-draw_text(panel_left + 12, panel_top + 10, "Trip Haul");
+draw_text(panel_left + 12, panel_top + 10, "Current Trip");
 
 draw_set_color(text_color);
-draw_text(panel_left + 12, panel_top + 32, "Rocks: " + string(global.carried_rocks) + " / " + string(global.rock_carry_max));
-draw_text(panel_left + 12, panel_top + 50, "Logs: " + string(global.carried_logs) + " / " + string(global.log_carry_max));
-draw_text(panel_left + 12, panel_top + 70, "Rocks Depleted: " + string(global.trip_rocks_depleted));
-draw_text(panel_left + 12, panel_top + 88, "XP Gained: " + string(global.trip_xp_gained));
+draw_text(
+    panel_left + 12,
+    panel_top + 32,
+    "Backpack: " + string(pocket_rocks)
+    + " / " + string(game_state.player_inventory.capacity)
+);
+
+draw_text(
+    panel_left + 12,
+    panel_top + 50,
+    "Vehicle stone: " + string(vehicle_rocks)
+    + " / " + string(vehicle_capacity)
+);
+
+draw_text(
+    panel_left + 12,
+    panel_top + 68,
+    "Gathered: " + string(game_state.trip_rocks_gathered)
+);
+
+draw_text(
+    panel_left + 12,
+    panel_top + 86,
+    "Trip XP: " + string(game_state.trip_xp_gained)
+);
+
+draw_set_color(accent_color);
+draw_text(panel_left + 12, panel_top + 110, "Homebase");
+
+draw_set_color(text_color);
+draw_text(
+    panel_left + 12,
+    panel_top + 132,
+    "Stored: " + string(home_rocks) + " Fieldstone, "
+    + string(home_logs) + " Logs"
+);
+
+draw_text(
+    panel_left + 12,
+    panel_top + 150,
+    "Deliveries: " + string(game_state.completed_deliveries)
+);
+
+draw_text(
+    panel_left + 12,
+    panel_top + 168,
+    "Winch: " + attachment_get_status_text()
+);
 
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 draw_set_color(c_white);
-

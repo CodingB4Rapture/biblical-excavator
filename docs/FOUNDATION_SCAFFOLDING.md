@@ -58,15 +58,24 @@ Rewards flow through `progress_award_rock`, which updates totals and shows both 
 
 ## Haul And Drop-Off Flow
 
-The trip haul uses temporary placeholder limits:
+The trip haul now has three separate owners:
 
-- Rocks: `10`
-- Logs: `1`
+- Player backpack: `6` small items.
+- Vehicle cargo: `10` loose Fieldstones.
+- Homebase: unlimited placeholder household storage.
 
-The top-left GUI trip panel shows carried rocks/logs, rocks depleted this trip, and XP gained this trip.
+The player can press `E` near a waiting rock to pocket it. Crushing a rock still
+loads the vehicle and awards Equipment XP.
 
-Moment rewards now appear on the right side, so the trip panel can stay readable.
+The wife performs the Homebase transfer. The vehicle must be parked in the Home
+Delivery circle to unload its cargo, while backpack contents transfer directly.
+Large winched objects remain physical until they are inside that circle.
 
-The placeholder `obj_homebase_dropoff` stores carried resources and resets the current trip counters. This is the first pass at the future homestead/base loop.
+After three non-empty deliveries, the wife reports that a winch attachment has
+arrived by mail. The player can install it on the vehicle, take the cable from
+the rear hitch, attach it to the log, and tow the log into the delivery circle.
 
 The `obj_rock_controller` records rock spawn points and respawns depleted rocks after a delay. Tree spawning should get its own separate controller later.
+
+See `docs/CORE_LOOP_TRACKER.md` for controls, tuning locations, art needs, and
+the current human playtest checkpoints.

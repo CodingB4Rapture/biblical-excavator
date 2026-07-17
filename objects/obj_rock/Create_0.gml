@@ -1,6 +1,38 @@
 /// obj_rock - Create Event
 
+game_state_ensure();
+
+resource_id = ResourceId.FIELDSTONE;
 rock_state = RockState.WAITING;
+
+interaction_enabled = true;
+interaction_radius = 24;
+interaction_priority = 10;
+
+interaction_get_prompt = function(_actor)
+{
+    if (rock_state != RockState.WAITING)
+    {
+        return "";
+    }
+
+    var current_game_state = game_state_ensure();
+
+    if (!inventory_can_add(current_game_state.player_inventory, resource_id, 1))
+    {
+        return "Backpack full";
+    }
+
+    return "Pick up " + resource_get_name(resource_id);
+};
+
+interaction_run = function(_actor)
+{
+    if (rock_state == RockState.WAITING)
+    {
+        progress_collect_rock_by_hand(id);
+    }
+};
 
 rock_stage = 0;
 rock_tick_time = round(game_get_speed(gamespeed_fps) * 0.42);

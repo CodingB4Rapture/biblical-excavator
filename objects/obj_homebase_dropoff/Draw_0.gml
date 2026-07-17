@@ -11,8 +11,8 @@ draw_circle(x, y, dropoff_radius, true);
 draw_set_halign(fa_center);
 draw_set_valign(fa_middle);
 draw_set_color(make_color_rgb(244, 232, 203));
-draw_text(x, y - 4, "HOMEBASE");
-draw_text(x, y + 10, "DROP-OFF");
+draw_text(x, y - 4, "HOME");
+draw_text(x, y + 10, "DELIVERY");
 
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
