@@ -56,6 +56,22 @@ interaction_run = function(_actor)
             "Home Delivery",
             delivery_line
         );
+
+        if (delivery.quest_completed)
+        {
+            notification_show_dialogue(
+                [
+                    "Now you've got the supplies to build your own cabin!",
+                    "Choose a clear place for the cabin site. We can work out the construction stages next."
+                ],
+                id,
+                0,
+                NotificationStyle.PROMPT,
+                "FARMER'S WIFE",
+                "unlock_cabin_placement"
+            );
+            return;
+        }
     }
 
     if (progress_receive_winch_mail())

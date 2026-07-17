@@ -17,8 +17,6 @@ interaction_run = function(_actor)
 
     if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
     {
-        game_state.tutorial_stage = TutorialStage.TALK_TO_FARMERS_WIFE;
-
         notification_show_dialogue(
             [
                 "Well, it might not look like much yet, but my wife and I bought this old homestead some years back. The folks before us had left the place to ruin, and it had been sitting that way for a long while.",
@@ -31,7 +29,8 @@ interaction_run = function(_actor)
             id,
             0,
             NotificationStyle.PROMPT,
-            "FARMER"
+            "FARMER",
+            "finish_farmer_intro"
         );
         return;
     }

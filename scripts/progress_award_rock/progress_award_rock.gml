@@ -145,7 +145,8 @@ function progress_deliver_homebase(_dropoff)
         fieldstone: 0,
         timber_logs: 0,
         vehicle_was_in_zone: false,
-        mail_became_ready: false
+        mail_became_ready: false,
+        quest_completed: false
     };
 
     delivery.fieldstone += inventory_transfer_resource(
@@ -248,6 +249,7 @@ function progress_deliver_homebase(_dropoff)
         && inventory_get_amount(game_state.home_inventory, ResourceId.TIMBER_LOG) >= 1)
         {
             game_state.tutorial_stage = TutorialStage.COMPLETE;
+            delivery.quest_completed = quest_complete(QuestId.FIRM_FOUNDATION);
             notification_show_hint("Cabin materials are home. The foundation is ready for the next build step.", game_get_speed(gamespeed_fps) * 5, false);
         }
 

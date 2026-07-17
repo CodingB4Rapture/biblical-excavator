@@ -5,5 +5,6 @@ page_index = 0;
 follow_target = noone;
 notification_style = NotificationStyle.MEMORY;
 speaker_name = "HOMESTEAD";
+completion_action = "";
 input_lock_frames = 0;
 

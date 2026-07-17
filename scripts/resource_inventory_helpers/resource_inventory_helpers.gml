@@ -148,6 +148,12 @@ function game_state_create_default()
         tutorial_intro_seen: false,
         tutorial_stage: TutorialStage.TALK_TO_FARMER,
         tutorial_hand_stones_spawned: false,
+        quest_statuses: array_create(QuestId.COUNT, QuestStatus.LOCKED),
+        cabin_placement_unlocked: false,
+        cabin_site_placed: false,
+        cabin_site_room: "Room1",
+        cabin_site_x: 0,
+        cabin_site_y: 0,
         removed_world_ids: []
     };
 }
@@ -162,6 +168,33 @@ function game_state_ensure()
     if (!variable_struct_exists(global.game_state, "removed_world_ids"))
     {
         global.game_state.removed_world_ids = [];
+    }
+
+    if (!variable_struct_exists(global.game_state, "quest_statuses"))
+    {
+        global.game_state.quest_statuses = array_create(
+            QuestId.COUNT,
+            QuestStatus.LOCKED
+        );
+        global.game_state.quest_statuses[QuestId.FIRM_FOUNDATION] =
+            global.game_state.tutorial_stage == TutorialStage.COMPLETE
+                ? QuestStatus.COMPLETE
+                : QuestStatus.ACTIVE;
+    }
+
+    if (global.game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
+    {
+        global.game_state.quest_statuses[QuestId.FIRM_FOUNDATION] = QuestStatus.LOCKED;
+    }
+
+    if (!variable_struct_exists(global.game_state, "cabin_placement_unlocked"))
+    {
+        global.game_state.cabin_placement_unlocked =
+            global.game_state.tutorial_stage == TutorialStage.COMPLETE;
+        global.game_state.cabin_site_placed = false;
+        global.game_state.cabin_site_room = "Room1";
+        global.game_state.cabin_site_x = 0;
+        global.game_state.cabin_site_y = 0;
     }
 
     return global.game_state;

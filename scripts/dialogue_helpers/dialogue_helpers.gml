@@ -25,3 +25,28 @@ function dialogue_get_speaker_name(_speaker)
 
     return "HOMESTEAD";
 }
+
+function dialogue_run_completion_action(_action)
+{
+    switch (_action)
+    {
+        case "finish_farmer_intro":
+        {
+            var game_state = game_state_ensure();
+
+            if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
+            {
+                game_state.tutorial_stage = TutorialStage.TALK_TO_FARMERS_WIFE;
+            }
+
+            quest_start(QuestId.FIRM_FOUNDATION);
+            break;
+        }
+
+        case "unlock_cabin_placement":
+        {
+            cabin_unlock_placement();
+            break;
+        }
+    }
+}

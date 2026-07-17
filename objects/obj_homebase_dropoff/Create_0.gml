@@ -25,6 +25,22 @@ interaction_run = function(_actor)
     {
         progress_show_reward_summary("Home Delivery", delivery_line);
 
+        if (delivery.quest_completed)
+        {
+            notification_show_dialogue(
+                [
+                    "Now you've got the supplies to build your own cabin!",
+                    "Choose a clear place for the cabin site. We can work out the construction stages next."
+                ],
+                speaker,
+                0,
+                NotificationStyle.PROMPT,
+                "FARMER'S WIFE",
+                "unlock_cabin_placement"
+            );
+            return;
+        }
+
         notification_show_dialogue(
             "Thank you. I'll put these with our supplies.",
             speaker,

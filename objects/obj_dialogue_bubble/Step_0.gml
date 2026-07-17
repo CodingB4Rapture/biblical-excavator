@@ -17,7 +17,9 @@ if (dialogue_advance_pressed())
     }
     else
     {
+        var finished_action = completion_action;
         instance_destroy();
+        dialogue_run_completion_action(finished_action);
     }
 }
 

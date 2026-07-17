@@ -39,6 +39,19 @@ enum TutorialStage
     COMPLETE
 }
 
+enum QuestId
+{
+    FIRM_FOUNDATION,
+    COUNT
+}
+
+enum QuestStatus
+{
+    LOCKED,
+    ACTIVE,
+    COMPLETE
+}
+
 enum CameraMode
 {
     FOLLOW_GAMEPLAY,

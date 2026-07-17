@@ -13,6 +13,8 @@ Saved data includes:
 - removed small stones, large rocks, and the tutorial log;
 - the log's current position;
 - winch unlock/install state;
+- cabin-placement unlock state and the placed cabin site's room and position;
+- Quest 1 status and its completed reward history;
 - an unfinished Farmer or Farmer's Wife dialogue and its current page;
 - fullscreen and master-volume settings.
 

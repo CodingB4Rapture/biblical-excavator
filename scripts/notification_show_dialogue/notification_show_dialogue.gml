@@ -1,6 +1,14 @@
-/// notification_show_dialogue(text or page array, follow_target, duration, style, speaker)
+/// notification_show_dialogue(text or page array, follow_target, duration,
+/// style, speaker, completion action)
 /// Creates or extends the single bottom-screen conversation panel.
-function notification_show_dialogue(_text, _follow_target, _duration, _style, _speaker_name = "")
+function notification_show_dialogue(
+    _text,
+    _follow_target,
+    _duration,
+    _style,
+    _speaker_name = "",
+    _completion_action = ""
+)
 {
     var pages = is_array(_text) ? _text : [_text];
     var bubble = instance_find(obj_dialogue_bubble, 0);
@@ -10,6 +18,11 @@ function notification_show_dialogue(_text, _follow_target, _duration, _style, _s
         for (var i = 0; i < array_length(pages); i++)
         {
             array_push(bubble.pages, pages[i]);
+        }
+
+        if (_completion_action != "")
+        {
+            bubble.completion_action = _completion_action;
         }
 
         return bubble;
@@ -24,6 +37,7 @@ function notification_show_dialogue(_text, _follow_target, _duration, _style, _s
     bubble.speaker_name = (_speaker_name == "")
         ? dialogue_get_speaker_name(_follow_target)
         : _speaker_name;
+    bubble.completion_action = _completion_action;
     bubble.input_lock_frames = 6;
 
     return bubble;

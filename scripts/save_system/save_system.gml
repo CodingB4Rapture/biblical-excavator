@@ -165,6 +165,9 @@ function save_build_snapshot()
             : [],
         dialogue_page_index: instance_exists(dialogue) ? dialogue.page_index : 0,
         dialogue_speaker: instance_exists(dialogue) ? dialogue.speaker_name : "",
+        dialogue_completion_action: instance_exists(dialogue)
+            ? dialogue.completion_action
+            : "",
         dialogue_style: instance_exists(dialogue)
             ? dialogue.notification_style
             : NotificationStyle.PROMPT
@@ -183,6 +186,12 @@ function save_build_snapshot()
             tutorial_intro_seen: game_state.tutorial_intro_seen,
             tutorial_stage: game_state.tutorial_stage,
             tutorial_hand_stones_spawned: game_state.tutorial_hand_stones_spawned,
+            quest_statuses: save_clone_array(game_state.quest_statuses),
+            cabin_placement_unlocked: game_state.cabin_placement_unlocked,
+            cabin_site_placed: game_state.cabin_site_placed,
+            cabin_site_room: game_state.cabin_site_room,
+            cabin_site_x: game_state.cabin_site_x,
+            cabin_site_y: game_state.cabin_site_y,
             removed_world_ids: save_clone_array(game_state.removed_world_ids)
         },
         scene: scene,
@@ -292,7 +301,13 @@ function save_load()
         data.scene.dialogue_pages = [];
         data.scene.dialogue_page_index = 0;
         data.scene.dialogue_speaker = "";
+        data.scene.dialogue_completion_action = "";
         data.scene.dialogue_style = NotificationStyle.PROMPT;
+    }
+
+    if (!variable_struct_exists(data.scene, "dialogue_completion_action"))
+    {
+        data.scene.dialogue_completion_action = "";
     }
 
     if (!variable_struct_exists(data, "settings") || !is_struct(data.settings))
@@ -316,6 +331,40 @@ function save_load()
     game_state.tutorial_intro_seen = saved_state.tutorial_intro_seen;
     game_state.tutorial_stage = saved_state.tutorial_stage;
     game_state.tutorial_hand_stones_spawned = saved_state.tutorial_hand_stones_spawned;
+
+    if (variable_struct_exists(saved_state, "quest_statuses"))
+    {
+        game_state.quest_statuses = save_clone_array(saved_state.quest_statuses);
+    }
+    else
+    {
+        game_state.quest_statuses[QuestId.FIRM_FOUNDATION] =
+            game_state.tutorial_stage == TutorialStage.COMPLETE
+                ? QuestStatus.COMPLETE
+                : QuestStatus.ACTIVE;
+    }
+
+    // Quest 1 does not become active until the Farmer's first conversation
+    // reaches its final page.
+    if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
+    {
+        game_state.quest_statuses[QuestId.FIRM_FOUNDATION] = QuestStatus.LOCKED;
+    }
+
+    if (variable_struct_exists(saved_state, "cabin_placement_unlocked"))
+    {
+        game_state.cabin_placement_unlocked = saved_state.cabin_placement_unlocked;
+        game_state.cabin_site_placed = saved_state.cabin_site_placed;
+        game_state.cabin_site_room = saved_state.cabin_site_room;
+        game_state.cabin_site_x = saved_state.cabin_site_x;
+        game_state.cabin_site_y = saved_state.cabin_site_y;
+    }
+    else
+    {
+        game_state.cabin_placement_unlocked =
+            game_state.tutorial_stage == TutorialStage.COMPLETE;
+    }
+
     game_state.removed_world_ids = saved_state.removed_world_ids;
     global.game_state = game_state;
 
@@ -400,7 +449,8 @@ function save_restore_room_state()
             noone,
             0,
             scene.dialogue_style,
-            scene.dialogue_speaker
+            scene.dialogue_speaker,
+            scene.dialogue_completion_action
         );
 
         dialogue.page_index = clamp(

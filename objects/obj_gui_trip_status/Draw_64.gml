@@ -177,6 +177,18 @@ draw_text(
     + "    Trip XP: " + string(game_state.trip_xp_gained)
 );
 
+draw_set_color(accent_color);
+draw_set_halign(fa_right);
+var journal_prompt = "[Q] Quest Journal";
+
+if (game_state.cabin_placement_unlocked && !game_state.cabin_site_placed)
+{
+    journal_prompt = "[Q] Journal  [B] Cabin Site";
+}
+
+draw_text(trip_right - 12, trip_top + 118, journal_prompt);
+draw_set_halign(fa_left);
+
 if (show_homebase)
 {
     draw_set_color(accent_color);

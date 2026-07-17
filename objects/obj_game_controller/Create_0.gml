@@ -36,5 +36,5 @@ if (!instance_exists(obj_camera_controller))
 if (!game_state.tutorial_intro_seen)
 {
     game_state.tutorial_intro_seen = true;
-    notification_show_hint("Talk to the Farmer near the home delivery area.", game_get_speed(gamespeed_fps) * 6, false);
+    notification_show_hint("Talk to the Farmer near Home Delivery. Press Q for your Quest Journal.", game_get_speed(gamespeed_fps) * 6, false);
 }
