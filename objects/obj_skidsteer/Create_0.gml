@@ -18,7 +18,7 @@ image_angle = 0;
 
 is_crushing = false;
 
-has_driver = true;
+has_driver = false;
 driver_instance = noone;
 exit_cooldown = 0;
 last_blocking_log = noone;
@@ -53,7 +53,7 @@ interaction_run = function(_actor)
     skidsteer_run_interaction(id, _actor);
 };
 
-skidsteer_state = SkidsteerState.DRIVING;
+skidsteer_state = SkidsteerState.EMPTY;
 skidsteer_input = {
     throttle: 0,
     steering: 0,

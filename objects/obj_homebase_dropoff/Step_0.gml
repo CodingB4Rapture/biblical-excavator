@@ -1,4 +1,3 @@
 /// obj_homebase_dropoff - Step Event
 ///
-/// This object only marks the delivery area. The wife performs the actual
-/// transfer so Homebase deliveries are deliberate and easy to understand.
+/// Delivery behavior lives in this object's Create event interaction closure.

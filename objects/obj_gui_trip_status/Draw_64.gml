@@ -31,6 +31,31 @@ var home_logs = inventory_get_amount(
     ResourceId.TIMBER_LOG
 );
 
+var tutorial_text = "Talk to the Farmer";
+var trip_label = "Before Trip 1";
+
+switch (game_state.tutorial_stage)
+{
+    case TutorialStage.TALK_TO_FARMERS_WIFE: tutorial_text = "Talk to Farmer's Wife"; break;
+    case TutorialStage.TRIP_ONE_HAND_FIELDSTONE:
+        trip_label = "Trip 1 of 3";
+        tutorial_text = "Deliver 6 small fieldstones by hand";
+        break;
+    case TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE:
+        trip_label = "Trip 2 of 3";
+        tutorial_text = "Deliver 10 fieldstones by skidsteer";
+        break;
+    case TutorialStage.WINCH_READY:
+        trip_label = "Trip 3 of 3";
+        tutorial_text = "Install the winch attachment";
+        break;
+    case TutorialStage.HAUL_FIRST_LOG:
+        trip_label = "Trip 3 of 3";
+        tutorial_text = "Winch the log to Home Delivery";
+        break;
+    case TutorialStage.COMPLETE: trip_label = "Complete"; tutorial_text = "Cabin materials delivered"; break;
+}
+
 var panel_left = 22;
 var panel_top = 22;
 var panel_right = panel_left + panel_width;
@@ -60,6 +85,9 @@ draw_set_valign(fa_top);
 
 draw_set_color(accent_color);
 draw_text(panel_left + 12, panel_top + 10, "Current Trip");
+
+draw_set_color(accent_color);
+draw_text(panel_left + 12, panel_top + 204, trip_label + ": " + tutorial_text);
 
 draw_set_color(text_color);
 draw_text(
@@ -102,12 +130,19 @@ draw_text(
 draw_text(
     panel_left + 12,
     panel_top + 150,
-    "Deliveries: " + string(game_state.completed_deliveries)
+    "Cabin goal: " + string(home_rocks) + " / 16 stone, "
+    + string(home_logs) + " / 1 log"
 );
 
 draw_text(
     panel_left + 12,
     panel_top + 168,
+    "Deliveries: " + string(game_state.completed_deliveries)
+);
+
+draw_text(
+    panel_left + 12,
+    panel_top + 186,
     "Winch: " + attachment_get_status_text()
 );
 

@@ -28,6 +28,23 @@ enum RockState
     BREAKING
 }
 
+enum TutorialStage
+{
+    TALK_TO_FARMER,
+    TALK_TO_FARMERS_WIFE,
+    TRIP_ONE_HAND_FIELDSTONE,
+    TRIP_TWO_VEHICLE_FIELDSTONE,
+    WINCH_READY,
+    HAUL_FIRST_LOG,
+    COMPLETE
+}
+
+enum CameraMode
+{
+    FOLLOW_GAMEPLAY,
+    CUTSCENE
+}
+
 enum ResourceId
 {
     FIELDSTONE,

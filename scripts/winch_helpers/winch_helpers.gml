@@ -47,6 +47,7 @@ function winch_install_attachment(_vehicle)
     }
 
     game_state.winch_attachment_state = AttachmentState.INSTALLED;
+    game_state.tutorial_stage = TutorialStage.HAUL_FIRST_LOG;
     _vehicle.winch_state = WinchState.STOWED;
 
     progress_show_reward_summary(

@@ -16,22 +16,12 @@ interaction_get_prompt = function(_actor)
         return "";
     }
 
-    var current_game_state = game_state_ensure();
-
-    if (!inventory_can_add(current_game_state.player_inventory, resource_id, 1))
-    {
-        return "Backpack full";
-    }
-
-    return "Pick up " + resource_get_name(resource_id);
+    return "Large fieldstone - use skidsteer";
 };
 
 interaction_run = function(_actor)
 {
-    if (rock_state == RockState.WAITING)
-    {
-        progress_collect_rock_by_hand(id);
-    }
+    notification_show_hint("This old fieldstone needs the skidsteer.", game_get_speed(gamespeed_fps) * 2, false);
 };
 
 rock_stage = 0;

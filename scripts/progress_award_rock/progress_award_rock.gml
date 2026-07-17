@@ -79,6 +79,12 @@ function progress_collect_rock_by_hand(_rock_instance)
 {
     var game_state = game_state_ensure();
 
+    if (game_state.tutorial_stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE)
+    {
+        notification_show_hint("The Farmer's Wife has not asked for hand-gathered fieldstone yet.", game_get_speed(gamespeed_fps) * 2, false);
+        return false;
+    }
+
     if (!inventory_can_add(game_state.player_inventory, ResourceId.FIELDSTONE, 1))
     {
         notification_show_hint(
@@ -105,6 +111,28 @@ function progress_collect_rock_by_hand(_rock_instance)
     }
 
     return true;
+}
+
+function tutorial_spawn_hand_fieldstones()
+{
+    var game_state = game_state_ensure();
+
+    if (game_state.tutorial_hand_stones_spawned)
+    {
+        return;
+    }
+
+    game_state.tutorial_hand_stones_spawned = true;
+
+    // One six-stone hand load: the first of the three designated work trips.
+    var positions = [
+        [112, 112], [128, 112], [144, 112], [160, 112], [176, 112], [192, 112]
+    ];
+
+    for (var i = 0; i < array_length(positions); i++)
+    {
+        instance_create_depth(positions[i][0], positions[i][1], 0, obj_small_fieldstone);
+    }
 }
 
 function progress_deliver_homebase(_dropoff)
@@ -196,11 +224,28 @@ function progress_deliver_homebase(_dropoff)
         game_state.trip_rocks_gathered = 0;
         game_state.trip_xp_gained = 0;
 
-        if (game_state.completed_deliveries >= game_state.winch_mail_after_deliveries
+        if (game_state.tutorial_stage == TutorialStage.TRIP_ONE_HAND_FIELDSTONE
+        && inventory_get_amount(game_state.home_inventory, ResourceId.FIELDSTONE) >= 6)
+        {
+            game_state.tutorial_stage = TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE;
+            notification_show_hint("Trip 1 complete. The skidsteer is ready for the remaining 10 fieldstones.", game_get_speed(gamespeed_fps) * 5, false);
+        }
+
+        if (game_state.tutorial_stage == TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE
+        && inventory_get_amount(game_state.home_inventory, ResourceId.FIELDSTONE) >= 16
         && game_state.winch_attachment_state == AttachmentState.LOCKED)
         {
             game_state.winch_attachment_state = AttachmentState.MAIL_READY;
+            game_state.tutorial_stage = TutorialStage.WINCH_READY;
             delivery.mail_became_ready = true;
+        }
+
+        if (game_state.tutorial_stage == TutorialStage.HAUL_FIRST_LOG
+        && inventory_get_amount(game_state.home_inventory, ResourceId.FIELDSTONE) >= 16
+        && inventory_get_amount(game_state.home_inventory, ResourceId.TIMBER_LOG) >= 1)
+        {
+            game_state.tutorial_stage = TutorialStage.COMPLETE;
+            notification_show_hint("Cabin materials are home. The foundation is ready for the next build step.", game_get_speed(gamespeed_fps) * 5, false);
         }
     }
 

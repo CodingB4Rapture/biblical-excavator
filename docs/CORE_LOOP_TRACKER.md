@@ -79,8 +79,8 @@ Log tuning is in `objects/obj_log/Create_0.gml`:
 - `block_radius`
 - `tow_pull_speed`
 
-The mail requirement is `winch_mail_after_deliveries` in
-`game_state_ensure`.
+The first winch delivery is now tied to completing Tutorial Trip 2: sixteen
+fieldstones stored at Homebase. See `FIRST_TUTORIAL_FLOW.md`.
 
 ## Human Checkpoints
 

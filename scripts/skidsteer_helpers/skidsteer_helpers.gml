@@ -57,7 +57,6 @@ function skidsteer_exit_vehicle()
 
     driver_instance.vehicle = id;
     exit_cooldown = 8;
-    view_object[0] = obj_player;
 
     if (instance_exists(last_blocking_log))
     {
@@ -265,8 +264,6 @@ function skidsteer_enter_vehicle(_vehicle, _actor)
     _vehicle.driver_instance = noone;
     _vehicle.exit_cooldown = 8;
 
-    view_object[0] = obj_skidsteer;
-
     with (_actor)
     {
         instance_destroy();
@@ -276,6 +273,11 @@ function skidsteer_enter_vehicle(_vehicle, _actor)
 function skidsteer_get_interaction_prompt(_vehicle, _actor)
 {
     var game_state = game_state_ensure();
+
+    if (game_state.tutorial_stage < TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE)
+    {
+        return "Finish hand-gathering first";
+    }
 
     if (game_state.winch_attachment_state == AttachmentState.STORED_AT_HOME)
     {
@@ -306,6 +308,12 @@ function skidsteer_get_interaction_prompt(_vehicle, _actor)
 function skidsteer_run_interaction(_vehicle, _actor)
 {
     var game_state = game_state_ensure();
+
+    if (game_state.tutorial_stage < TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE)
+    {
+        notification_show_hint("Finish the first six hand-gathered fieldstones before using the skidsteer.", game_get_speed(gamespeed_fps) * 3, false);
+        return;
+    }
 
     if (game_state.winch_attachment_state == AttachmentState.STORED_AT_HOME)
     {

@@ -1,5 +1,10 @@
 /// obj_player - Step Event
 
+if (dialogue_is_active())
+{
+    exit;
+}
+
 switch (player_state)
 {
     case PlayerState.WALKING:

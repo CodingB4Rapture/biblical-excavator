@@ -1,23 +1,16 @@
 {
   "$GMObject":"",
-  "%Name":"obj_homebase_dropoff",
+  "%Name":"obj_camera_controller",
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":3,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
-    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":8,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
-  "name":"obj_homebase_dropoff",
+  "name":"obj_camera_controller",
   "overriddenProperties":[],
-  "parent":{
-    "name":"Homestead",
-    "path":"folders/World/Homestead.yy",
-  },
-  "parentObjectId":{
-    "name":"obj_interactable_parent",
-    "path":"objects/obj_interactable_parent/obj_interactable_parent.yy",
-  },
-  "persistent":false,
+  "parent":{"name":"Controllers","path":"folders/Game Systems/Controllers.yy",},
+  "parentObjectId":null,
+  "persistent":true,
   "physicsAngularDamping":0.1,
   "physicsDensity":0.5,
   "physicsFriction":0.2,
@@ -36,5 +29,5 @@
   "solid":false,
   "spriteId":null,
   "spriteMaskId":null,
-  "visible":true,
+  "visible":false,
 }

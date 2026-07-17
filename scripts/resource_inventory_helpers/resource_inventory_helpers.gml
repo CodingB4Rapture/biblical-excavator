@@ -146,8 +146,10 @@ function game_state_ensure()
             trip_xp_gained: 0,
             equipment_xp: 0,
             completed_deliveries: 0,
-            winch_mail_after_deliveries: 3,
-            winch_attachment_state: AttachmentState.LOCKED
+            winch_attachment_state: AttachmentState.LOCKED,
+            tutorial_intro_seen: false,
+            tutorial_stage: TutorialStage.TALK_TO_FARMER,
+            tutorial_hand_stones_spawned: false
         };
     }
 

@@ -1,15 +1,21 @@
 /// obj_dialogue_bubble - Step Event
+/// The world waits until the player deliberately advances the conversation.
 
-life -= 1;
-
-if (instance_exists(follow_target))
+if (input_lock_frames > 0)
 {
-    x = follow_target.x;
-    y = follow_target.y;
+    input_lock_frames -= 1;
+    exit;
 }
 
-if (life <= 0)
+if (dialogue_advance_pressed())
 {
-    instance_destroy();
+    if (page_index < array_length(pages) - 1)
+    {
+        page_index += 1;
+    }
+    else
+    {
+        instance_destroy();
+    }
 }
 
