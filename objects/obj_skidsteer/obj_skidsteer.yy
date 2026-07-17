@@ -10,8 +10,8 @@
   "name":"obj_skidsteer",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Work Vehicle",
+    "path":"folders/Vehicle and Equipment/Work Vehicle.yy",
   },
   "parentObjectId":{
     "name":"obj_interactable_parent",

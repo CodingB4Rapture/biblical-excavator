@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"winch_helpers",
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Attachments and Winch",
+    "path":"folders/Vehicle and Equipment/Attachments and Winch.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

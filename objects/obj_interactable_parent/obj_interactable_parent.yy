@@ -6,8 +6,8 @@
   "name":"obj_interactable_parent",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Shared Definitions",
+    "path":"folders/Game Systems/Shared Definitions.yy",
   },
   "parentObjectId":null,
   "persistent":false,

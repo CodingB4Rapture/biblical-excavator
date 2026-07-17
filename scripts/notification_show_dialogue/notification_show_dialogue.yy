@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"notification_show_dialogue",
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"HUD and Dialogue",
+    "path":"folders/Interface and Feedback/HUD and Dialogue.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

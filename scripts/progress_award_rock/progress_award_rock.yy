@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"progress_award_rock",
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Inventory and Progression",
+    "path":"folders/Game Systems/Inventory and Progression.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

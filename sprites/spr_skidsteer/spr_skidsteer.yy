@@ -26,8 +26,8 @@
   "nineSlice":null,
   "origin":4,
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Work Vehicle",
+    "path":"folders/Vehicle and Equipment/Work Vehicle.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

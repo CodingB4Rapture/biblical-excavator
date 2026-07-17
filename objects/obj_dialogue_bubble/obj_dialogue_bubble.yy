@@ -10,8 +10,8 @@
   "name":"obj_dialogue_bubble",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"HUD and Dialogue",
+    "path":"folders/Interface and Feedback/HUD and Dialogue.yy",
   },
   "parentObjectId":null,
   "persistent":false,

@@ -9,8 +9,8 @@
   "name":"obj_rock_controller",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Controllers",
+    "path":"folders/Game Systems/Controllers.yy",
   },
   "parentObjectId":null,
   "persistent":false,

@@ -9,8 +9,8 @@
   "name":"obj_rock",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Resources",
+    "path":"folders/World/Resources.yy",
   },
   "parentObjectId":{
     "name":"obj_interactable_parent",

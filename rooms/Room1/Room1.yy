@@ -68,8 +68,8 @@
   ],
   "name":"Room1",
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Rooms",
+    "path":"folders/World/Rooms.yy",
   },
   "parentRoom":null,
   "physicsSettings":{

@@ -25,8 +25,8 @@
   "nineSlice":null,
   "origin":4,
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Environment Art",
+    "path":"folders/World/Environment Art.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

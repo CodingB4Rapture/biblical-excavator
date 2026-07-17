@@ -10,8 +10,8 @@
   "name":"obj_player",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Player",
+    "path":"folders/Characters/Player.yy",
   },
   "parentObjectId":null,
   "persistent":false,
