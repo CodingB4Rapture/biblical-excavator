@@ -7,6 +7,18 @@ All rights reserved unless otherwise stated.
 The source code and game assets in this repository may be viewed for
 educational and portfolio purposes but may not be redistributed,
 commercialized, or incorporated into another project without permission.
+
+## Current Prototype Controls
+
+- `WASD`: walk or drive.
+- `E` while driving: exit the vehicle.
+- `E` on foot: use the currently displayed contextual action.
+
+The current loop supports backpack collection, vehicle rock hauling,
+wife-managed Homebase deliveries, and a placeholder winch attachment unlocked
+through early deliveries. See `docs/CORE_LOOP_TRACKER.md` for the playable flow
+and current art/tuning checkpoints.
+
 **Before beginning work**:
 
 **Do not edit the same room, sprite, sequence, or object at the same time without coordinating first.**

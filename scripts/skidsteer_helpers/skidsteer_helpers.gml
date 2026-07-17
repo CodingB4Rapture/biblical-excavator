@@ -83,7 +83,11 @@ function skidsteer_update_tracks(_input)
     var left_track = clamp(_input.throttle + _input.steering, -1, 1);
     var right_track = clamp(_input.throttle - _input.steering, -1, 1);
 
-    var target_drive_speed = ((left_track + right_track) * 0.5) * max_drive_speed;
+    var tow_speed_multiplier = winch_get_drive_multiplier(id);
+
+    var target_drive_speed = ((left_track + right_track) * 0.5)
+        * max_drive_speed
+        * tow_speed_multiplier;
     var target_turn_speed = ((right_track - left_track) * 0.5) * max_turn_speed;
 
     drive_speed = lerp(drive_speed, target_drive_speed, drive_acceleration);
@@ -95,14 +99,35 @@ function skidsteer_update_tracks(_input)
 
 function skidsteer_find_log_contact(_next_x, _next_y)
 {
-    var hit_log = instance_nearest(_next_x, _next_y, obj_log);
+    var hit_log = noone;
+    var nearest_distance = 1000000;
 
-    if (hit_log != noone && point_distance(_next_x, _next_y, hit_log.x, hit_log.y) <= hit_log.block_radius)
+    for (var i = 0; i < instance_number(obj_log); i++)
     {
-        return hit_log;
+        var candidate = instance_find(obj_log, i);
+
+        // The attached target must not block the vehicle towing it.
+        if (candidate.tow_vehicle == id)
+        {
+            continue;
+        }
+
+        var candidate_distance = point_distance(
+            _next_x,
+            _next_y,
+            candidate.x,
+            candidate.y
+        );
+
+        if (candidate_distance <= candidate.block_radius
+        && candidate_distance < nearest_distance)
+        {
+            hit_log = candidate;
+            nearest_distance = candidate_distance;
+        }
     }
 
-    return noone;
+    return hit_log;
 }
 
 function skidsteer_handle_log_contact(_log)
@@ -222,10 +247,98 @@ function skidsteer_update_driving()
 
     skidsteer_update_tracks(skidsteer_input);
     skidsteer_try_move();
+    winch_update_tow(id);
 }
 
 function skidsteer_update_empty()
 {
     drive_speed = 0;
     turn_speed = 0;
+}
+
+function skidsteer_enter_vehicle(_vehicle, _actor)
+{
+    _actor.player_state = PlayerState.ENTERING_VEHICLE;
+
+    _vehicle.has_driver = true;
+    _vehicle.skidsteer_state = SkidsteerState.DRIVING;
+    _vehicle.driver_instance = noone;
+    _vehicle.exit_cooldown = 8;
+
+    view_object[0] = obj_skidsteer;
+
+    with (_actor)
+    {
+        instance_destroy();
+    }
+}
+
+function skidsteer_get_interaction_prompt(_vehicle, _actor)
+{
+    var game_state = game_state_ensure();
+
+    if (game_state.winch_attachment_state == AttachmentState.STORED_AT_HOME)
+    {
+        return "Install winch attachment";
+    }
+
+    if (_vehicle.winch_state == WinchState.CABLE_IN_HAND
+    && _vehicle.winch_handler == _actor)
+    {
+        if (winch_player_is_near_hitch(_vehicle, _actor))
+        {
+            return "Stow winch cable";
+        }
+
+        return "Return cable to rear hitch";
+    }
+
+    if (game_state.winch_attachment_state == AttachmentState.INSTALLED
+    && _vehicle.winch_state == WinchState.STOWED
+    && winch_player_is_near_hitch(_vehicle, _actor))
+    {
+        return "Take winch cable";
+    }
+
+    return "Enter vehicle";
+}
+
+function skidsteer_run_interaction(_vehicle, _actor)
+{
+    var game_state = game_state_ensure();
+
+    if (game_state.winch_attachment_state == AttachmentState.STORED_AT_HOME)
+    {
+        winch_install_attachment(_vehicle);
+        return;
+    }
+
+    if (_vehicle.winch_state == WinchState.CABLE_IN_HAND
+    && _vehicle.winch_handler == _actor)
+    {
+        if (winch_player_is_near_hitch(_vehicle, _actor))
+        {
+            winch_stow_cable(_vehicle);
+        }
+        else
+        {
+            notification_show_hint(
+                "Bring the cable back to the rear hitch before entering.",
+                game_get_speed(gamespeed_fps) * 3,
+                false
+            );
+        }
+
+        return;
+    }
+
+    if (game_state.winch_attachment_state == AttachmentState.INSTALLED
+    && _vehicle.winch_state == WinchState.STOWED
+    && winch_player_is_near_hitch(_vehicle, _actor))
+    {
+        winch_take_cable(_vehicle, _actor);
+        return;
+    }
+
+    skidsteer_enter_vehicle(_vehicle, _actor);
 }

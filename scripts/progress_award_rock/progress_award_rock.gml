@@ -1,27 +1,25 @@
-/// progress_award_rock(rock_amount, xp_amount, source_instance)
-///
-/// Updates early resource totals and shows reward feedback.
+/// Early collection, XP, and Homebase delivery helpers.
+
 function progress_ensure_inventory()
 {
-    if (!variable_global_exists("rock_carry_max")) global.rock_carry_max = 10;
-    if (!variable_global_exists("log_carry_max")) global.log_carry_max = 1;
+    return game_state_ensure();
+}
 
-    if (!variable_global_exists("carried_rocks")) global.carried_rocks = 0;
-    if (!variable_global_exists("carried_logs")) global.carried_logs = 0;
-
-    if (!variable_global_exists("trip_rocks_depleted")) global.trip_rocks_depleted = 0;
-    if (!variable_global_exists("trip_xp_gained")) global.trip_xp_gained = 0;
-
-    if (!variable_global_exists("home_rocks")) global.home_rocks = 0;
-    if (!variable_global_exists("home_logs")) global.home_logs = 0;
-
-    if (!variable_global_exists("equipment_xp")) global.equipment_xp = 0;
+function progress_get_vehicle()
+{
+    return instance_find(obj_skidsteer, 0);
 }
 
 function progress_can_collect_rocks(_amount)
 {
-    progress_ensure_inventory();
-    return global.carried_rocks + _amount <= global.rock_carry_max;
+    var vehicle = progress_get_vehicle();
+
+    if (!instance_exists(vehicle))
+    {
+        return false;
+    }
+
+    return inventory_can_add(vehicle.cargo_inventory, ResourceId.FIELDSTONE, _amount);
 }
 
 function progress_show_reward_summary(_line_one, _line_two)
@@ -43,84 +41,211 @@ function progress_show_reward_summary(_line_one, _line_two)
 
 function progress_award_rock(_rock_amount, _xp_amount, _source_instance)
 {
-    progress_ensure_inventory();
+    var game_state = game_state_ensure();
+    var vehicle = _source_instance;
 
-    if (!progress_can_collect_rocks(_rock_amount))
+    if (!instance_exists(vehicle))
+    {
+        vehicle = progress_get_vehicle();
+    }
+
+    if (!instance_exists(vehicle)
+    || !inventory_can_add(vehicle.cargo_inventory, ResourceId.FIELDSTONE, _rock_amount))
     {
         return 0;
     }
 
-    global.carried_rocks += _rock_amount;
-    global.trip_rocks_depleted += _rock_amount;
-    global.trip_xp_gained += _xp_amount;
-    global.equipment_xp += _xp_amount;
+    inventory_add(vehicle.cargo_inventory, ResourceId.FIELDSTONE, _rock_amount);
 
-    var rock_word = (_rock_amount == 1) ? "Rock" : "Rocks";
+    game_state.trip_rocks_gathered += _rock_amount;
+    game_state.trip_xp_gained += _xp_amount;
+    game_state.equipment_xp += _xp_amount;
+
+    var rock_word = (_rock_amount == 1) ? "Fieldstone" : "Fieldstones";
     progress_show_reward_summary(
-        "Collected " + string(_rock_amount) + " " + rock_word,
-        "+" + string(_xp_amount) + " XP"
+        "Loaded " + string(_rock_amount) + " " + rock_word,
+        "+" + string(_xp_amount) + " Equipment XP"
     );
 
-    var drop_x = 0;
-    var drop_y = 0;
-
-    if (instance_exists(_source_instance))
-    {
-        drop_x = _source_instance.x + random_range(-5, 5);
-        drop_y = _source_instance.y - 18;
-    }
-
+    var drop_x = vehicle.x + random_range(-5, 5);
+    var drop_y = vehicle.y - 18;
     var xp_drop = instance_create_depth(drop_x, drop_y, -900, obj_xp_drop);
     xp_drop.xp_amount = _xp_amount;
 
     return _xp_amount;
 }
 
-function progress_dropoff_homebase()
+function progress_collect_rock_by_hand(_rock_instance)
 {
-    progress_ensure_inventory();
+    var game_state = game_state_ensure();
 
-    var dropped_rocks = global.carried_rocks;
-    var dropped_logs = global.carried_logs;
+    if (!inventory_can_add(game_state.player_inventory, ResourceId.FIELDSTONE, 1))
+    {
+        notification_show_hint(
+            "Your backpack is full. Bring its contents home.",
+            game_get_speed(gamespeed_fps) * 3,
+            false
+        );
 
-    if (dropped_rocks <= 0 && dropped_logs <= 0)
+        return false;
+    }
+
+    inventory_add(game_state.player_inventory, ResourceId.FIELDSTONE, 1);
+    game_state.trip_rocks_gathered += 1;
+
+    progress_show_reward_summary(
+        "Pocketed 1 Fieldstone",
+        "Backpack " + string(inventory_get_total(game_state.player_inventory))
+        + " / " + string(game_state.player_inventory.capacity)
+    );
+
+    with (_rock_instance)
+    {
+        instance_destroy();
+    }
+
+    return true;
+}
+
+function progress_deliver_homebase(_dropoff)
+{
+    var game_state = game_state_ensure();
+    var delivery = {
+        total: 0,
+        fieldstone: 0,
+        timber_logs: 0,
+        vehicle_was_in_zone: false,
+        mail_became_ready: false
+    };
+
+    delivery.fieldstone += inventory_transfer_resource(
+        game_state.player_inventory,
+        game_state.home_inventory,
+        ResourceId.FIELDSTONE
+    );
+
+    delivery.timber_logs += inventory_transfer_resource(
+        game_state.player_inventory,
+        game_state.home_inventory,
+        ResourceId.TIMBER_LOG
+    );
+
+    var vehicle = progress_get_vehicle();
+
+    if (instance_exists(vehicle) && instance_exists(_dropoff))
+    {
+        delivery.vehicle_was_in_zone = point_distance(
+            vehicle.x,
+            vehicle.y,
+            _dropoff.x,
+            _dropoff.y
+        ) <= _dropoff.dropoff_radius;
+
+        if (delivery.vehicle_was_in_zone)
+        {
+            delivery.fieldstone += inventory_transfer_resource(
+                vehicle.cargo_inventory,
+                game_state.home_inventory,
+                ResourceId.FIELDSTONE
+            );
+
+            delivery.timber_logs += inventory_transfer_resource(
+                vehicle.cargo_inventory,
+                game_state.home_inventory,
+                ResourceId.TIMBER_LOG
+            );
+        }
+    }
+
+    if (instance_exists(_dropoff))
+    {
+        for (var i = instance_number(obj_log) - 1; i >= 0; i--)
+        {
+            var log = instance_find(obj_log, i);
+
+            if (!instance_exists(log)
+            || log.pullable_state == PullableState.DELIVERED
+            || point_distance(log.x, log.y, _dropoff.x, _dropoff.y) > _dropoff.dropoff_radius)
+            {
+                continue;
+            }
+
+            if (instance_exists(log.tow_vehicle))
+            {
+                winch_detach_target(log.tow_vehicle);
+            }
+
+            if (inventory_add(game_state.home_inventory, log.resource_id, 1) > 0)
+            {
+                delivery.timber_logs += 1;
+                log.pullable_state = PullableState.DELIVERED;
+
+                with (log)
+                {
+                    instance_destroy();
+                }
+            }
+        }
+    }
+
+    delivery.total = delivery.fieldstone + delivery.timber_logs;
+
+    if (delivery.total > 0)
+    {
+        game_state.completed_deliveries += 1;
+        game_state.trip_rocks_gathered = 0;
+        game_state.trip_xp_gained = 0;
+
+        if (game_state.completed_deliveries >= game_state.winch_mail_after_deliveries
+        && game_state.winch_attachment_state == AttachmentState.LOCKED)
+        {
+            game_state.winch_attachment_state = AttachmentState.MAIL_READY;
+            delivery.mail_became_ready = true;
+        }
+    }
+
+    return delivery;
+}
+
+function progress_get_delivery_line(_delivery)
+{
+    var delivery_line = "";
+
+    if (_delivery.fieldstone > 0)
+    {
+        delivery_line = string(_delivery.fieldstone) + " Fieldstone";
+    }
+
+    if (_delivery.timber_logs > 0)
+    {
+        if (delivery_line != "")
+        {
+            delivery_line += ", ";
+        }
+
+        delivery_line += string(_delivery.timber_logs) + " Timber Log";
+    }
+
+    return delivery_line;
+}
+
+function progress_receive_winch_mail()
+{
+    var game_state = game_state_ensure();
+
+    if (game_state.winch_attachment_state != AttachmentState.MAIL_READY)
     {
         return false;
     }
 
-    global.home_rocks += dropped_rocks;
-    global.home_logs += dropped_logs;
-
-    global.carried_rocks = 0;
-    global.carried_logs = 0;
-    global.trip_rocks_depleted = 0;
-    global.trip_xp_gained = 0;
-
-    var rock_word = (dropped_rocks == 1) ? "Rock" : "Rocks";
-    var log_word = (dropped_logs == 1) ? "Log" : "Logs";
-    var dropoff_line = "";
-
-    if (dropped_rocks > 0)
-    {
-        dropoff_line = "Stored " + string(dropped_rocks) + " " + rock_word;
-    }
-
-    if (dropped_logs > 0)
-    {
-        if (dropoff_line == "")
-        {
-            dropoff_line = "Stored " + string(dropped_logs) + " " + log_word;
-        }
-        else
-        {
-            dropoff_line += ", " + string(dropped_logs) + " " + log_word;
-        }
-    }
-
-    progress_show_reward_summary(
-        "Homebase Drop-off",
-        dropoff_line
-    );
-
+    game_state.winch_attachment_state = AttachmentState.STORED_AT_HOME;
     return true;
+}
+
+/// Compatibility wrapper retained while Homebase behavior moves to the wife.
+function progress_dropoff_homebase()
+{
+    var dropoff = instance_find(obj_homebase_dropoff, 0);
+    var delivery = progress_deliver_homebase(dropoff);
+    return delivery.total > 0;
 }

@@ -2,6 +2,6 @@
 
 progress_ensure_inventory();
 
-panel_width = 238;
-panel_height = 112;
+panel_width = 258;
+panel_height = 190;
 
