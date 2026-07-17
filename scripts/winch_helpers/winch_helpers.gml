@@ -61,6 +61,8 @@ function winch_install_attachment(_vehicle)
         false
     );
 
+    save_write();
+
     return true;
 }
 

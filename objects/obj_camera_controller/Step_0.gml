@@ -1,5 +1,7 @@
 /// obj_camera_controller - Step Event
 
+if (gameplay_is_paused()) exit;
+
 // Never let the room's legacy object-follow setting fight this controller.
 view_object[0] = noone;
 

@@ -2,6 +2,9 @@
 
 progress_ensure_inventory();
 
-panel_width = 258;
-panel_height = 224;
+trip_panel_width = 300;
+trip_panel_height = 140;
+home_panel_width = 300;
+home_panel_height = 122;
+panel_gap = 12;
 

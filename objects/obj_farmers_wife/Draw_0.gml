@@ -1,4 +1,6 @@
 /// obj_farmers_wife - Draw Event
+
+draw_set_font(-1);
 /// Placeholder character art. Safe to replace with a sprite later.
 
 draw_set_color(make_color_rgb(91, 58, 96));

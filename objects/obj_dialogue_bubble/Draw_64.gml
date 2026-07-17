@@ -1,6 +1,8 @@
 /// obj_dialogue_bubble - Draw GUI Event
 /// Asset-free portrait placeholder: replace this drawing with character art later.
 
+draw_set_font(-1);
+
 var gui_w = display_get_gui_width();
 var gui_h = display_get_gui_height();
 var margin = 20;

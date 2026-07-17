@@ -3,6 +3,14 @@
 game_state_ensure();
 
 resource_id = ResourceId.TIMBER_LOG;
+world_id = "tutorial_log_1";
+
+if (save_world_id_is_removed(world_id))
+{
+    instance_destroy();
+    exit;
+}
+
 pullable_state = PullableState.FREE;
 tow_vehicle = noone;
 tow_pull_speed = 1.1;

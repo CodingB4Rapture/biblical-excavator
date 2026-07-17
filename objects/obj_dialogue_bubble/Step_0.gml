@@ -1,6 +1,8 @@
 /// obj_dialogue_bubble - Step Event
 /// The world waits until the player deliberately advances the conversation.
 
+if (gameplay_is_paused()) exit;
+
 if (input_lock_frames > 0)
 {
     input_lock_frames -= 1;

@@ -1,5 +1,7 @@
 /// obj_player - Draw Event
 
+draw_set_font(-1);
+
 draw_set_color(c_navy);
 draw_circle(x, y, 6, false);
 

@@ -4,6 +4,13 @@ game_state_ensure();
 
 resource_id = ResourceId.FIELDSTONE;
 rock_state = RockState.WAITING;
+world_id = "large_rock_" + string(round(x)) + "_" + string(round(y));
+
+if (save_world_id_is_removed(world_id))
+{
+    instance_destroy();
+    exit;
+}
 
 interaction_enabled = true;
 interaction_radius = 24;

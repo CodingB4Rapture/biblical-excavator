@@ -1,5 +1,7 @@
 /// obj_rock_controller - Step Event
 
+if (gameplay_is_paused()) exit;
+
 for (var i = 0; i < array_length(rock_spawns); i++)
 {
     var spawn = rock_spawns[i];

@@ -1,5 +1,7 @@
 /// obj_rock - Step Event
 
+if (gameplay_is_paused()) exit;
+
 switch (rock_state)
 {
     case RockState.WAITING:
@@ -22,6 +24,10 @@ switch (rock_state)
             if (random(1) <= break_chance || rock_stage >= 2)
             {
                 var xp_amount = rock_stage_xp[rock_stage];
+
+                // Mark it now so saving during the short breaking animation
+                // cannot duplicate an already-awarded fieldstone.
+                save_mark_world_removed(world_id);
 
                 progress_award_rock(
                     1,

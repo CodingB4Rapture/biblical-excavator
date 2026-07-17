@@ -1,6 +1,10 @@
 /// obj_game_controller - Create Event
 /// Durable player, household, and progression state lives outside obj_player.
 
+// A playable room always begins live. The pause overlay sets this back to true
+// only while it actually exists.
+gameplay_set_paused(false);
+
 if (instance_number(obj_game_controller) > 1)
 {
     instance_destroy();

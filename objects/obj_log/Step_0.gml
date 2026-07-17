@@ -1,5 +1,7 @@
 /// obj_log - Step Event
 
+if (gameplay_is_paused()) exit;
+
 if (notice_cooldown > 0)
 {
     notice_cooldown -= 1;

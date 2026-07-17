@@ -1,5 +1,7 @@
 /// obj_smoke_puff - Step Event
 
+if (gameplay_is_paused()) exit;
+
 x += horizontal_speed;
 y += vertical_speed;
 

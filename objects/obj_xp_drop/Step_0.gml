@@ -1,5 +1,7 @@
 /// obj_xp_drop - Step Event
 
+if (gameplay_is_paused()) exit;
+
 y -= rise_speed;
 life -= 1;
 

@@ -98,6 +98,7 @@ function progress_collect_rock_by_hand(_rock_instance)
 
     inventory_add(game_state.player_inventory, ResourceId.FIELDSTONE, 1);
     game_state.trip_rocks_gathered += 1;
+    save_mark_world_removed(_rock_instance.world_id);
 
     progress_show_reward_summary(
         "Pocketed 1 Fieldstone",
@@ -117,7 +118,8 @@ function tutorial_spawn_hand_fieldstones()
 {
     var game_state = game_state_ensure();
 
-    if (game_state.tutorial_hand_stones_spawned)
+    if (game_state.tutorial_stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE
+    || instance_number(obj_small_fieldstone) > 0)
     {
         return;
     }
@@ -207,6 +209,7 @@ function progress_deliver_homebase(_dropoff)
             {
                 delivery.timber_logs += 1;
                 log.pullable_state = PullableState.DELIVERED;
+                save_mark_world_removed(log.world_id);
 
                 with (log)
                 {
@@ -247,6 +250,9 @@ function progress_deliver_homebase(_dropoff)
             game_state.tutorial_stage = TutorialStage.COMPLETE;
             notification_show_hint("Cabin materials are home. The foundation is ready for the next build step.", game_get_speed(gamespeed_fps) * 5, false);
         }
+
+        // Home Delivery is an intentional, understandable autosave point.
+        save_write();
     }
 
     return delivery;

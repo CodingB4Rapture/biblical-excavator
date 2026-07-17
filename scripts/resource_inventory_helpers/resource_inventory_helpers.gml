@@ -135,22 +135,33 @@ function inventory_transfer_resource(_from, _to, _resource_id)
     return amount_to_move;
 }
 
+function game_state_create_default()
+{
+    return {
+        player_inventory: inventory_create(6),
+        home_inventory: inventory_create(-1),
+        trip_rocks_gathered: 0,
+        trip_xp_gained: 0,
+        equipment_xp: 0,
+        completed_deliveries: 0,
+        winch_attachment_state: AttachmentState.LOCKED,
+        tutorial_intro_seen: false,
+        tutorial_stage: TutorialStage.TALK_TO_FARMER,
+        tutorial_hand_stones_spawned: false,
+        removed_world_ids: []
+    };
+}
+
 function game_state_ensure()
 {
     if (!variable_global_exists("game_state") || !is_struct(global.game_state))
     {
-        global.game_state = {
-            player_inventory: inventory_create(6),
-            home_inventory: inventory_create(-1),
-            trip_rocks_gathered: 0,
-            trip_xp_gained: 0,
-            equipment_xp: 0,
-            completed_deliveries: 0,
-            winch_attachment_state: AttachmentState.LOCKED,
-            tutorial_intro_seen: false,
-            tutorial_stage: TutorialStage.TALK_TO_FARMER,
-            tutorial_hand_stones_spawned: false
-        };
+        global.game_state = game_state_create_default();
+    }
+
+    if (!variable_struct_exists(global.game_state, "removed_world_ids"))
+    {
+        global.game_state.removed_world_ids = [];
     }
 
     return global.game_state;

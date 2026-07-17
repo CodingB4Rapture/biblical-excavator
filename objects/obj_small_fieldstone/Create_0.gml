@@ -1,6 +1,14 @@
 /// obj_small_fieldstone - Create Event
 
 resource_id = ResourceId.FIELDSTONE;
+world_id = "small_fieldstone_" + string(round(x)) + "_" + string(round(y));
+
+if (save_world_id_is_removed(world_id))
+{
+    instance_destroy();
+    exit;
+}
+
 interaction_enabled = true;
 interaction_radius = 20;
 interaction_priority = 12;

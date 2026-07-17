@@ -1,5 +1,7 @@
 /// obj_gui_reward_summary - Draw GUI Event
 
+draw_set_font(-1);
+
 var fade_in = min(1, age / 14);
 var fade_out = min(1, life / 28);
 var panel_alpha = min(fade_in, fade_out) * 0.94;

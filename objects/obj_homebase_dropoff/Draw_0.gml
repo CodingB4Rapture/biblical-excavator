@@ -1,5 +1,7 @@
 /// obj_homebase_dropoff - Draw Event
 
+draw_set_font(-1);
+
 draw_set_alpha(0.34);
 draw_set_color(make_color_rgb(74, 92, 58));
 draw_circle(x, y, dropoff_radius, false);
