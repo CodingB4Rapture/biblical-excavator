@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"resource_inventory_helpers",
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Inventory and Progression",
+    "path":"folders/Game Systems/Inventory and Progression.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

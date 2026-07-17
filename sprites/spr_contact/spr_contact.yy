@@ -26,8 +26,8 @@
   "nineSlice":null,
   "origin":4,
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Effects",
+    "path":"folders/Interface and Feedback/Effects.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

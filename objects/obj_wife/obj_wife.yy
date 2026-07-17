@@ -9,8 +9,8 @@
   "name":"obj_wife",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Homestead NPCs",
+    "path":"folders/Characters/Homestead NPCs.yy",
   },
   "parentObjectId":{
     "name":"obj_interactable_parent",

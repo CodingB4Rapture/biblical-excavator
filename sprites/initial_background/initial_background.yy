@@ -25,8 +25,8 @@
   "nineSlice":null,
   "origin":4,
   "parent":{
-    "name":"Background Assets",
-    "path":"folders/Background Assets.yy",
+    "name":"Environment Art",
+    "path":"folders/World/Environment Art.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

@@ -28,8 +28,8 @@
   "nineSlice":null,
   "origin":4,
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Reference Art",
+    "path":"folders/Reference Art.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

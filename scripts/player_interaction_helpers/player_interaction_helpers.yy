@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"player_interaction_helpers",
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Player",
+    "path":"folders/Characters/Player.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

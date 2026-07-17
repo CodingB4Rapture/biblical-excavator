@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"skidsteer_helpers",
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Work Vehicle",
+    "path":"folders/Vehicle and Equipment/Work Vehicle.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

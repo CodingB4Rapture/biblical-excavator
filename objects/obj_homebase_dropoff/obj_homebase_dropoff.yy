@@ -10,8 +10,8 @@
   "name":"obj_homebase_dropoff",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Homestead",
+    "path":"folders/World/Homestead.yy",
   },
   "parentObjectId":null,
   "persistent":false,

@@ -10,8 +10,8 @@
   "name":"obj_xp_drop",
   "overriddenProperties":[],
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Effects",
+    "path":"folders/Interface and Feedback/Effects.yy",
   },
   "parentObjectId":null,
   "persistent":false,
