@@ -154,6 +154,9 @@ function game_state_create_default()
         cabin_site_room: "Room1",
         cabin_site_x: 0,
         cabin_site_y: 0,
+        day_number: 1,
+        // Minutes since midnight; 1080 is 6:00 PM.
+        time_of_day: 1080,
         removed_world_ids: []
     };
 }
@@ -195,6 +198,18 @@ function game_state_ensure()
         global.game_state.cabin_site_room = "Room1";
         global.game_state.cabin_site_x = 0;
         global.game_state.cabin_site_y = 0;
+    }
+
+    // Runtime states created before the calendar feature keep all progress and
+    // receive the same safe starting time as a new game.
+    if (!variable_struct_exists(global.game_state, "day_number"))
+    {
+        global.game_state.day_number = 1;
+    }
+
+    if (!variable_struct_exists(global.game_state, "time_of_day"))
+    {
+        global.game_state.time_of_day = 1080;
     }
 
     return global.game_state;

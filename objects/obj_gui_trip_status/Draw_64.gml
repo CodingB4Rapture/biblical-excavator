@@ -114,6 +114,31 @@ var panel_gold = make_color_rgb(196, 145, 49);
 var text_color = make_color_rgb(235, 224, 198);
 var accent_color = make_color_rgb(255, 220, 92);
 
+if (calendar_should_run())
+{
+    var clock_left = screen_margin;
+    var clock_top = 22;
+    var clock_right = clock_left + 150;
+    var clock_bottom = clock_top + 52;
+
+    draw_set_alpha(0.92);
+    draw_set_color(panel_edge);
+    draw_roundrect(clock_left, clock_top, clock_right, clock_bottom, false);
+    draw_set_color(panel_gold);
+    draw_roundrect(clock_left + 2, clock_top + 2, clock_right - 2, clock_bottom - 2, true);
+    draw_set_alpha(0.88);
+    draw_set_color(panel_color);
+    draw_roundrect(clock_left + 4, clock_top + 4, clock_right - 4, clock_bottom - 4, false);
+
+    draw_set_alpha(1);
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+    draw_set_color(accent_color);
+    draw_text(clock_left + 12, clock_top + 8, "Day " + string(game_state.day_number));
+    draw_set_color(text_color);
+    draw_text(clock_left + 12, clock_top + 27, calendar_get_time_text());
+}
+
 draw_set_alpha(0.92);
 
 draw_set_color(panel_edge);

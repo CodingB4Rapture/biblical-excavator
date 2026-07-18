@@ -6,14 +6,12 @@ interaction_priority = 18;
 
 interaction_get_prompt = function(_actor)
 {
-    return "Inspect cabin construction site";
+    return calendar_is_nighttime()
+        ? "Sleep until morning"
+        : "Rest at cabin";
 };
 
 interaction_run = function(_actor)
 {
-    notification_show_hint(
-        "Cabin site placed. Construction recipes are the next system.",
-        game_get_speed(gamespeed_fps) * 4,
-        false
-    );
+    cabin_sleep_until_morning();
 };

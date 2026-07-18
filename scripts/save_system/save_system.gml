@@ -192,6 +192,8 @@ function save_build_snapshot()
             cabin_site_room: game_state.cabin_site_room,
             cabin_site_x: game_state.cabin_site_x,
             cabin_site_y: game_state.cabin_site_y,
+            day_number: game_state.day_number,
+            time_of_day: game_state.time_of_day,
             removed_world_ids: save_clone_array(game_state.removed_world_ids)
         },
         scene: scene,
@@ -363,6 +365,17 @@ function save_load()
     {
         game_state.cabin_placement_unlocked =
             game_state.tutorial_stage == TutorialStage.COMPLETE;
+    }
+
+    // These optional fields keep earlier format-version-one saves compatible.
+    if (variable_struct_exists(saved_state, "day_number"))
+    {
+        game_state.day_number = saved_state.day_number;
+    }
+
+    if (variable_struct_exists(saved_state, "time_of_day"))
+    {
+        game_state.time_of_day = saved_state.time_of_day;
     }
 
     game_state.removed_world_ids = saved_state.removed_world_ids;

@@ -10,6 +10,7 @@ if (variable_global_exists("save_restore_pending") && global.save_restore_pendin
 
 gameplay_ensure_controllable_actor();
 cabin_restore_site();
+calendar_update();
 
 if (variable_global_exists("save_new_game_pending") && global.save_new_game_pending)
 {

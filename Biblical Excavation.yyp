@@ -72,6 +72,7 @@
     {"id":{"name":"rm_main_menu","path":"rooms/rm_main_menu/rm_main_menu.yy",},},
     {"id":{"name":"Room1","path":"rooms/Room1/Room1.yy",},},
     {"id":{"name":"cabin_placement_helpers","path":"scripts/cabin_placement_helpers/cabin_placement_helpers.yy",},},
+    {"id":{"name":"calendar_helpers","path":"scripts/calendar_helpers/calendar_helpers.yy",},},
     {"id":{"name":"camera_helpers","path":"scripts/camera_helpers/camera_helpers.yy",},},
     {"id":{"name":"dialogue_helpers","path":"scripts/dialogue_helpers/dialogue_helpers.yy",},},
     {"id":{"name":"game_enums","path":"scripts/game_enums/game_enums.yy",},},
