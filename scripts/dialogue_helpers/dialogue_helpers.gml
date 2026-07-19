@@ -43,6 +43,20 @@ function dialogue_run_completion_action(_action)
             break;
         }
 
+        case "start_hand_gathering":
+        {
+            var game_state = game_state_ensure();
+
+            if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMERS_WIFE)
+            {
+                game_state.tutorial_stage = TutorialStage.TRIP_ONE_HAND_FIELDSTONE;
+                tutorial_spawn_hand_fieldstones();
+                save_write();
+            }
+
+            break;
+        }
+
         case "unlock_cabin_placement":
         {
             cabin_unlock_placement();

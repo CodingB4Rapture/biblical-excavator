@@ -13,6 +13,14 @@ if (instance_number(obj_game_controller) > 1)
 
 var game_state = game_state_ensure();
 
+// The day card owns its pause and fade independently of menus and dialogue.
+day_transition_active = false;
+day_transition_timer = 0;
+day_transition_day = game_state.day_number;
+day_transition_resources = array_create(ResourceId.COUNT, 0);
+day_transition_fade_frames = max(1, round(game_get_speed(gamespeed_fps) * 0.75));
+day_transition_hold_frames = max(1, round(game_get_speed(gamespeed_fps) * 2.25));
+
 // Lets a hot-reloaded project state receive this new tutorial flag safely.
 if (!variable_struct_exists(game_state, "tutorial_intro_seen"))
 {

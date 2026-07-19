@@ -48,17 +48,17 @@ interaction_run = function(_actor)
             NotificationStyle.PROMPT
         );
 
-        if (progress_receive_winch_mail())
+        if (delivery.mail_became_ready)
         {
             notification_show_dialogue(
-                "A winch attachment came in the mail. I set it aside for the work vehicle.",
+                "A winch attachment came in the mail. The package is beside Home Delivery.",
                 speaker,
                 game_get_speed(gamespeed_fps) * 6,
                 NotificationStyle.PROMPT
             );
 
             notification_show_hint(
-                "Walk to the vehicle and press E to install the winch attachment.",
+                "Find the marked package and press E to collect it.",
                 game_get_speed(gamespeed_fps) * 6,
                 false
             );

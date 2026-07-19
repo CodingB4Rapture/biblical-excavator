@@ -30,10 +30,18 @@ finished cabin. Its room and position are saved. Future crafting work can turn
 that site into readable construction stages without rewriting Quest 1.
 
 Press `Q` during gameplay to open the Quest Journal. `Q` or Escape closes it.
-The journal pauses gameplay and reads progress from the same tutorial,
-inventory, attachment, and Homebase state used by the core loop.
-Completed quests remain in the journal with their objective count and reward
-list, so the player can check what was unlocked afterward.
+The journal pauses gameplay and uses a reusable two-pane layout:
+
+- The left pane is a clickable and keyboard-navigable quest list.
+- Red quest names have not started, yellow quests are active, and green quests
+  are complete.
+- The right pane shows the selected quest's summary, objectives, and rewards.
+- Completed quests retain a checked objective history and use their completion
+  summary to explain what the player accomplished.
+
+The list supports mouse-wheel scrolling and Up/Down navigation, so future
+quests only need a `QuestId`, definition, status entry, and objective provider;
+they do not need a custom journal object.
 
 Quest status is included in `save_slot_1.json`. Older version-one saves infer
 the first quest's status from their tutorial stage.

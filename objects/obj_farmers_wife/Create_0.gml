@@ -30,9 +30,6 @@ interaction_run = function(_actor)
 
     if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMERS_WIFE)
     {
-        game_state.tutorial_stage = TutorialStage.TRIP_ONE_HAND_FIELDSTONE;
-        tutorial_spawn_hand_fieldstones();
-
         notification_show_dialogue(
             [
                 "For the cabin foundation, we need 16 fieldstones and one good log. First, bring me 6 small loose stones by hand.",
@@ -41,7 +38,8 @@ interaction_run = function(_actor)
             id,
             0,
             NotificationStyle.PROMPT,
-            "FARMER'S WIFE"
+            "FARMER'S WIFE",
+            "start_hand_gathering"
         );
         return;
     }
@@ -72,24 +70,24 @@ interaction_run = function(_actor)
             );
             return;
         }
-    }
 
-    if (progress_receive_winch_mail())
-    {
-        notification_show_dialogue(
-            "A winch attachment came in the mail. I set it aside for the work vehicle.",
-            id,
-            game_get_speed(gamespeed_fps) * 6,
-            NotificationStyle.PROMPT
-        );
 
-        notification_show_hint(
-            "Walk to the vehicle and press E to install the winch attachment.",
-            game_get_speed(gamespeed_fps) * 6,
-            false
-        );
-
-        return;
+        if (delivery.mail_became_ready)
+        {
+            notification_show_dialogue(
+                "A winch attachment came in the mail. The package is beside Home Delivery.",
+                id,
+                0,
+                NotificationStyle.PROMPT,
+                "FARMER'S WIFE"
+            );
+            notification_show_hint(
+                "Find the marked package and press E to collect it.",
+                game_get_speed(gamespeed_fps) * 5,
+                false
+            );
+            return;
+        }
     }
 
     if (delivery.total > 0)

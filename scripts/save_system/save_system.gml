@@ -180,6 +180,7 @@ function save_build_snapshot()
             home_inventory: save_copy_amounts(game_state.home_inventory),
             trip_rocks_gathered: game_state.trip_rocks_gathered,
             trip_xp_gained: game_state.trip_xp_gained,
+            daily_resources_gathered: save_clone_array(game_state.daily_resources_gathered),
             equipment_xp: game_state.equipment_xp,
             completed_deliveries: game_state.completed_deliveries,
             winch_attachment_state: game_state.winch_attachment_state,
@@ -327,6 +328,10 @@ function save_load()
     save_apply_amounts(game_state.home_inventory, saved_state.home_inventory);
     game_state.trip_rocks_gathered = saved_state.trip_rocks_gathered;
     game_state.trip_xp_gained = saved_state.trip_xp_gained;
+    if (variable_struct_exists(saved_state, "daily_resources_gathered"))
+    {
+        game_state.daily_resources_gathered = save_clone_array(saved_state.daily_resources_gathered);
+    }
     game_state.equipment_xp = saved_state.equipment_xp;
     game_state.completed_deliveries = saved_state.completed_deliveries;
     game_state.winch_attachment_state = saved_state.winch_attachment_state;
@@ -424,6 +429,13 @@ function save_restore_room_state()
         vehicle.winch_state = (game_state_ensure().winch_attachment_state == AttachmentState.INSTALLED)
             ? WinchState.STOWED
             : WinchState.UNAVAILABLE;
+
+        // A held cable is intentionally reconstructed as stowed on load.
+        // Return its tutorial objective to the rear hitch as well.
+        if (game_state_ensure().tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG)
+        {
+            game_state_ensure().tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
+        }
     }
 
     if (scene.player_active)

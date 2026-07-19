@@ -1,19 +1,22 @@
 {
   "$GMObject":"",
-  "%Name":"obj_player",
+  "%Name":"obj_winch_package",
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":3,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":8,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
-  "name":"obj_player",
+  "name":"obj_winch_package",
   "overriddenProperties":[],
   "parent":{
-    "name":"Player",
-    "path":"folders/Characters/Player.yy",
+    "name":"Attachments and Winch",
+    "path":"folders/Vehicle and Equipment/Attachments and Winch.yy",
   },
-  "parentObjectId":null,
+  "parentObjectId":{
+    "name":"obj_interactable_parent",
+    "path":"objects/obj_interactable_parent/obj_interactable_parent.yy",
+  },
   "persistent":false,
   "physicsAngularDamping":0.1,
   "physicsDensity":0.5,

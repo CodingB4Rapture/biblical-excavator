@@ -142,6 +142,7 @@ function game_state_create_default()
         home_inventory: inventory_create(-1),
         trip_rocks_gathered: 0,
         trip_xp_gained: 0,
+        daily_resources_gathered: array_create(ResourceId.COUNT, 0),
         equipment_xp: 0,
         completed_deliveries: 0,
         winch_attachment_state: AttachmentState.LOCKED,
@@ -210,6 +211,19 @@ function game_state_ensure()
     if (!variable_struct_exists(global.game_state, "time_of_day"))
     {
         global.game_state.time_of_day = 1080;
+    }
+
+    // Earlier tutorial code collected the mail automatically but left the
+    // stage at the old WINCH_READY value (now WINCH_PACKAGE_READY).
+    if (global.game_state.tutorial_stage == TutorialStage.WINCH_PACKAGE_READY
+    && global.game_state.winch_attachment_state == AttachmentState.STORED_AT_HOME)
+    {
+        global.game_state.tutorial_stage = TutorialStage.WINCH_INSTALL_REQUIRED;
+    }
+
+    if (!variable_struct_exists(global.game_state, "daily_resources_gathered"))
+    {
+        global.game_state.daily_resources_gathered = array_create(ResourceId.COUNT, 0);
     }
 
     return global.game_state;

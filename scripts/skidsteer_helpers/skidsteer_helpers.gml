@@ -135,6 +135,13 @@ function skidsteer_handle_log_contact(_log)
     skidsteer_start_contact_visual(SkidsteerState.CONTACT_BLOCKED);
     last_blocking_log = _log;
 
+    var game_state = game_state_ensure();
+    if (game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG)
+    {
+        game_state.tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
+        save_write();
+    }
+
     if (_log.notice_cooldown <= 0)
     {
         notification_show_dialogue(

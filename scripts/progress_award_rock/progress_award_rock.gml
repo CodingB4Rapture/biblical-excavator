@@ -58,6 +58,7 @@ function progress_award_rock(_rock_amount, _xp_amount, _source_instance)
     inventory_add(vehicle.cargo_inventory, ResourceId.FIELDSTONE, _rock_amount);
 
     game_state.trip_rocks_gathered += _rock_amount;
+    game_state.daily_resources_gathered[ResourceId.FIELDSTONE] += _rock_amount;
     game_state.trip_xp_gained += _xp_amount;
     game_state.equipment_xp += _xp_amount;
 
@@ -98,6 +99,7 @@ function progress_collect_rock_by_hand(_rock_instance)
 
     inventory_add(game_state.player_inventory, ResourceId.FIELDSTONE, 1);
     game_state.trip_rocks_gathered += 1;
+    game_state.daily_resources_gathered[ResourceId.FIELDSTONE] += 1;
     save_mark_world_removed(_rock_instance.world_id);
 
     progress_show_reward_summary(
@@ -112,29 +114,6 @@ function progress_collect_rock_by_hand(_rock_instance)
     }
 
     return true;
-}
-
-function tutorial_spawn_hand_fieldstones()
-{
-    var game_state = game_state_ensure();
-
-    if (game_state.tutorial_stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE
-    || instance_number(obj_small_fieldstone) > 0)
-    {
-        return;
-    }
-
-    game_state.tutorial_hand_stones_spawned = true;
-
-    // One six-stone hand load: the first of the three designated work trips.
-    var positions = [
-        [112, 112], [128, 112], [144, 112], [160, 112], [176, 112], [192, 112]
-    ];
-
-    for (var i = 0; i < array_length(positions); i++)
-    {
-        instance_create_depth(positions[i][0], positions[i][1], 0, obj_small_fieldstone);
-    }
 }
 
 function progress_deliver_homebase(_dropoff)
@@ -209,6 +188,7 @@ function progress_deliver_homebase(_dropoff)
             if (inventory_add(game_state.home_inventory, log.resource_id, 1) > 0)
             {
                 delivery.timber_logs += 1;
+                game_state.daily_resources_gathered[ResourceId.TIMBER_LOG] += 1;
                 log.pullable_state = PullableState.DELIVERED;
                 save_mark_world_removed(log.world_id);
 
@@ -228,30 +208,7 @@ function progress_deliver_homebase(_dropoff)
         game_state.trip_rocks_gathered = 0;
         game_state.trip_xp_gained = 0;
 
-        if (game_state.tutorial_stage == TutorialStage.TRIP_ONE_HAND_FIELDSTONE
-        && inventory_get_amount(game_state.home_inventory, ResourceId.FIELDSTONE) >= 6)
-        {
-            game_state.tutorial_stage = TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE;
-            notification_show_hint("Trip 1 complete. The skidsteer is ready for the remaining 10 fieldstones.", game_get_speed(gamespeed_fps) * 5, false);
-        }
-
-        if (game_state.tutorial_stage == TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE
-        && inventory_get_amount(game_state.home_inventory, ResourceId.FIELDSTONE) >= 16
-        && game_state.winch_attachment_state == AttachmentState.LOCKED)
-        {
-            game_state.winch_attachment_state = AttachmentState.MAIL_READY;
-            game_state.tutorial_stage = TutorialStage.WINCH_READY;
-            delivery.mail_became_ready = true;
-        }
-
-        if (game_state.tutorial_stage == TutorialStage.HAUL_FIRST_LOG
-        && inventory_get_amount(game_state.home_inventory, ResourceId.FIELDSTONE) >= 16
-        && inventory_get_amount(game_state.home_inventory, ResourceId.TIMBER_LOG) >= 1)
-        {
-            game_state.tutorial_stage = TutorialStage.COMPLETE;
-            delivery.quest_completed = quest_complete(QuestId.FIRM_FOUNDATION);
-            notification_show_hint("Cabin materials are home. The foundation is ready for the next build step.", game_get_speed(gamespeed_fps) * 5, false);
-        }
+        tutorial_process_delivery(delivery);
 
         // Home Delivery is an intentional, understandable autosave point.
         save_write();
@@ -280,19 +237,6 @@ function progress_get_delivery_line(_delivery)
     }
 
     return delivery_line;
-}
-
-function progress_receive_winch_mail()
-{
-    var game_state = game_state_ensure();
-
-    if (game_state.winch_attachment_state != AttachmentState.MAIL_READY)
-    {
-        return false;
-    }
-
-    game_state.winch_attachment_state = AttachmentState.STORED_AT_HOME;
-    return true;
 }
 
 /// Compatibility wrapper retained while Homebase behavior moves to the wife.

@@ -12,6 +12,7 @@ function quest_get_definition(_quest_id)
             return {
                 title: "A Firm Foundation",
                 summary: "Meet the homesteaders and gather the first stone and timber for the cabin foundation.",
+                completion_summary: "You helped the homesteaders secure sixteen fieldstones and a timber log, learned to operate the skidsteer and winch, and unlocked a place to build your own cabin.",
                 rewards: [
                     "Cabin Site Plan",
                     "Cabin Placement Unlocked"
@@ -23,6 +24,7 @@ function quest_get_definition(_quest_id)
     return {
         title: "Unknown Quest",
         summary: "No quest details are available.",
+        completion_summary: "No completion details are available.",
         rewards: []
     };
 }
@@ -108,31 +110,37 @@ function quest_get_objectives(_quest_id)
         game_state.home_inventory,
         ResourceId.TIMBER_LOG
     );
+    var quest_finished = quest_get_status(_quest_id) == QuestStatus.COMPLETE;
 
     return [
         {
             text: "Speak with the Farmer",
-            complete: game_state.tutorial_stage >= TutorialStage.TALK_TO_FARMERS_WIFE
+            complete: quest_finished || game_state.tutorial_stage >= TutorialStage.TALK_TO_FARMERS_WIFE
         },
         {
             text: "Receive the first task from the Farmer's Wife",
-            complete: game_state.tutorial_stage >= TutorialStage.TRIP_ONE_HAND_FIELDSTONE
+            complete: quest_finished || game_state.tutorial_stage >= TutorialStage.TRIP_ONE_HAND_FIELDSTONE
         },
         {
             text: "Deliver 6 small fieldstones by hand (" + string(min(home_stones, 6)) + "/6)",
-            complete: home_stones >= 6
+            complete: quest_finished || home_stones >= 6
         },
         {
             text: "Deliver 10 more fieldstones by work vehicle (" + string(min(home_stones, 16)) + "/16 total)",
-            complete: home_stones >= 16
+            complete: quest_finished || home_stones >= 16
         },
         {
-            text: "Install the mailed winch attachment",
-            complete: game_state.winch_attachment_state == AttachmentState.INSTALLED
+            text: "Collect the mailed winch attachment",
+            complete: quest_finished || game_state.winch_attachment_state == AttachmentState.STORED_AT_HOME
+                || game_state.winch_attachment_state == AttachmentState.INSTALLED
+        },
+        {
+            text: "Install the winch attachment",
+            complete: quest_finished || game_state.winch_attachment_state == AttachmentState.INSTALLED
         },
         {
             text: "Winch and deliver the timber log (" + string(min(home_logs, 1)) + "/1)",
-            complete: home_logs >= 1
+            complete: quest_finished || home_logs >= 1
         }
     ];
 }

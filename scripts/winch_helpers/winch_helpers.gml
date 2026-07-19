@@ -47,7 +47,7 @@ function winch_install_attachment(_vehicle)
     }
 
     game_state.winch_attachment_state = AttachmentState.INSTALLED;
-    game_state.tutorial_stage = TutorialStage.HAUL_FIRST_LOG;
+    game_state.tutorial_stage = TutorialStage.INSPECT_FIRST_LOG;
     _vehicle.winch_state = WinchState.STOWED;
 
     progress_show_reward_summary(
@@ -56,7 +56,7 @@ function winch_install_attachment(_vehicle)
     );
 
     notification_show_hint(
-        "Walk behind the vehicle and press E to take the cable.",
+        "Winch installed. Inspect the marked log before taking the cable.",
         game_get_speed(gamespeed_fps) * 5,
         false
     );
@@ -76,6 +76,13 @@ function winch_take_cable(_vehicle, _actor)
     _vehicle.winch_state = WinchState.CABLE_IN_HAND;
     _vehicle.winch_handler = _actor;
 
+    var game_state = game_state_ensure();
+    if (game_state.tutorial_stage == TutorialStage.TAKE_WINCH_CABLE
+    || game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG)
+    {
+        game_state.tutorial_stage = TutorialStage.ATTACH_CABLE_TO_LOG;
+    }
+
     notification_show_hint(
         "Carry the cable to a large log or boulder and press E.",
         game_get_speed(gamespeed_fps) * 5,
@@ -94,6 +101,12 @@ function winch_stow_cable(_vehicle)
 
     _vehicle.winch_handler = noone;
     _vehicle.winch_state = WinchState.STOWED;
+
+    var game_state = game_state_ensure();
+    if (game_state.tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG)
+    {
+        game_state.tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
+    }
     return true;
 }
 
@@ -130,6 +143,13 @@ function winch_attach_target(_vehicle, _target, _actor)
     _target.tow_vehicle = _vehicle;
     _target.pullable_state = PullableState.ATTACHED;
 
+    var game_state = game_state_ensure();
+    if (game_state.tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG)
+    {
+        game_state.tutorial_stage = TutorialStage.HAUL_FIRST_LOG;
+        save_write();
+    }
+
     notification_show_hint(
         "Winch attached. Return to the vehicle and drive slowly.",
         game_get_speed(gamespeed_fps) * 5,
@@ -159,6 +179,7 @@ function winch_detach_target(_vehicle)
     _vehicle.winch_state = (game_state.winch_attachment_state == AttachmentState.INSTALLED)
         ? WinchState.STOWED
         : WinchState.UNAVAILABLE;
+
 }
 
 function winch_get_drive_multiplier(_vehicle)
@@ -260,10 +281,29 @@ function winch_get_target_prompt(_target, _actor)
 
 function winch_interact_with_target(_target, _actor)
 {
+    var game_state = game_state_ensure();
+    if (game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG)
+    {
+        game_state.tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
+        notification_show_hint(
+            "The log needs the winch. Take the cable from the skidsteer's rear hitch.",
+            game_get_speed(gamespeed_fps) * 5,
+            false
+        );
+        save_write();
+        return;
+    }
+
     if (_target.pullable_state == PullableState.ATTACHED
     && instance_exists(_target.tow_vehicle))
     {
         winch_detach_target(_target.tow_vehicle);
+
+        if (game_state.tutorial_stage == TutorialStage.HAUL_FIRST_LOG)
+        {
+            game_state.tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
+            save_write();
+        }
 
         notification_show_hint(
             "Winch detached.",
@@ -282,7 +322,6 @@ function winch_interact_with_target(_target, _actor)
         return;
     }
 
-    var game_state = game_state_ensure();
     var message = "This is too large to carry by hand.";
 
     switch (game_state.winch_attachment_state)

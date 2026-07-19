@@ -1,5 +1,20 @@
 /// obj_game_controller - Step Event
 
+if (day_transition_active)
+{
+    day_transition_timer += 1;
+    var transition_length = day_transition_fade_frames * 2 + day_transition_hold_frames;
+
+    if (day_transition_timer >= transition_length)
+    {
+        day_transition_active = false;
+        gameplay_set_paused(false);
+        save_write();
+    }
+
+    exit;
+}
+
 if (gameplay_is_paused()) exit;
 
 if (variable_global_exists("save_restore_pending") && global.save_restore_pending)
@@ -9,6 +24,7 @@ if (variable_global_exists("save_restore_pending") && global.save_restore_pendin
 }
 
 gameplay_ensure_controllable_actor();
+tutorial_ensure_winch_package();
 cabin_restore_site();
 calendar_update();
 

@@ -76,9 +76,25 @@ switch (game_state.tutorial_stage)
         trip_label = "Trip 2 of 3";
         tutorial_text = "Deliver 10 fieldstones by skidsteer";
         break;
-    case TutorialStage.WINCH_READY:
+    case TutorialStage.WINCH_PACKAGE_READY:
         trip_label = "Trip 3 of 3";
-        tutorial_text = "Install the winch attachment";
+        tutorial_text = "Collect the winch package";
+        break;
+    case TutorialStage.WINCH_INSTALL_REQUIRED:
+        trip_label = "Trip 3 of 3";
+        tutorial_text = "Install the winch on the skidsteer";
+        break;
+    case TutorialStage.INSPECT_FIRST_LOG:
+        trip_label = "Trip 3 of 3";
+        tutorial_text = "Inspect the large log";
+        break;
+    case TutorialStage.TAKE_WINCH_CABLE:
+        trip_label = "Trip 3 of 3";
+        tutorial_text = "Take the cable from the rear hitch";
+        break;
+    case TutorialStage.ATTACH_CABLE_TO_LOG:
+        trip_label = "Trip 3 of 3";
+        tutorial_text = "Attach the cable to the log";
         break;
     case TutorialStage.HAUL_FIRST_LOG:
         trip_label = "Trip 3 of 3";

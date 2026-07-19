@@ -17,6 +17,9 @@ function calendar_update()
 {
     if (!calendar_should_run()) return;
 
+    var controller = instance_find(obj_game_controller, 0);
+    if (instance_exists(controller) && controller.day_transition_active) return;
+
     var game_state = game_state_ensure();
     var real_seconds = delta_time / 1000000;
     var game_minutes_per_real_second =
@@ -28,7 +31,30 @@ function calendar_update()
     {
         game_state.time_of_day -= CALENDAR_MINUTES_PER_DAY;
         game_state.day_number += 1;
+        calendar_show_day_transition();
     }
+}
+
+function calendar_show_day_transition()
+{
+    var controller = instance_find(obj_game_controller, 0);
+    if (!instance_exists(controller) || controller.day_transition_active) return false;
+
+    var game_state = game_state_ensure();
+    controller.day_transition_active = true;
+    controller.day_transition_timer = 0;
+    controller.day_transition_day = game_state.day_number;
+    controller.day_transition_resources = array_create(ResourceId.COUNT, 0);
+
+    for (var resource_id = 0; resource_id < ResourceId.COUNT; resource_id++)
+    {
+        controller.day_transition_resources[resource_id] =
+            game_state.daily_resources_gathered[resource_id];
+        game_state.daily_resources_gathered[resource_id] = 0;
+    }
+
+    gameplay_set_paused(true);
+    return true;
 }
 
 function calendar_is_nighttime()
@@ -69,13 +95,7 @@ function cabin_sleep_until_morning()
     var game_state = game_state_ensure();
     game_state.day_number += 1;
     game_state.time_of_day = CALENDAR_MORNING_MINUTE;
-
-    notification_show_hint(
-        "You sleep through the night. Day " + string(game_state.day_number)
-            + " begins at 6:00 AM.",
-        game_get_speed(gamespeed_fps) * 5,
-        false
-    );
+    calendar_show_day_transition();
 
     save_write();
     return true;
