@@ -1,5 +1,67 @@
 /// Shared contextual interaction behavior for the on-foot player.
 
+function input_move_x()
+{
+    return clamp(
+        keyboard_check(ord("D")) + keyboard_check(vk_right)
+            - keyboard_check(ord("A")) - keyboard_check(vk_left),
+        -1,
+        1
+    );
+}
+
+function input_move_y()
+{
+    return clamp(
+        keyboard_check(ord("S")) + keyboard_check(vk_down)
+            - keyboard_check(ord("W")) - keyboard_check(vk_up),
+        -1,
+        1
+    );
+}
+
+function input_vehicle_throttle()
+{
+    return -input_move_y();
+}
+
+function input_vehicle_steering()
+{
+    return input_move_x();
+}
+
+function input_interact_pressed()
+{
+    return keyboard_check_pressed(ord("E"));
+}
+
+function input_lock_interaction(_frames)
+{
+    if (!variable_global_exists("interaction_input_lock_frames"))
+    {
+        global.interaction_input_lock_frames = 0;
+    }
+
+    global.interaction_input_lock_frames = max(
+        global.interaction_input_lock_frames,
+        _frames
+    );
+}
+
+function input_interaction_is_locked()
+{
+    return variable_global_exists("interaction_input_lock_frames")
+        && global.interaction_input_lock_frames > 0;
+}
+
+function input_tick_interaction_lock()
+{
+    if (input_interaction_is_locked())
+    {
+        global.interaction_input_lock_frames -= 1;
+    }
+}
+
 function player_find_interactable(_actor)
 {
     var best_target = noone;
@@ -53,6 +115,12 @@ function player_update_interaction(_actor)
     _actor.interaction_target = player_find_interactable(_actor);
     _actor.interaction_prompt = "";
 
+    if (input_interaction_is_locked())
+    {
+        input_tick_interaction_lock();
+        return;
+    }
+
     if (!instance_exists(_actor.interaction_target))
     {
         return;
@@ -61,7 +129,7 @@ function player_update_interaction(_actor)
     var target = _actor.interaction_target;
     _actor.interaction_prompt = target.interaction_get_prompt(_actor);
 
-    if (keyboard_check_pressed(ord("E")))
+    if (input_interact_pressed())
     {
         target.interaction_run(_actor);
     }

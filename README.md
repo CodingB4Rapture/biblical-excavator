@@ -10,7 +10,7 @@ commercialized, or incorporated into another project without permission.
 
 ## Current Prototype Controls
 
-- `WASD`: walk or drive.
+- `WASD` or arrow keys: walk or drive.
 - `E` while driving: exit the vehicle.
 - `E` on foot: use the currently displayed contextual action.
 

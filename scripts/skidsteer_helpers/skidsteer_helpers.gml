@@ -71,9 +71,9 @@ function skidsteer_exit_vehicle()
 function skidsteer_read_input()
 {
     return {
-        throttle: keyboard_check(ord("W")) - keyboard_check(ord("S")),
-        steering: keyboard_check(ord("D")) - keyboard_check(ord("A")),
-        exit_pressed: keyboard_check_pressed(ord("E"))
+        throttle: input_vehicle_throttle(),
+        steering: input_vehicle_steering(),
+        exit_pressed: input_interact_pressed()
     };
 }
 

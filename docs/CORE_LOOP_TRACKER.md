@@ -95,6 +95,16 @@ Seth needs to evaluate these in GameMaker:
 - Should speaking to the wife be required every trip, or should later upgrades
   allow quick unloading?
 
+## Control Helpers
+
+Shared keyboard input lives in
+`scripts/player_interaction_helpers/player_interaction_helpers.gml`.
+
+- `WASD` and arrow keys both drive movement.
+- `E` is the shared interact/enter/exit vehicle button.
+- Dialogue also accepts click, `E`, Enter, or Space. Ending dialogue briefly
+  locks world interaction so the same `E` press does not reopen the NPC.
+
 ## Art Still Needed
 
 Mechanics can be tested before these assets exist:

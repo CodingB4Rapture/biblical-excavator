@@ -20,8 +20,10 @@ interaction_run = function(_actor)
     {
         notification_show_dialogue(
             [
-                "Well, it might not look like much yet, but my wife and I bought this old homestead some years back. The folks before us had left the place to ruin, and it had been sitting that way for a long while.",
-                "We always believed our lives were meant for restoration. So when we first walked onto this property, we knew there was good work waiting here. Work that didn't have to be done in vain.",
+                "Well, it might not look like much yet, but my wife and I bought this old homestead some years back.",
+                "The folks before us had left the place to ruin, and it had been sitting that way for a long while.",
+                "We always believed our lives were meant for restoration. When we first walked onto this property, we knew there was good work waiting here.",
+                "Work that didn't have to be done in vain.",
                 "A good book says, 'The righteous shall inherit the land, and dwell in it forever.'",
                 "My wife makes sure I stay busy enough to dwell on it forever, that's for certain.",
                 "Still, I'm not as young as I used to be. That's why we put out the notice, and why you're standing here now. I'm glad you came.",

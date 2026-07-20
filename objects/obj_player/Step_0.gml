@@ -11,8 +11,8 @@ switch (player_state)
 {
     case PlayerState.WALKING:
     {
-        var move_x = keyboard_check(ord("D")) - keyboard_check(ord("A"));
-        var move_y = keyboard_check(ord("S")) - keyboard_check(ord("W"));
+        var move_x = input_move_x();
+        var move_y = input_move_y();
 
         if (move_x != 0 || move_y != 0)
         {

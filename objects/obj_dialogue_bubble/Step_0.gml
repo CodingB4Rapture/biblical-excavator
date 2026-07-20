@@ -18,6 +18,7 @@ if (dialogue_advance_pressed())
     else
     {
         var finished_action = completion_action;
+        input_lock_interaction(2);
         instance_destroy();
         dialogue_run_completion_action(finished_action);
     }
