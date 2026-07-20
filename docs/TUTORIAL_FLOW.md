@@ -32,6 +32,8 @@ The complete list of durable tutorial stages is `TutorialStage` in
 10. Take the cable from the skidsteer's rear hitch.
 11. Attach the cable to the log.
 12. Haul the log into Home Delivery.
+13. Place the cabin site.
+14. Rest at the cabin site to open the first homestead day.
 
 ## How the systems communicate
 
@@ -48,6 +50,23 @@ The winch package is not placed manually in the room. It is reconstructed beside
 Home Delivery whenever the durable state says the mail is ready. Collecting it
 updates the durable attachment and tutorial states, so saving and loading cannot
 lose the package milestone.
+
+After Quest 1 completes, `HomesteadStage` owns the bridge out of the tutorial.
+Quest completion unlocks cabin placement; placing the site sets
+`FIRST_REST_REQUIRED`; sleeping there sets `HUB_OPEN`.
+
+Cabin placement is not paused. The player can walk or drive while marking a
+site, so the site is not limited to the camera view where the reward dialogue
+finished. Before the first rest, `B` or the Farmer's Wife can reopen placement
+to move the stakes.
+
+While `FIRST_REST_REQUIRED` is active, the right-side status panel and yellow
+guidance arrow point to the placed cabin site. They only read state; the cabin
+interaction performs the actual transition.
+
+Sleeping at the cabin moves the player to a temporary doorway exit below the
+site before the morning fade completes. That exit beat is the intended hook for
+the Farmer approaching about the future workbench area.
 
 ## Safe editing rules
 

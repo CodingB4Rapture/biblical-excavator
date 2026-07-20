@@ -21,6 +21,7 @@ interaction_get_prompt = function(_actor)
 interaction_run = function(_actor)
 {
     var game_state = game_state_ensure();
+    var homestead_stage = homestead_stage_get();
 
     if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
     {
@@ -40,6 +41,38 @@ interaction_run = function(_actor)
             NotificationStyle.PROMPT,
             "FARMER'S WIFE",
             "start_hand_gathering"
+        );
+        return;
+    }
+
+    if (game_state.cabin_placement_unlocked && !game_state.cabin_site_placed)
+    {
+        notification_show_dialogue(
+            [
+                "Walk the land and choose a clear place for the cabin site.",
+                "I can help you mark it now, and you can still move around before you left-click the final spot."
+            ],
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER'S WIFE",
+            "begin_cabin_placement"
+        );
+        return;
+    }
+
+    if (homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
+    {
+        notification_show_dialogue(
+            [
+                "The cabin site is placed. If that spot doesn't feel right yet, we can move the stakes before you rest.",
+                "After the site feels right, rest there and we'll begin the next chapter in the morning."
+            ],
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER'S WIFE",
+            "move_cabin_site"
         );
         return;
     }
@@ -111,8 +144,12 @@ interaction_run = function(_actor)
         return;
     }
 
-    var game_state = game_state_ensure();
     var empty_message = "Nothing to put away yet. Bring home whatever you can use.";
+
+    if (homestead_stage == HomesteadStage.HUB_OPEN)
+    {
+        empty_message = "The cabin site is established. Bring home what you can use, and we'll keep building from there.";
+    }
 
     if (game_state.winch_attachment_state == AttachmentState.INSTALLED)
     {

@@ -64,6 +64,7 @@ if (instance_exists(home_dropoff))
 
 var tutorial_text = "Talk to the Farmer";
 var trip_label = "Before Trip 1";
+var trip_heading = "";
 
 switch (game_state.tutorial_stage)
 {
@@ -102,6 +103,25 @@ switch (game_state.tutorial_stage)
         break;
     case TutorialStage.COMPLETE: trip_label = "Complete"; tutorial_text = "Cabin materials delivered"; break;
 }
+
+if (game_state.cabin_placement_unlocked && !game_state.cabin_site_placed)
+{
+    trip_label = "Cabin Site";
+    tutorial_text = "Walk to your chosen spot, then press B";
+}
+else if (game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
+{
+    trip_label = "Cabin Site";
+    tutorial_text = "Rest at the cabin site to begin morning";
+}
+else if (game_state.homestead_stage == HomesteadStage.HUB_OPEN
+&& game_state.tutorial_stage == TutorialStage.COMPLETE)
+{
+    trip_label = "Homestead Day " + string(game_state.day_number);
+    tutorial_text = "Homestead work can begin";
+}
+
+trip_heading = "Current Trip - " + trip_label;
 
 var screen_margin = 22;
 var trip_right = gui_w - screen_margin;
@@ -186,7 +206,7 @@ draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 
 draw_set_color(accent_color);
-draw_text(trip_left + 12, trip_top + 10, "Current Trip - " + trip_label);
+draw_text(trip_left + 12, trip_top + 10, trip_heading);
 
 draw_set_color(text_color);
 draw_text_ext(

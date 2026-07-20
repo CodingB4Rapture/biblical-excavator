@@ -155,11 +155,54 @@ function game_state_create_default()
         cabin_site_room: "Room1",
         cabin_site_x: 0,
         cabin_site_y: 0,
+        homestead_stage: HomesteadStage.TUTORIAL,
+        first_hub_hint_pending: false,
         day_number: 1,
         // Minutes since midnight; 1080 is 6:00 PM.
         time_of_day: 1080,
         removed_world_ids: []
     };
+}
+
+function homestead_stage_infer(_game_state)
+{
+    if (!_game_state.cabin_site_placed)
+    {
+        return HomesteadStage.TUTORIAL;
+    }
+
+    return (_game_state.day_number > 1)
+        ? HomesteadStage.HUB_OPEN
+        : HomesteadStage.FIRST_REST_REQUIRED;
+}
+
+function homestead_stage_sanitize(_stage, _game_state)
+{
+    if (!is_real(_stage)
+    || _stage < HomesteadStage.TUTORIAL
+    || _stage > HomesteadStage.HUB_OPEN)
+    {
+        return homestead_stage_infer(_game_state);
+    }
+
+    if (!_game_state.cabin_site_placed)
+    {
+        return HomesteadStage.TUTORIAL;
+    }
+
+    return _stage;
+}
+
+function homestead_stage_set(_stage)
+{
+    var game_state = game_state_ensure();
+    game_state.homestead_stage = homestead_stage_sanitize(_stage, game_state);
+    return game_state.homestead_stage;
+}
+
+function homestead_stage_get()
+{
+    return game_state_ensure().homestead_stage;
 }
 
 function game_state_ensure()
@@ -195,9 +238,25 @@ function game_state_ensure()
     {
         global.game_state.cabin_placement_unlocked =
             global.game_state.tutorial_stage == TutorialStage.COMPLETE;
+    }
+
+    if (!variable_struct_exists(global.game_state, "cabin_site_placed"))
+    {
         global.game_state.cabin_site_placed = false;
+    }
+
+    if (!variable_struct_exists(global.game_state, "cabin_site_room"))
+    {
         global.game_state.cabin_site_room = "Room1";
+    }
+
+    if (!variable_struct_exists(global.game_state, "cabin_site_x"))
+    {
         global.game_state.cabin_site_x = 0;
+    }
+
+    if (!variable_struct_exists(global.game_state, "cabin_site_y"))
+    {
         global.game_state.cabin_site_y = 0;
     }
 
@@ -211,6 +270,23 @@ function game_state_ensure()
     if (!variable_struct_exists(global.game_state, "time_of_day"))
     {
         global.game_state.time_of_day = 1080;
+    }
+
+    if (!variable_struct_exists(global.game_state, "homestead_stage"))
+    {
+        global.game_state.homestead_stage = homestead_stage_infer(global.game_state);
+    }
+    else
+    {
+        global.game_state.homestead_stage = homestead_stage_sanitize(
+            global.game_state.homestead_stage,
+            global.game_state
+        );
+    }
+
+    if (!variable_struct_exists(global.game_state, "first_hub_hint_pending"))
+    {
+        global.game_state.first_hub_hint_pending = false;
     }
 
     // Earlier tutorial code collected the mail automatically but left the

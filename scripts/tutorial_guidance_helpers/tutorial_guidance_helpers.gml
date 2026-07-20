@@ -20,6 +20,28 @@ function tutorial_guidance_target()
     var game_state = game_state_ensure();
     var target = noone;
 
+    if (game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
+    {
+        target = instance_find(obj_cabin_site, 0);
+
+        if (instance_exists(target))
+        {
+            return { valid: true, x: target.x, y: target.y };
+        }
+
+        if (game_state.cabin_site_placed
+        && game_state.cabin_site_room == room_get_name(room))
+        {
+            return {
+                valid: true,
+                x: game_state.cabin_site_x,
+                y: game_state.cabin_site_y
+            };
+        }
+
+        return { valid: false, x: 0, y: 0 };
+    }
+
     switch (game_state.tutorial_stage)
     {
         case TutorialStage.TALK_TO_FARMER: target = instance_find(obj_farmer, 0); break;

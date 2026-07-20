@@ -193,6 +193,8 @@ function save_build_snapshot()
             cabin_site_room: game_state.cabin_site_room,
             cabin_site_x: game_state.cabin_site_x,
             cabin_site_y: game_state.cabin_site_y,
+            homestead_stage: game_state.homestead_stage,
+            first_hub_hint_pending: game_state.first_hub_hint_pending,
             day_number: game_state.day_number,
             time_of_day: game_state.time_of_day,
             removed_world_ids: save_clone_array(game_state.removed_world_ids)
@@ -361,15 +363,31 @@ function save_load()
     if (variable_struct_exists(saved_state, "cabin_placement_unlocked"))
     {
         game_state.cabin_placement_unlocked = saved_state.cabin_placement_unlocked;
-        game_state.cabin_site_placed = saved_state.cabin_site_placed;
-        game_state.cabin_site_room = saved_state.cabin_site_room;
-        game_state.cabin_site_x = saved_state.cabin_site_x;
-        game_state.cabin_site_y = saved_state.cabin_site_y;
     }
     else
     {
         game_state.cabin_placement_unlocked =
             game_state.tutorial_stage == TutorialStage.COMPLETE;
+    }
+
+    if (variable_struct_exists(saved_state, "cabin_site_placed"))
+    {
+        game_state.cabin_site_placed = saved_state.cabin_site_placed;
+    }
+
+    if (variable_struct_exists(saved_state, "cabin_site_room"))
+    {
+        game_state.cabin_site_room = saved_state.cabin_site_room;
+    }
+
+    if (variable_struct_exists(saved_state, "cabin_site_x"))
+    {
+        game_state.cabin_site_x = saved_state.cabin_site_x;
+    }
+
+    if (variable_struct_exists(saved_state, "cabin_site_y"))
+    {
+        game_state.cabin_site_y = saved_state.cabin_site_y;
     }
 
     // These optional fields keep earlier format-version-one saves compatible.
@@ -383,7 +401,26 @@ function save_load()
         game_state.time_of_day = saved_state.time_of_day;
     }
 
-    game_state.removed_world_ids = saved_state.removed_world_ids;
+    if (variable_struct_exists(saved_state, "homestead_stage"))
+    {
+        game_state.homestead_stage = homestead_stage_sanitize(
+            saved_state.homestead_stage,
+            game_state
+        );
+    }
+    else
+    {
+        game_state.homestead_stage = homestead_stage_infer(game_state);
+    }
+
+    if (variable_struct_exists(saved_state, "first_hub_hint_pending"))
+    {
+        game_state.first_hub_hint_pending = saved_state.first_hub_hint_pending;
+    }
+
+    game_state.removed_world_ids = variable_struct_exists(saved_state, "removed_world_ids")
+        ? saved_state.removed_world_ids
+        : [];
     global.game_state = game_state;
 
     global.game_settings = {

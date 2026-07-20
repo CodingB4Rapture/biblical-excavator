@@ -105,3 +105,10 @@ enum PullableState
     DELIVERED
 }
 
+enum HomesteadStage
+{
+    TUTORIAL,
+    FIRST_REST_REQUIRED,
+    HUB_OPEN
+}
+

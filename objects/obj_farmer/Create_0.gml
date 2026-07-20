@@ -14,6 +14,7 @@ interaction_get_prompt = function(_actor)
 interaction_run = function(_actor)
 {
     var game_state = game_state_ensure();
+    var homestead_stage = homestead_stage_get();
 
     if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
     {
@@ -31,6 +32,30 @@ interaction_run = function(_actor)
             NotificationStyle.PROMPT,
             "FARMER",
             "finish_farmer_intro"
+        );
+        return;
+    }
+
+    if (homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
+    {
+        notification_show_dialogue(
+            "Cabin site's set. Best thing now is to rest there and start fresh in the morning.",
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER"
+        );
+        return;
+    }
+
+    if (homestead_stage == HomesteadStage.HUB_OPEN)
+    {
+        notification_show_dialogue(
+            "Your cabin site's established. Ordinary homestead work can begin now.",
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER"
         );
         return;
     }

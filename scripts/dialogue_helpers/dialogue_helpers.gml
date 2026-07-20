@@ -62,5 +62,17 @@ function dialogue_run_completion_action(_action)
             cabin_unlock_placement();
             break;
         }
+
+        case "begin_cabin_placement":
+        {
+            cabin_begin_placement(false);
+            break;
+        }
+
+        case "move_cabin_site":
+        {
+            cabin_begin_placement(true);
+            break;
+        }
     }
 }

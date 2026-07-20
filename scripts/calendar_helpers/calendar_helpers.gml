@@ -10,7 +10,8 @@ function calendar_should_run()
 {
     var game_state = game_state_ensure();
     return game_state.tutorial_stage == TutorialStage.COMPLETE
-        && game_state.cabin_site_placed;
+        && game_state.cabin_site_placed
+        && game_state.homestead_stage == HomesteadStage.HUB_OPEN;
 }
 
 function calendar_update()
@@ -57,6 +58,25 @@ function calendar_show_day_transition()
     return true;
 }
 
+function calendar_show_pending_hub_intro()
+{
+    var game_state = game_state_ensure();
+
+    if (!game_state.first_hub_hint_pending
+    || game_state.homestead_stage != HomesteadStage.HUB_OPEN)
+    {
+        return false;
+    }
+
+    game_state.first_hub_hint_pending = false;
+    notification_show_hint(
+        "First homestead morning. Talk with the Farmer's Wife when you're ready for what comes next.",
+        game_get_speed(gamespeed_fps) * 6,
+        false
+    );
+    return true;
+}
+
 function calendar_is_nighttime()
 {
     var time_of_day = game_state_ensure().time_of_day;
@@ -78,8 +98,22 @@ function calendar_get_time_text()
     return string(hour_12) + ":" + minute_text + " " + suffix;
 }
 
-function cabin_sleep_until_morning()
+function cabin_sleep_until_morning(_actor = noone)
 {
+    var game_state = game_state_ensure();
+
+    if (game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
+    {
+        game_state.day_number += 1;
+        game_state.time_of_day = CALENDAR_MORNING_MINUTE;
+        game_state.homestead_stage = HomesteadStage.HUB_OPEN;
+        game_state.first_hub_hint_pending = true;
+        cabin_place_actor_at_exit(_actor);
+        calendar_show_day_transition();
+        save_write();
+        return true;
+    }
+
     if (!calendar_should_run()) return false;
 
     if (!calendar_is_nighttime())
@@ -92,9 +126,9 @@ function cabin_sleep_until_morning()
         return false;
     }
 
-    var game_state = game_state_ensure();
     game_state.day_number += 1;
     game_state.time_of_day = CALENDAR_MORNING_MINUTE;
+    cabin_place_actor_at_exit(_actor);
     calendar_show_day_transition();
 
     save_write();

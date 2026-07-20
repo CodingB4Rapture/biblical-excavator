@@ -9,6 +9,7 @@ if (day_transition_active)
     {
         day_transition_active = false;
         gameplay_set_paused(false);
+        calendar_show_pending_hub_intro();
         save_write();
     }
 
@@ -28,6 +29,11 @@ tutorial_ensure_winch_package();
 cabin_restore_site();
 calendar_update();
 
+if (calendar_show_pending_hub_intro())
+{
+    save_write();
+}
+
 if (variable_global_exists("save_new_game_pending") && global.save_new_game_pending)
 {
     // Wait until all room instances exist, then create the first usable save.
@@ -35,7 +41,9 @@ if (variable_global_exists("save_new_game_pending") && global.save_new_game_pend
     global.save_new_game_pending = false;
 }
 
-if (keyboard_check_pressed(ord("Q")) && !instance_exists(obj_quest_menu))
+if (keyboard_check_pressed(ord("Q"))
+&& !instance_exists(obj_quest_menu)
+&& !instance_exists(obj_cabin_placement_controller))
 {
     instance_create_depth(0, 0, -5000, obj_quest_menu);
     exit;
@@ -43,7 +51,11 @@ if (keyboard_check_pressed(ord("Q")) && !instance_exists(obj_quest_menu))
 
 if (keyboard_check_pressed(ord("B")) && !instance_exists(obj_cabin_placement_controller))
 {
-    cabin_begin_placement();
+    var game_state = game_state_ensure();
+    var allow_relocate = game_state.cabin_site_placed
+        && game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED;
+
+    cabin_begin_placement(allow_relocate);
 
     if (instance_exists(obj_cabin_placement_controller))
     {
@@ -51,7 +63,9 @@ if (keyboard_check_pressed(ord("B")) && !instance_exists(obj_cabin_placement_con
     }
 }
 
-if (keyboard_check_pressed(vk_escape) && !instance_exists(obj_pause_menu))
+if (keyboard_check_pressed(vk_escape)
+&& !instance_exists(obj_pause_menu)
+&& !instance_exists(obj_cabin_placement_controller))
 {
     // Draw after the HUD and dialogue, while staying in a normal UI depth.
     instance_create_depth(0, 0, -5000, obj_pause_menu);
