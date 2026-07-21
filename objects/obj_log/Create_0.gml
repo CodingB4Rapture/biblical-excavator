@@ -27,8 +27,6 @@ tow_vehicle_speed_multiplier = 0.52;
 image_xscale = tree_world_id == "" ? 1 : -1;
 image_speed = 0;
 
-block_radius = 42;
-
 blocked_message = "You can't just drive over that downed tree.";
 blocked_hint = "Hop out and inspect what is blocking the skidsteer.";
 inspect_hint = "Walk to the downed tree and press E to inspect it.";

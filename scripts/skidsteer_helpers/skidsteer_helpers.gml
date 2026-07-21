@@ -111,6 +111,14 @@ function skidsteer_find_log_contact(_next_x, _next_y)
             continue;
         }
 
+        // Use the vehicle and log masks instead of a circular radius. The
+        // downed-tree art is long and shallow, so a circle blocks empty space
+        // above and below the visible tree.
+        if (instance_place(_next_x, _next_y, candidate) == noone)
+        {
+            continue;
+        }
+
         var candidate_distance = point_distance(
             _next_x,
             _next_y,
@@ -118,8 +126,7 @@ function skidsteer_find_log_contact(_next_x, _next_y)
             candidate.y
         );
 
-        if (candidate_distance <= candidate.block_radius
-        && candidate_distance < nearest_distance)
+        if (candidate_distance < nearest_distance)
         {
             hit_log = candidate;
             nearest_distance = candidate_distance;
@@ -224,9 +231,10 @@ function skidsteer_object_blocks_escape(_next_x, _next_y, _object)
 
 function skidsteer_log_blocks_escape(_log, _next_x, _next_y)
 {
-    var current_distance = point_distance(x, y, _log.x, _log.y);
-    if (current_distance > _log.block_radius) return true;
+    if (instance_place(_next_x, _next_y, _log) == noone) return false;
+    if (instance_place(x, y, _log) == noone) return true;
 
+    var current_distance = point_distance(x, y, _log.x, _log.y);
     return point_distance(_next_x, _next_y, _log.x, _log.y) <= current_distance;
 }
 

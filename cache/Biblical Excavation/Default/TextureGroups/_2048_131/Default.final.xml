@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureGroup>
+  <texture scale="1" mipsToGenerate="0" texwidth="2048" texheight="2048">default_0.bz2</texture>
+  <tpe x="2" y="2" tpage="default_0.bz2">initial_background_Biblical Excavation_db6ff584-94d4-460c-8c85-ce5875e4a783.tpe</tpe>
+  <tpe x="2" y="726" tpage="default_0.bz2">menu_background_Biblical Excavation_8091d9b0-29d5-42dd-8c7b-df871fa9079b.tpe</tpe>
+  <tpe x="2" y="1450" tpage="default_0.bz2">Header_font_Biblical Excavation_Header_font.tpe</tpe>
+  <tpe x="1286" y="2" tpage="default_0.bz2">menu_UI_Right_Panel_Biblical Excavation_1cb47a00-9889-45a8-9196-0e0a8cbf7345.tpe</tpe>
+  <tpe x="1286" y="450" tpage="default_0.bz2">menu_UI_Left_Panel_Biblical Excavation_1cb47a00-9889-45a8-9196-0e0a8cbf7345.tpe</tpe>
+  <tpe x="1286" y="898" tpage="default_0.bz2">description_font_Biblical Excavation_description_font.tpe</tpe>
+  <tpe x="1286" y="1158" tpage="default_0.bz2">UI_font_Biblical Excavation_UI_font.tpe</tpe>
+  <tpe x="2" y="1966" tpage="default_0.bz2">menu_UI_Button_Biblical Excavation_31bfb5f9-8e7c-48bc-b847-54be33dda32c.tpe</tpe>
+  <tpe x="426" y="1966" tpage="default_0.bz2">menu_UI_Button_Biblical Excavation_97fa40cf-b4a3-471d-83c0-81646f87a2f1.tpe</tpe>
+  <tpe x="1898" y="2" tpage="default_0.bz2">spr_pond_Biblical Excavation_87c5c898-3090-442b-b117-a7c47950dd21.tpe</tpe>
+  <tpe x="1802" y="450" tpage="default_0.bz2">spr_pond_Biblical Excavation_9c2c9635-3487-4f33-a358-ecbeb5ba4e77.tpe</tpe>
+  <tpe x="1802" y="566" tpage="default_0.bz2">spr_home_cabin_door_Biblical Excavation_bd2382c2-a15b-45bb-80eb-8342e3796a02.tpe</tpe>
+  <tpe x="850" y="1966" tpage="default_0.bz2">spr_cabin_after_Biblical Excavation_2c3cefba-42a3-49da-81bf-cb6a430c8f3a.tpe</tpe>
+  <tpe x="1934" y="118" tpage="default_0.bz2">spr_cabin_before_Biblical Excavation_2c3cefba-42a3-49da-81bf-cb6a430c8f3a.tpe</tpe>
+  <tpe x="1286" y="1418" tpage="default_0.bz2">spr_downed_tree_Biblical Excavation_327a8de3-d875-4b1b-afc6-a14029ad77dd.tpe</tpe>
+  <tpe x="1748" y="450" tpage="default_0.bz2">spr_tree_Biblical Excavation_78009579-b7ad-4e7f-bbd5-0f165cce5eac.tpe</tpe>
+  <tpe x="1870" y="566" tpage="default_0.bz2">spr_fancy_dirt_Biblical Excavation_13eb435b-52d3-457c-af05-a71848979d3b.tpe</tpe>
+  <tpe x="1802" y="730" tpage="default_0.bz2">spr_skidsteer_Biblical Excavation_9a930d9c-d61c-4ce1-b66c-8d9d29e7d209.tpe</tpe>
+  <tpe x="918" y="1966" tpage="default_0.bz2">spr_skidsteer_Biblical Excavation_67d432d7-cba4-4046-9fb1-f87c33a4f941.tpe</tpe>
+  <tpe x="2002" y="118" tpage="default_0.bz2">skidsteer_4state_128x32_Biblical Excavation_cd5a81d8-975f-456e-a25c-9ed9fa222f5f.tpe</tpe>
+  <tpe x="1934" y="186" tpage="default_0.bz2">spr_contact_Biblical Excavation_a48dd020-7f51-40bc-b507-27486d1a003a.tpe</tpe>
+  <tpe x="1898" y="118" tpage="default_0.bz2">spr_contact_Biblical Excavation_f98929f6-9401-4a02-8acb-188cf6b580b5.tpe</tpe>
+  <tpe x="1748" y="513" tpage="default_0.bz2">skidsteer_4state_128x32_Biblical Excavation_d67d960b-c27f-4d9b-8a7e-7fbac10b5cd1.tpe</tpe>
+  <tpe x="1370" y="1418" tpage="default_0.bz2">skidsteer_4state_128x32_Biblical Excavation_3e91ce69-8cb1-4f90-9a9c-75b9eba19f94.tpe</tpe>
+  <tpe x="1906" y="566" tpage="default_0.bz2">skidsteer_4state_128x32_Biblical Excavation_049b5c51-3329-4079-a7b8-34624331fdaf.tpe</tpe>
+  <tpe x="1870" y="602" tpage="default_0.bz2">spr_fieldrock_Biblical Excavation_d63ed18f-ca3b-45ad-bcd7-2cbb09139840.tpe</tpe>
+  <tpe x="1832" y="730" tpage="default_0.bz2">spr_stump_Biblical Excavation_4f1771c4-a327-493c-89c3-bf2b60957b61.tpe</tpe>
+  <tpe x="850" y="2034" tpage="default_0.bz2">spr_fieldrock_Biblical Excavation_f3a0c81c-b3ef-44d5-af8c-20a7ce4117fa.tpe</tpe>
+  <tpe x="1784" y="450" tpage="default_0.bz2">spr_fieldrock_Biblical Excavation_5d653344-8122-4403-92a6-fc4a27ed13c6.tpe</tpe>
+  <tpe x="1802" y="766" tpage="default_0.bz2">spr_fieldstone_Biblical Excavation_b033770e-028d-4f8f-9b75-8c7aa5894f1e.tpe</tpe>
+  <tpe x="948" y="1966" tpage="default_0.bz2">spr_fieldrock_Biblical Excavation_3bae76b6-e089-411a-8fc8-881f3508eeb7.tpe</tpe>
+  <tpe x="918" y="2001" tpage="default_0.bz2">spr_fieldrock_Biblical Excavation_aedf0df4-98f2-4f1e-ac5e-cb9b5b134394.tpe</tpe>
+  <tpe x="2032" y="2" tpage="default_0.bz2">spr_fieldrock_Biblical Excavation_add58de8-afee-47a1-9e66-2782055cef2a.tpe</tpe>
+</TextureGroup>
