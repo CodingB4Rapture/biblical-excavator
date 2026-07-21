@@ -107,6 +107,7 @@
     {"id":{"name":"skidsteer_4state_128x32","path":"sprites/skidsteer_4state_128x32/skidsteer_4state_128x32.yy",},},
     {"id":{"name":"spr_cabin_after","path":"sprites/spr_cabin_after/spr_cabin_after.yy",},},
     {"id":{"name":"spr_cabin_before","path":"sprites/spr_cabin_before/spr_cabin_before.yy",},},
+    {"id":{"name":"spr_chest","path":"sprites/spr_chest/spr_chest.yy",},},
     {"id":{"name":"spr_contact","path":"sprites/spr_contact/spr_contact.yy",},},
     {"id":{"name":"spr_downed_tree","path":"sprites/spr_downed_tree/spr_downed_tree.yy",},},
     {"id":{"name":"spr_fancy_dirt","path":"sprites/spr_fancy_dirt/spr_fancy_dirt.yy",},},
