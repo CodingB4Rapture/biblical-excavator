@@ -20,7 +20,11 @@ switch (player_state)
             var next_x = x + lengthdir_x(move_speed, move_direction);
             var next_y = y + lengthdir_y(move_speed, move_direction);
 
-            if (!collision_circle(next_x, next_y, 6, obj_rock, false, true))
+            if (!player_movement_is_blocked(id, next_x, next_y, 6, obj_fieldrock)
+            && !player_movement_is_blocked(id, next_x, next_y, 6, obj_tree)
+            && !player_movement_is_blocked(id, next_x, next_y, 6, obj_log)
+            && !player_movement_is_blocked(id, next_x, next_y, 6, obj_stump)
+            && !player_movement_is_blocked(id, next_x, next_y, 6, obj_pond))
             {
                 x = clamp(next_x, 0, room_width);
                 y = clamp(next_y, 0, room_height);

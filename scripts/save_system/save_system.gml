@@ -110,6 +110,30 @@ function save_mark_world_removed(_world_id)
     array_push(game_state.removed_world_ids, _world_id);
 }
 
+function save_unmark_world_removed(_world_id)
+{
+    var game_state = game_state_ensure();
+    var kept_ids = [];
+    var removed = false;
+
+    for (var i = 0; i < array_length(game_state.removed_world_ids); i++)
+    {
+        var saved_id = game_state.removed_world_ids[i];
+
+        if (saved_id == _world_id)
+        {
+            removed = true;
+        }
+        else
+        {
+            array_push(kept_ids, saved_id);
+        }
+    }
+
+    game_state.removed_world_ids = kept_ids;
+    return removed;
+}
+
 function save_clone_array(_source)
 {
     var result = array_create(array_length(_source), 0);
@@ -178,6 +202,13 @@ function save_build_snapshot()
         game_state: {
             player_inventory: save_copy_amounts(game_state.player_inventory),
             home_inventory: save_copy_amounts(game_state.home_inventory),
+            tools: {
+                axe_owned: game_state.tools.axe_owned
+            },
+            tutorial_fieldstones_collected: game_state.tutorial_fieldstones_collected,
+            fieldstone_records: save_clone_array(game_state.fieldstone_records),
+            fieldrock_records: save_clone_array(game_state.fieldrock_records),
+            tree_records: save_clone_array(game_state.tree_records),
             trip_rocks_gathered: game_state.trip_rocks_gathered,
             trip_xp_gained: game_state.trip_xp_gained,
             daily_resources_gathered: save_clone_array(game_state.daily_resources_gathered),
@@ -340,6 +371,79 @@ function save_load()
     game_state.tutorial_intro_seen = saved_state.tutorial_intro_seen;
     game_state.tutorial_stage = saved_state.tutorial_stage;
     game_state.tutorial_hand_stones_spawned = saved_state.tutorial_hand_stones_spawned;
+
+    if (variable_struct_exists(saved_state, "tools")
+    && is_struct(saved_state.tools)
+    && variable_struct_exists(saved_state.tools, "axe_owned"))
+    {
+        game_state.tools.axe_owned = saved_state.tools.axe_owned;
+    }
+    else
+    {
+        // Saves from before the axe slice preserve later tutorial progress.
+        game_state.tools.axe_owned = game_state.tutorial_stage != TutorialStage.TALK_TO_FARMER
+            && game_state.tutorial_stage != TutorialStage.TALK_TO_FARMERS_WIFE
+            && game_state.tutorial_stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE;
+    }
+
+    if (variable_struct_exists(saved_state, "tutorial_fieldstones_collected"))
+    {
+        game_state.tutorial_fieldstones_collected = clamp(
+            saved_state.tutorial_fieldstones_collected,
+            0,
+            6
+        );
+    }
+    else
+    {
+        game_state.tutorial_fieldstones_collected = game_state.tools.axe_owned
+            ? 6
+            : min(
+                6,
+                inventory_get_amount(game_state.player_inventory, ResourceId.FIELDSTONE)
+            );
+    }
+
+    if (variable_struct_exists(saved_state, "tree_records")
+    && is_array(saved_state.tree_records))
+    {
+        game_state.tree_records = save_clone_array(saved_state.tree_records);
+
+        // Room-presence tokens are runtime-only. Placed trees will mark the
+        // records that still exist in the current map during room creation.
+        for (var tree_index = 0;
+            tree_index < array_length(game_state.tree_records);
+            tree_index++)
+        {
+            game_state.tree_records[tree_index].seen_token = -1;
+        }
+    }
+
+    if (variable_struct_exists(saved_state, "fieldrock_records")
+    && is_array(saved_state.fieldrock_records))
+    {
+        game_state.fieldrock_records = save_clone_array(saved_state.fieldrock_records);
+
+        for (var fieldrock_index = 0;
+            fieldrock_index < array_length(game_state.fieldrock_records);
+            fieldrock_index++)
+        {
+            game_state.fieldrock_records[fieldrock_index].seen_token = -1;
+        }
+    }
+
+    if (variable_struct_exists(saved_state, "fieldstone_records")
+    && is_array(saved_state.fieldstone_records))
+    {
+        game_state.fieldstone_records = save_clone_array(saved_state.fieldstone_records);
+
+        for (var fieldstone_index = 0;
+            fieldstone_index < array_length(game_state.fieldstone_records);
+            fieldstone_index++)
+        {
+            game_state.fieldstone_records[fieldstone_index].seen_token = -1;
+        }
+    }
 
     if (variable_struct_exists(saved_state, "quest_statuses"))
     {

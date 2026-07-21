@@ -11,6 +11,9 @@ if (instance_number(obj_game_controller) > 1)
     exit;
 }
 
+resource_regeneration_begin_room();
+randomize();
+
 var game_state = game_state_ensure();
 
 // The day card owns its pause and fade independently of menus and dialogue.

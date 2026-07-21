@@ -12,7 +12,7 @@ function quest_get_definition(_quest_id)
             return {
                 title: "A Firm Foundation",
                 summary: "Meet the homesteaders and gather the first stone and timber for the cabin foundation.",
-                completion_summary: "You helped the homesteaders secure sixteen fieldstones and a timber log, learned to operate the skidsteer and winch, and unlocked a place to build your own cabin.",
+                completion_summary: "You helped the homesteaders secure sixteen Fieldstones, a Timber Log, and Small Lumber from the stump; learned to operate the skidsteer and winch; and unlocked a place to build your own cabin.",
                 rewards: [
                     "Cabin Site Plan",
                     "Cabin Placement Unlocked"
@@ -110,6 +110,10 @@ function quest_get_objectives(_quest_id)
         game_state.home_inventory,
         ResourceId.TIMBER_LOG
     );
+    var home_small_lumber = inventory_get_amount(
+        game_state.home_inventory,
+        ResourceId.SMALL_LUMBER
+    );
     var quest_finished = quest_get_status(_quest_id) == QuestStatus.COMPLETE;
 
     return [
@@ -122,8 +126,28 @@ function quest_get_objectives(_quest_id)
             complete: quest_finished || game_state.tutorial_stage >= TutorialStage.TRIP_ONE_HAND_FIELDSTONE
         },
         {
-            text: "Deliver 6 small fieldstones by hand (" + string(min(home_stones, 6)) + "/6)",
-            complete: quest_finished || home_stones >= 6
+            text: "Collect 6 Fieldstones by hand ("
+                + string(min(game_state.tutorial_fieldstones_collected, 6)) + "/6)",
+            complete: quest_finished || game_state.tutorial_fieldstones_collected >= 6
+        },
+        {
+            text: "Receive the gifted axe",
+            complete: quest_finished || game_state.tools.axe_owned
+        },
+        {
+            text: "Use the axe on a standing tree",
+            complete: quest_finished || (
+                game_state.tutorial_stage != TutorialStage.CHOP_TREE
+                && game_state.tools.axe_owned
+            )
+        },
+        {
+            text: "Inspect the fallen tree and stump",
+            complete: quest_finished || (
+                game_state.tools.axe_owned
+                && game_state.tutorial_stage != TutorialStage.CHOP_TREE
+                && game_state.tutorial_stage != TutorialStage.INSPECT_FALLEN_TREE
+            )
         },
         {
             text: "Deliver 10 more fieldstones by work vehicle (" + string(min(home_stones, 16)) + "/16 total)",
@@ -141,6 +165,11 @@ function quest_get_objectives(_quest_id)
         {
             text: "Winch and deliver the timber log (" + string(min(home_logs, 1)) + "/1)",
             complete: quest_finished || home_logs >= 1
+        },
+        {
+            text: "Pull and deliver the stump as Small Lumber ("
+                + string(min(home_small_lumber, 1)) + "/1)",
+            complete: quest_finished || home_small_lumber >= 1
         }
     ];
 }

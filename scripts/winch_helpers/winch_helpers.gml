@@ -84,7 +84,7 @@ function winch_take_cable(_vehicle, _actor)
     }
 
     notification_show_hint(
-        "Carry the cable to a large log or boulder and press E.",
+        "Carry the cable to a downed tree or stump and press E.",
         game_get_speed(gamespeed_fps) * 5,
         false
     );
@@ -118,6 +118,16 @@ function winch_attach_target(_vehicle, _target, _actor)
         return false;
     }
 
+    if (!resource_get_definition(_target.resource_id).can_winch)
+    {
+        notification_show_hint(
+            resource_get_world_name(_target.resource_id) + " cannot be attached to the winch.",
+            game_get_speed(gamespeed_fps) * 2,
+            false
+        );
+        return false;
+    }
+
     var cable_distance = point_distance(
         winch_get_hitch_x(_vehicle),
         winch_get_hitch_y(_vehicle),
@@ -144,7 +154,8 @@ function winch_attach_target(_vehicle, _target, _actor)
     _target.pullable_state = PullableState.ATTACHED;
 
     var game_state = game_state_ensure();
-    if (game_state.tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG)
+    if (game_state.tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG
+    && _target.resource_id == ResourceId.TIMBER_LOG)
     {
         game_state.tutorial_stage = TutorialStage.HAUL_FIRST_LOG;
         save_write();
@@ -187,7 +198,10 @@ function winch_get_drive_multiplier(_vehicle)
     if (_vehicle.winch_state == WinchState.ATTACHED
     && instance_exists(_vehicle.winch_target))
     {
-        return _vehicle.winch_tow_speed_multiplier;
+        var target = _vehicle.winch_target;
+        return variable_instance_exists(target, "tow_vehicle_speed_multiplier")
+            ? target.tow_vehicle_speed_multiplier
+            : _vehicle.winch_tow_speed_multiplier;
     }
 
     return 1;
@@ -249,7 +263,7 @@ function winch_limit_cable_holder(_actor)
 
 function winch_get_target_prompt(_target, _actor)
 {
-    var resource_name = resource_get_name(_target.resource_id);
+    var resource_name = resource_get_world_name(_target.resource_id);
 
     if (_target.pullable_state == PullableState.ATTACHED
     && instance_exists(_target.tow_vehicle))
@@ -282,7 +296,8 @@ function winch_get_target_prompt(_target, _actor)
 function winch_interact_with_target(_target, _actor)
 {
     var game_state = game_state_ensure();
-    if (game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG)
+    if (game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG
+    && _target.resource_id == ResourceId.TIMBER_LOG)
     {
         game_state.tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
         notification_show_hint(

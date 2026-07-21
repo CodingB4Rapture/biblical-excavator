@@ -42,19 +42,19 @@ Good next scaffolds:
 - `AttachmentState`: shared names for no attachment, winch equipped, winch attached, and winch pulling.
 - `obj_game_controller`: shared game mode, player mode, and high-level setup.
 
-## Rock Reward Flow
+## Fieldrock Reward Flow
 
-Rocks use `RockState`:
+Fieldrocks use `FieldrockState`:
 
-- `WAITING`: rock is idle.
+- `WAITING`: Fieldrock is idle.
 - `STRUGGLING`: skidsteer has started crushing it.
-- `BREAKING`: reward has been given and the rock is about to smoke/destroy.
+- `BREAKING`: reward has been given and the Fieldrock is about to smoke/destroy.
 
 The intended feel is:
 
 `contact -> stage 1 chance for +5 XP -> stage 2 chance for +10 XP -> stage 3 breaks for +25 XP`
 
-Rewards flow through `progress_award_rock`, which updates totals and shows both top-left GUI reward text and a floating XP drop near the skidsteer.
+Rewards flow through `resource_progress_helpers`, which updates totals and shows both top-left GUI reward text and a floating XP drop near the skidsteer.
 
 ## Haul And Drop-Off Flow
 
@@ -64,18 +64,36 @@ The trip haul now has three separate owners:
 - Vehicle cargo: `10` loose Fieldstones.
 - Homebase: unlimited placeholder household storage.
 
-The player can press `E` near a waiting rock to pocket it. Crushing a rock still
-loads the vehicle and awards Equipment XP.
+The player can press `E` near a small Fieldstone to pocket it. Fieldrocks cannot
+be gathered by hand; crushing one loads Fieldstone cargo into the vehicle and
+awards Equipment XP.
 
 The wife performs the Homebase transfer. The vehicle must be parked in the Home
 Delivery circle to unload its cargo, while backpack contents transfer directly.
 Large winched objects remain physical until they are inside that circle.
 
-After three non-empty deliveries, the wife reports that a winch attachment has
-arrived by mail. The player can install it on the vehicle, take the cable from
-the rear hitch, attach it to the log, and tow the log into the delivery circle.
+Downed trees and stumps share `obj_pullable_parent`. Home Delivery stores a
+downed tree as a Timber Log and converts a delivered stump into one Small
+Lumber before removing the physical object and saving its absent world state.
 
-The `obj_rock_controller` records rock spawn points and respawns depleted rocks after a delay. Tree spawning should get its own separate controller later.
+After the sixteen-Fieldstone tutorial delivery, the wife reports that a winch
+attachment has arrived by mail. The player installs it, delivers the downed tree
+as a Timber Log, then returns for the stump and delivers it as Small Lumber.
+
+The `obj_rock_controller` now restores depleted Fieldrocks at their original
+spawn after one in-game day. `obj_tree_controller` separately restores a felled
+tree three days after both its downed tree and stump have been delivered. Neither
+resource appears while its spawn point is occupied. Tutorial hand-Fieldstones
+remain one-time pickups.
+
+See `docs/RESOURCE_REGENERATION.md` for the complete lifecycle and tuning points.
 
 See `docs/CORE_LOOP_TRACKER.md` for controls, tuning locations, art needs, and
 the current human playtest checkpoints.
+
+## Inventory Menu
+
+`obj_inventory_menu` is a separate paused overlay patterned after the Quest
+Journal. `I` or `Tab` toggles it, `Escape` closes it, Left/Right or mouse clicks
+select Backpack, Vehicle, Homebase, and Tools. The menu reads existing inventory
+structures and unlock flags; it does not own or duplicate inventory data.

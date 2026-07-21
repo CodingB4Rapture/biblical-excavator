@@ -161,20 +161,21 @@ function skidsteer_handle_log_contact(_log)
     }
 }
 
-function skidsteer_handle_rock_contact(_rock, _input)
+function skidsteer_handle_fieldrock_contact(_fieldrock, _input)
 {
     drive_speed = 0;
 
     if (_input.throttle > 0)
     {
-        if (!progress_can_collect_rocks(1) && _rock.rock_state == RockState.WAITING)
+        if (!progress_can_crush_resource(_fieldrock.resource_id)
+        && _fieldrock.fieldrock_state == FieldrockState.WAITING)
         {
             skidsteer_start_contact_visual(SkidsteerState.CONTACT_BLOCKED);
 
             if (carry_full_hint_cooldown <= 0)
             {
                 notification_show_hint(
-                    "Rock carry is full. Drop off at Homebase.",
+                    "Fieldstone cargo is full. Drop off at Homebase.",
                     game_get_speed(gamespeed_fps) * 3,
                     false
                 );
@@ -187,14 +188,14 @@ function skidsteer_handle_rock_contact(_rock, _input)
 
         skidsteer_start_contact_visual(SkidsteerState.CRUSHING);
 
-        with (_rock)
+        with (_fieldrock)
         {
-            if (rock_state == RockState.WAITING)
+            if (fieldrock_state == FieldrockState.WAITING)
             {
-                rock_state = RockState.STRUGGLING;
-                rock_reward_source = other.id;
-                rock_stage = 0;
-                rock_tick_timer = rock_tick_time;
+                fieldrock_state = FieldrockState.STRUGGLING;
+                fieldrock_reward_source = other.id;
+                fieldrock_stage = 0;
+                fieldrock_tick_timer = fieldrock_tick_time;
                 image_index = 0;
                 image_speed = 0;
             }
@@ -204,6 +205,29 @@ function skidsteer_handle_rock_contact(_rock, _input)
     {
         skidsteer_state = SkidsteerState.CONTACT_BLOCKED;
     }
+}
+
+/// A vehicle already overlapping a rearranged world object may reverse out.
+/// New collisions still block normally.
+function skidsteer_object_blocks_escape(_next_x, _next_y, _object)
+{
+    var next_hit = instance_place(_next_x, _next_y, _object);
+    if (!instance_exists(next_hit)) return false;
+
+    var current_hit = instance_place(x, y, _object);
+    if (!instance_exists(current_hit)) return true;
+
+    var current_distance = point_distance(x, y, current_hit.x, current_hit.y);
+    var next_distance = point_distance(_next_x, _next_y, current_hit.x, current_hit.y);
+    return next_distance <= current_distance;
+}
+
+function skidsteer_log_blocks_escape(_log, _next_x, _next_y)
+{
+    var current_distance = point_distance(x, y, _log.x, _log.y);
+    if (current_distance > _log.block_radius) return true;
+
+    return point_distance(_next_x, _next_y, _log.x, _log.y) <= current_distance;
 }
 
 function skidsteer_try_move()
@@ -218,16 +242,24 @@ function skidsteer_try_move()
     var next_y = y + move_y;
 
     var hit_log = skidsteer_find_log_contact(next_x, next_y);
-    if (hit_log != noone)
+    if (hit_log != noone && skidsteer_log_blocks_escape(hit_log, next_x, next_y))
     {
         skidsteer_handle_log_contact(hit_log);
         return;
     }
 
-    var hit_rock = instance_place(next_x, next_y, obj_rock);
-    if (hit_rock != noone)
+    var hit_fieldrock = instance_place(next_x, next_y, obj_fieldrock);
+    if (hit_fieldrock != noone
+    && skidsteer_object_blocks_escape(next_x, next_y, obj_fieldrock))
     {
-        skidsteer_handle_rock_contact(hit_rock, skidsteer_input);
+        skidsteer_handle_fieldrock_contact(hit_fieldrock, skidsteer_input);
+        return;
+    }
+
+    if (skidsteer_object_blocks_escape(next_x, next_y, obj_pond))
+    {
+        drive_speed = 0;
+        skidsteer_start_contact_visual(SkidsteerState.CONTACT_BLOCKED);
         return;
     }
 
@@ -281,9 +313,11 @@ function skidsteer_get_interaction_prompt(_vehicle, _actor)
 {
     var game_state = game_state_ensure();
 
-    if (game_state.tutorial_stage < TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE)
+    if (!tutorial_can_use_skidsteer())
     {
-        return "Finish hand-gathering first";
+        return game_state.tutorial_stage == TutorialStage.CHOP_TREE
+            ? "Chop a standing tree first"
+            : "Finish hand-gathering first";
     }
 
     if (game_state.winch_attachment_state == AttachmentState.STORED_AT_HOME)
@@ -316,9 +350,12 @@ function skidsteer_run_interaction(_vehicle, _actor)
 {
     var game_state = game_state_ensure();
 
-    if (game_state.tutorial_stage < TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE)
+    if (!tutorial_can_use_skidsteer())
     {
-        notification_show_hint("Finish the first six hand-gathered fieldstones before using the skidsteer.", game_get_speed(gamespeed_fps) * 3, false);
+        var blocked_message = game_state.tutorial_stage == TutorialStage.CHOP_TREE
+            ? "Use your new axe on a standing tree before taking the skidsteer."
+            : "Finish the first six hand-gathered Fieldstones before using the skidsteer.";
+        notification_show_hint(blocked_message, game_get_speed(gamespeed_fps) * 3, false);
         return;
     }
 

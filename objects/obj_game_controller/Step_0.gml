@@ -24,6 +24,16 @@ if (variable_global_exists("save_restore_pending") && global.save_restore_pendin
     global.save_restore_pending = false;
 }
 
+if (!instance_exists(obj_fieldstone_controller))
+{
+    instance_create_depth(0, 0, 1000, obj_fieldstone_controller);
+}
+
+if (!instance_exists(obj_tree_controller))
+{
+    instance_create_depth(0, 0, 1000, obj_tree_controller);
+}
+
 gameplay_ensure_controllable_actor();
 tutorial_ensure_winch_package();
 cabin_restore_site();
@@ -43,9 +53,19 @@ if (variable_global_exists("save_new_game_pending") && global.save_new_game_pend
 
 if (keyboard_check_pressed(ord("Q"))
 && !instance_exists(obj_quest_menu)
+&& !instance_exists(obj_inventory_menu)
 && !instance_exists(obj_cabin_placement_controller))
 {
     instance_create_depth(0, 0, -5000, obj_quest_menu);
+    exit;
+}
+
+if ((keyboard_check_pressed(ord("I")) || keyboard_check_pressed(vk_tab))
+&& !instance_exists(obj_inventory_menu)
+&& !instance_exists(obj_quest_menu)
+&& !instance_exists(obj_cabin_placement_controller))
+{
+    instance_create_depth(0, 0, -5000, obj_inventory_menu);
     exit;
 }
 
@@ -65,6 +85,8 @@ if (keyboard_check_pressed(ord("B")) && !instance_exists(obj_cabin_placement_con
 
 if (keyboard_check_pressed(vk_escape)
 && !instance_exists(obj_pause_menu)
+&& !instance_exists(obj_inventory_menu)
+&& !instance_exists(obj_quest_menu)
 && !instance_exists(obj_cabin_placement_controller))
 {
     // Draw after the HUD and dialogue, while staying in a normal UI depth.

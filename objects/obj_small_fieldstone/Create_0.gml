@@ -32,5 +32,5 @@ interaction_get_prompt = function(_actor)
 
 interaction_run = function(_actor)
 {
-    progress_collect_rock_by_hand(id);
+    progress_collect_resource_by_hand(id);
 };

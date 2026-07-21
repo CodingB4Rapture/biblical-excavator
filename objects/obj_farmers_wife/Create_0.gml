@@ -33,7 +33,7 @@ interaction_run = function(_actor)
     {
         notification_show_dialogue(
             [
-                "For the cabin foundation, we need 16 fieldstones and one good log. First, bring me 6 small loose stones by hand.",
+                "For the cabin foundation, we need 16 Fieldstones and one good log. First, gather 6 small loose Fieldstones by hand.",
                 "After that, the work vehicle can handle the remaining 10. Take your time—something is coming that will help us handle the log afterward."
             ],
             id,
@@ -153,7 +153,12 @@ interaction_run = function(_actor)
 
     if (game_state.winch_attachment_state == AttachmentState.INSTALLED)
     {
-        empty_message = "The winch is ready. Large logs belong inside the delivery circle.";
+        empty_message = "The winch is ready. Downed trees and stumps belong inside the delivery circle.";
+    }
+
+    if (game_state.tutorial_stage == TutorialStage.PULL_STUMP)
+    {
+        empty_message = "The Timber Log is stored. Pull the stump into Home Delivery so we can recover Small Lumber.";
     }
 
     notification_show_dialogue(

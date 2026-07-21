@@ -1,38 +1,42 @@
 /// obj_log - Create Event
 
+event_inherited();
 game_state_ensure();
 
-resource_id = ResourceId.TIMBER_LOG;
-world_id = "tutorial_log_1";
+if (!variable_instance_exists(id, "tree_world_id")) tree_world_id = "";
 
-if (save_world_id_is_removed(world_id))
+resource_id = ResourceId.TIMBER_LOG;
+world_id = tree_world_id != ""
+    ? tree_world_id + "_downed"
+    : "world_log_" + room_get_name(room) + "_"
+        + string(round(x)) + "_" + string(round(y));
+
+var removed_by_legacy_id = tree_world_id == ""
+    && round(x) == 384
+    && round(y) == 64
+    && save_world_id_is_removed("tutorial_log_1");
+
+if (save_world_id_is_removed(world_id) || removed_by_legacy_id)
 {
     instance_destroy();
     exit;
 }
 
-pullable_state = PullableState.FREE;
-tow_vehicle = noone;
-tow_pull_speed = 1.1;
+tow_pull_speed = tree_world_id == "" ? 1.1 : 0.65;
+tow_vehicle_speed_multiplier = 0.52;
+image_xscale = tree_world_id == "" ? 1 : -1;
+image_speed = 0;
 
-block_radius = 34;
-notice_time = game_get_speed(gamespeed_fps) * 3;
-notice_cooldown = 0;
+block_radius = 42;
 
-blocked_message = "You remember someone saying:\ \ 'You can't just drive over that log, kid.' ";
-blocked_hint = "Press 'E' to Hop out and check what's blocking you.";
-inspect_hint = "Walk over to the log and press 'E' to inspect it.";
+blocked_message = "You can't just drive over that downed tree.";
+blocked_hint = "Hop out and inspect what is blocking the skidsteer.";
+inspect_hint = "Walk to the downed tree and press E to inspect it.";
 
-interaction_enabled = true;
-interaction_radius = 30;
-interaction_priority = 20;
-
-interaction_get_prompt = function(_actor)
-{
-    return winch_get_target_prompt(id, _actor);
-};
-
+interaction_radius = 34;
+interaction_priority = 28;
 interaction_run = function(_actor)
 {
+    if (tree_world_id != "" && tutorial_report_felled_tree_inspected()) return;
     winch_interact_with_target(id, _actor);
 };

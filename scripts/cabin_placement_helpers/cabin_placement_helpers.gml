@@ -33,8 +33,9 @@ function cabin_placement_is_valid(_x, _y, _ignore_existing_site = false)
     if (!cabin_point_is_clear_of_object(_x, _y, obj_skidsteer, 64)) return false;
     if (!cabin_point_is_clear_of_object(_x, _y, obj_farmer, 56)) return false;
     if (!cabin_point_is_clear_of_object(_x, _y, obj_farmers_wife, 56)) return false;
-    if (!cabin_point_is_clear_of_object(_x, _y, obj_rock, 48)) return false;
+    if (!cabin_point_is_clear_of_object(_x, _y, obj_fieldrock, 48)) return false;
     if (!cabin_point_is_clear_of_object(_x, _y, obj_log, 52)) return false;
+    if (!cabin_point_is_clear_of_object(_x, _y, obj_pond, 96)) return false;
     if (!_ignore_existing_site
     && !cabin_point_is_clear_of_object(_x, _y, obj_cabin_site, 72)) return false;
 

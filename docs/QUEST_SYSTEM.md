@@ -6,14 +6,17 @@ This quest is the complete introductory gameplay loop:
 
 1. Speak with the Farmer.
 2. Receive the first task from the Farmer's Wife.
-3. Deliver 6 small fieldstones by hand.
-4. Deliver 10 more fieldstones with the work vehicle.
-5. Receive and install the winch attachment.
-6. Winch the timber log into Home Delivery and turn it in.
+3. Collect 6 small Fieldstones by hand and receive the axe.
+4. Chop the marked tree and inspect its downed tree and stump.
+5. Crush 10 Fieldrocks with the work vehicle and deliver all 16 Fieldstones.
+6. Receive and install the winch attachment.
+7. Winch the downed tree into Home Delivery as a Timber Log.
+8. Winch the stump into Home Delivery as Small Lumber.
 
 The quest begins after the player reaches the final page of the Farmer's first
-conversation. A centered banner announces its start. Delivering the log
-finishes the quest and displays a centered completion banner.
+conversation. A centered banner announces its start. Delivering the Timber Log
+reveals the final stump objective; delivering the stump as Small Lumber finishes
+the quest and displays a centered completion banner.
 
 Completing the quest records these rewards in the journal:
 
@@ -42,6 +45,9 @@ The journal pauses gameplay and uses a reusable two-pane layout:
 The list supports mouse-wheel scrolling and Up/Down navigation, so future
 quests only need a `QuestId`, definition, status entry, and objective provider;
 they do not need a custom journal object.
+
+Press `I` or `Tab` to open the separate Inventory menu. It pauses gameplay and
+reads Backpack, Vehicle, Homebase, and Tools data without owning those values.
 
 Quest status is included in `save_slot_1.json`. Older version-one saves infer
 the first quest's status from their tutorial stage.

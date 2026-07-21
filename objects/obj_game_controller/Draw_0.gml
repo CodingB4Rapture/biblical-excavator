@@ -4,6 +4,7 @@
 if (gameplay_is_paused()
 || dialogue_is_active()
 || instance_exists(obj_quest_menu)
+|| instance_exists(obj_inventory_menu)
 || instance_exists(obj_pause_menu)
 || instance_exists(obj_cabin_placement_controller)) exit;
 

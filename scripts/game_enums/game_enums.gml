@@ -21,16 +21,24 @@ enum NotificationStyle
     PROMPT
 }
 
-enum RockState
+enum FieldrockState
 {
     WAITING,
     STRUGGLING,
     BREAKING
 }
 
+enum TreeState
+{
+    STANDING,
+    CHOPPING,
+    FALLING,
+    FELLED
+}
+
 enum TutorialStage
 {
-    // Values 0-6 stay stable so existing save files remain compatible.
+    // Values 0-10 stay stable so existing save files remain compatible.
     TALK_TO_FARMER = 0,
     TALK_TO_FARMERS_WIFE = 1,
     TRIP_ONE_HAND_FIELDSTONE = 2,
@@ -41,7 +49,11 @@ enum TutorialStage
     WINCH_INSTALL_REQUIRED = 7,
     INSPECT_FIRST_LOG = 8,
     TAKE_WINCH_CABLE = 9,
-    ATTACH_CABLE_TO_LOG = 10
+    ATTACH_CABLE_TO_LOG = 10,
+    // New tutorial beats append values so legacy saves keep their meaning.
+    CHOP_TREE = 11,
+    INSPECT_FALLEN_TREE = 12,
+    PULL_STUMP = 13
 }
 
 enum QuestId
@@ -65,15 +77,18 @@ enum CameraMode
 
 enum ResourceId
 {
-    FIELDSTONE,
-    TIMBER_LOG,
+    // Keep existing numeric IDs stable for format-version-one saves.
+    FIELDSTONE = 0,
+    TIMBER_LOG = 1,
+    FIELDROCK = 2,
+    SMALL_LUMBER = 3,
     COUNT
 }
 
 enum ResourceCategory
 {
-    ROCK,
-    LOG
+    STONE,
+    LUMBER
 }
 
 enum ResourceSize

@@ -13,11 +13,33 @@ function resource_get_definition(_resource_id)
         {
             return {
                 name: "Fieldstone",
-                category: ResourceCategory.ROCK,
+                world_name: "Fieldstone",
+                category: ResourceCategory.STONE,
                 size: ResourceSize.SMALL,
                 can_pocket: true,
                 can_vehicle_carry: true,
-                can_winch: false
+                can_winch: false,
+                world_sprite: spr_fieldstone,
+                crush_result_id: -1,
+                crush_result_amount: 0,
+                delivery_result_id: ResourceId.FIELDSTONE
+            };
+        }
+
+        case ResourceId.FIELDROCK:
+        {
+            return {
+                name: "Fieldrock",
+                world_name: "Fieldrock",
+                category: ResourceCategory.STONE,
+                size: ResourceSize.LARGE,
+                can_pocket: false,
+                can_vehicle_carry: false,
+                can_winch: false,
+                world_sprite: spr_fieldrock,
+                crush_result_id: ResourceId.FIELDSTONE,
+                crush_result_amount: 1,
+                delivery_result_id: -1
             };
         }
 
@@ -25,22 +47,49 @@ function resource_get_definition(_resource_id)
         {
             return {
                 name: "Timber Log",
-                category: ResourceCategory.LOG,
+                world_name: "Downed Tree",
+                category: ResourceCategory.LUMBER,
                 size: ResourceSize.LARGE,
                 can_pocket: false,
                 can_vehicle_carry: false,
-                can_winch: true
+                can_winch: true,
+                world_sprite: spr_downed_tree,
+                crush_result_id: -1,
+                crush_result_amount: 0,
+                delivery_result_id: ResourceId.TIMBER_LOG
+            };
+        }
+
+        case ResourceId.SMALL_LUMBER:
+        {
+            return {
+                name: "Small Lumber",
+                world_name: "Stump",
+                category: ResourceCategory.LUMBER,
+                size: ResourceSize.LARGE,
+                can_pocket: false,
+                can_vehicle_carry: false,
+                can_winch: true,
+                world_sprite: spr_stump,
+                crush_result_id: -1,
+                crush_result_amount: 0,
+                delivery_result_id: ResourceId.SMALL_LUMBER
             };
         }
     }
 
     return {
         name: "Unknown Resource",
-        category: ResourceCategory.ROCK,
+        world_name: "Unknown Resource",
+        category: ResourceCategory.STONE,
         size: ResourceSize.SMALL,
         can_pocket: false,
         can_vehicle_carry: false,
-        can_winch: false
+        can_winch: false,
+        world_sprite: -1,
+        crush_result_id: -1,
+        crush_result_amount: 0,
+        delivery_result_id: -1
     };
 }
 
@@ -55,6 +104,34 @@ function inventory_create(_capacity)
         capacity: _capacity,
         amounts: array_create(ResourceId.COUNT, 0)
     };
+}
+
+function resource_get_world_name(_resource_id)
+{
+    return resource_get_definition(_resource_id).world_name;
+}
+
+function inventory_ensure_size(_inventory)
+{
+    if (!is_struct(_inventory)) return inventory_create(0);
+
+    if (!variable_struct_exists(_inventory, "capacity"))
+    {
+        _inventory.capacity = 0;
+    }
+
+    if (!variable_struct_exists(_inventory, "amounts") || !is_array(_inventory.amounts))
+    {
+        _inventory.amounts = array_create(ResourceId.COUNT, 0);
+        return _inventory;
+    }
+
+    while (array_length(_inventory.amounts) < ResourceId.COUNT)
+    {
+        array_push(_inventory.amounts, 0);
+    }
+
+    return _inventory;
 }
 
 function inventory_get_amount(_inventory, _resource_id)
@@ -140,6 +217,14 @@ function game_state_create_default()
     return {
         player_inventory: inventory_create(6),
         home_inventory: inventory_create(-1),
+        tools: {
+            axe_owned: false
+        },
+        tutorial_fieldstones_collected: 0,
+        fieldstone_records: [],
+        fieldrock_records: [],
+        tree_records: [],
+        // Legacy format-v1 save key; the value now counts gathered Fieldstones.
         trip_rocks_gathered: 0,
         trip_xp_gained: 0,
         daily_resources_gathered: array_create(ResourceId.COUNT, 0),
@@ -215,6 +300,54 @@ function game_state_ensure()
     if (!variable_struct_exists(global.game_state, "removed_world_ids"))
     {
         global.game_state.removed_world_ids = [];
+    }
+
+    global.game_state.player_inventory = inventory_ensure_size(global.game_state.player_inventory);
+    global.game_state.home_inventory = inventory_ensure_size(global.game_state.home_inventory);
+
+    if (!variable_struct_exists(global.game_state, "tools")
+    || !is_struct(global.game_state.tools))
+    {
+        global.game_state.tools = {
+            axe_owned: global.game_state.tutorial_stage != TutorialStage.TALK_TO_FARMER
+                && global.game_state.tutorial_stage != TutorialStage.TALK_TO_FARMERS_WIFE
+                && global.game_state.tutorial_stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE
+        };
+    }
+
+    if (!variable_struct_exists(global.game_state.tools, "axe_owned"))
+    {
+        global.game_state.tools.axe_owned = global.game_state.tutorial_stage != TutorialStage.TALK_TO_FARMER
+            && global.game_state.tutorial_stage != TutorialStage.TALK_TO_FARMERS_WIFE
+            && global.game_state.tutorial_stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE;
+    }
+
+    if (!variable_struct_exists(global.game_state, "tutorial_fieldstones_collected"))
+    {
+        global.game_state.tutorial_fieldstones_collected = global.game_state.tools.axe_owned
+            ? 6
+            : min(
+                6,
+                inventory_get_amount(global.game_state.player_inventory, ResourceId.FIELDSTONE)
+            );
+    }
+
+    if (!variable_struct_exists(global.game_state, "tree_records")
+    || !is_array(global.game_state.tree_records))
+    {
+        global.game_state.tree_records = [];
+    }
+
+    if (!variable_struct_exists(global.game_state, "fieldrock_records")
+    || !is_array(global.game_state.fieldrock_records))
+    {
+        global.game_state.fieldrock_records = [];
+    }
+
+    if (!variable_struct_exists(global.game_state, "fieldstone_records")
+    || !is_array(global.game_state.fieldstone_records))
+    {
+        global.game_state.fieldstone_records = [];
     }
 
     if (!variable_struct_exists(global.game_state, "quest_statuses"))
@@ -300,6 +433,11 @@ function game_state_ensure()
     if (!variable_struct_exists(global.game_state, "daily_resources_gathered"))
     {
         global.game_state.daily_resources_gathered = array_create(ResourceId.COUNT, 0);
+    }
+
+    while (array_length(global.game_state.daily_resources_gathered) < ResourceId.COUNT)
+    {
+        array_push(global.game_state.daily_resources_gathered, 0);
     }
 
     return global.game_state;

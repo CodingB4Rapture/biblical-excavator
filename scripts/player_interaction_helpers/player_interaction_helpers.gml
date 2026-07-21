@@ -202,6 +202,66 @@ function player_draw_interaction(_actor)
     draw_set_color(c_white);
 }
 
+/// Obstacles block entry, but an actor already overlapping one may move away.
+/// This also recovers saves when world objects have been rearranged around the
+/// player. Comparing against the current overlap avoids trapping the actor in
+/// clusters where collision_circle returns a different neighboring instance.
+function player_movement_is_blocked(_actor, _next_x, _next_y, _radius, _object)
+{
+    var next_hit = collision_circle(
+        _next_x,
+        _next_y,
+        _radius,
+        _object,
+        false,
+        true
+    );
+    if (!instance_exists(next_hit)) return false;
+
+    var current_hit = collision_circle(
+        _actor.x,
+        _actor.y,
+        _radius,
+        _object,
+        false,
+        true
+    );
+    if (!instance_exists(current_hit)) return true;
+
+    var current_distance = point_distance(_actor.x, _actor.y, current_hit.x, current_hit.y);
+    var next_distance = point_distance(_next_x, _next_y, current_hit.x, current_hit.y);
+    return next_distance <= current_distance;
+}
+
+/// Shared world-space progress bar for timed interactions.
+function world_draw_progress_bar(_x, _y, _width, _progress, _label)
+{
+    var progress = clamp(_progress, 0, 1);
+    var bar_height = 5;
+    var left = _x - _width * 0.5;
+    var right = _x + _width * 0.5;
+    var top = _y;
+    var bottom = top + bar_height;
+
+    draw_set_alpha(0.94);
+    draw_set_color(make_color_rgb(66, 45, 25));
+    draw_rectangle(left - 1, top - 1, right + 1, bottom + 1, false);
+    draw_set_color(make_color_rgb(28, 25, 20));
+    draw_rectangle(left, top, right, bottom, false);
+    draw_set_color(make_color_rgb(222, 167, 65));
+    draw_rectangle(left, top, lerp(left, right, progress), bottom, false);
+
+    draw_set_alpha(1);
+    draw_set_font(-1);
+    draw_set_halign(fa_center);
+    draw_set_valign(fa_bottom);
+    draw_set_color(make_color_rgb(255, 240, 208));
+    draw_text_transformed(_x, top - 2, _label, 0.45, 0.45, 0);
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+    draw_set_color(c_white);
+}
+
 /// Small ground marker used for named people and important world locations.
 function world_draw_location_marker(_x, _y, _label, _accent, _radius = 7)
 {

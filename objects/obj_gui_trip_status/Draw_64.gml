@@ -8,17 +8,17 @@ var vehicle = progress_get_vehicle();
 var player = instance_find(obj_player, 0);
 var home_dropoff = instance_find(obj_homebase_dropoff, 0);
 
-var pocket_rocks = inventory_get_amount(
+var pocket_fieldstones = inventory_get_amount(
     game_state.player_inventory,
     ResourceId.FIELDSTONE
 );
 
-var vehicle_rocks = 0;
+var vehicle_fieldstones = 0;
 var vehicle_capacity = 0;
 
 if (instance_exists(vehicle))
 {
-    vehicle_rocks = inventory_get_amount(
+    vehicle_fieldstones = inventory_get_amount(
         vehicle.cargo_inventory,
         ResourceId.FIELDSTONE
     );
@@ -26,7 +26,7 @@ if (instance_exists(vehicle))
     vehicle_capacity = vehicle.cargo_inventory.capacity;
 }
 
-var home_rocks = inventory_get_amount(
+var home_fieldstones = inventory_get_amount(
     game_state.home_inventory,
     ResourceId.FIELDSTONE
 );
@@ -34,6 +34,11 @@ var home_rocks = inventory_get_amount(
 var home_logs = inventory_get_amount(
     game_state.home_inventory,
     ResourceId.TIMBER_LOG
+);
+
+var home_small_lumber = inventory_get_amount(
+    game_state.home_inventory,
+    ResourceId.SMALL_LUMBER
 );
 
 // Homebase details are contextual. They appear only while the controlled
@@ -71,11 +76,20 @@ switch (game_state.tutorial_stage)
     case TutorialStage.TALK_TO_FARMERS_WIFE: tutorial_text = "Talk to Farmer's Wife"; break;
     case TutorialStage.TRIP_ONE_HAND_FIELDSTONE:
         trip_label = "Trip 1 of 3";
-        tutorial_text = "Deliver 6 small fieldstones by hand";
+        tutorial_text = "Collect 6 Fieldstones by hand ("
+            + string(game_state.tutorial_fieldstones_collected) + "/6)";
+        break;
+    case TutorialStage.CHOP_TREE:
+        trip_label = "Axe Work";
+        tutorial_text = "Use the gifted axe on a standing tree";
+        break;
+    case TutorialStage.INSPECT_FALLEN_TREE:
+        trip_label = "Axe Work";
+        tutorial_text = "Inspect the fallen tree and stump";
         break;
     case TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE:
         trip_label = "Trip 2 of 3";
-        tutorial_text = "Deliver 10 fieldstones by skidsteer";
+        tutorial_text = "Crush 10 Fieldrocks, then deliver all 16 Fieldstones";
         break;
     case TutorialStage.WINCH_PACKAGE_READY:
         trip_label = "Trip 3 of 3";
@@ -100,6 +114,10 @@ switch (game_state.tutorial_stage)
     case TutorialStage.HAUL_FIRST_LOG:
         trip_label = "Trip 3 of 3";
         tutorial_text = "Winch the log to Home Delivery";
+        break;
+    case TutorialStage.PULL_STUMP:
+        trip_label = "Trip 3 of 3";
+        tutorial_text = "Winch the stump to Home Delivery for Small Lumber";
         break;
     case TutorialStage.COMPLETE: trip_label = "Complete"; tutorial_text = "Cabin materials delivered"; break;
 }
@@ -220,14 +238,14 @@ draw_text_ext(
 draw_text(
     trip_left + 12,
     trip_top + 64,
-    "Backpack: " + string(pocket_rocks)
+    "Backpack: " + string(pocket_fieldstones)
     + " / " + string(game_state.player_inventory.capacity)
 );
 
 draw_text(
     trip_left + 12,
     trip_top + 82,
-    "Vehicle stone: " + string(vehicle_rocks)
+    "Vehicle stone: " + string(vehicle_fieldstones)
     + " / " + string(vehicle_capacity)
 );
 
@@ -240,11 +258,11 @@ draw_text(
 
 draw_set_color(accent_color);
 draw_set_halign(fa_right);
-var journal_prompt = "[Q] Quest Journal";
+var journal_prompt = "[I/Tab] Inventory  [Q] Quest Journal";
 
 if (game_state.cabin_placement_unlocked && !game_state.cabin_site_placed)
 {
-    journal_prompt = "[Q] Journal  [B] Cabin Site";
+    journal_prompt = "[I/Tab] Inventory  [Q] Journal  [B] Cabin Site";
 }
 
 draw_text(trip_right - 12, trip_top + 118, journal_prompt);
@@ -259,14 +277,15 @@ if (show_homebase)
     draw_text(
         home_left + 12,
         home_top + 32,
-        "Stored: " + string(home_rocks) + " Fieldstone, "
-        + string(home_logs) + " Logs"
+        "Stored: " + string(home_fieldstones) + " Fieldstone, "
+        + string(home_logs) + " Logs, "
+        + string(home_small_lumber) + " Small Lumber"
     );
 
     draw_text(
         home_left + 12,
         home_top + 50,
-        "Cabin goal: " + string(home_rocks) + " / 16 stone, "
+        "Cabin goal: " + string(home_fieldstones) + " / 16 stone, "
         + string(home_logs) + " / 1 log"
     );
 

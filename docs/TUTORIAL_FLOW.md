@@ -7,7 +7,7 @@ This document is the plain-language map for changing or discussing the tutorial.
 When working on the tutorial, first ask which question the change answers:
 
 - **What did the player collect or deliver?**  
-  `scripts/progress_award_rock/progress_award_rock.gml`
+  `scripts/resource_progress_helpers/resource_progress_helpers.gml`
 - **Did that action complete an objective, and what comes next?**  
   `scripts/tutorial_progression_helpers/tutorial_progression_helpers.gml`
 - **Where should the yellow arrow point right now?**  
@@ -23,17 +23,18 @@ The complete list of durable tutorial stages is `TutorialStage` in
 1. Talk to the Farmer.
 2. Talk to the Farmer's Wife and finish her task dialogue.
 3. Gather six small fieldstones by hand.
-4. Deliver them to Home Delivery.
-5. Enter the skidsteer and gather ten more fieldstones.
-6. Deliver those stones.
-7. Collect the mailed winch package beside Home Delivery.
-8. Install the winch on the skidsteer.
-9. Inspect or encounter the large tutorial log.
+4. Receive the axe and chop the marked standing tree.
+5. Inspect the resulting downed tree and stump.
+6. Enter the skidsteer and crush ten Fieldrocks into Fieldstone cargo.
+7. Deliver all sixteen Fieldstones to Home Delivery.
+8. Collect the mailed winch package beside Home Delivery.
+9. Install the winch on the skidsteer.
 10. Take the cable from the skidsteer's rear hitch.
-11. Attach the cable to the log.
-12. Haul the log into Home Delivery.
-13. Place the cabin site.
-14. Rest at the cabin site to open the first homestead day.
+11. Attach the cable to the downed tree and haul it into Home Delivery.
+12. Attach the cable to the stump and deliver it as Small Lumber.
+13. Open Inventory with `I` or `Tab` to inspect the resulting supplies and tools.
+14. Place the cabin site.
+15. Rest at the cabin site to open the first homestead day.
 
 ## How the systems communicate
 
@@ -50,6 +51,12 @@ The winch package is not placed manually in the room. It is reconstructed beside
 Home Delivery whenever the durable state says the mail is ready. Collecting it
 updates the durable attachment and tutorial states, so saving and loading cannot
 lose the package milestone.
+
+The Inventory menu is a separate read-only UI object. It reads the player
+backpack and Homebase inventories from durable game state, vehicle cargo from
+the live skidsteer, and tool unlocks from the persistent tools and attachment
+state. It pauses gameplay like the Quest Journal without owning or copying any
+inventory values.
 
 After Quest 1 completes, `HomesteadStage` owns the bridge out of the tutorial.
 Quest completion unlocks cabin placement; placing the site sets

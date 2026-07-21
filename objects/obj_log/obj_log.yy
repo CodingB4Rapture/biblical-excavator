@@ -4,7 +4,6 @@
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":3,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
-    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":8,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
   "name":"obj_log",
@@ -14,8 +13,8 @@
     "path":"folders/World/Resources.yy",
   },
   "parentObjectId":{
-    "name":"obj_interactable_parent",
-    "path":"objects/obj_interactable_parent/obj_interactable_parent.yy",
+    "name":"obj_pullable_parent",
+    "path":"objects/obj_pullable_parent/obj_pullable_parent.yy",
   },
   "persistent":false,
   "physicsAngularDamping":0.1,
@@ -34,7 +33,7 @@
   "resourceType":"GMObject",
   "resourceVersion":"2.0",
   "solid":false,
-  "spriteId":null,
+  "spriteId":{"name":"spr_downed_tree","path":"sprites/spr_downed_tree/spr_downed_tree.yy",},
   "spriteMaskId":null,
   "visible":true,
 }
