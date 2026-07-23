@@ -1,86 +1,73 @@
 # Tutorial Flow
 
-This document is the plain-language map for changing or discussing the tutorial.
+This document is the plain-language map for changing the tutorial.
 
-## Three questions, three code locations
+## Ownership
 
-When working on the tutorial, first ask which question the change answers:
-
-- **What did the player collect or deliver?**  
+- Resource collection and delivery facts:
   `scripts/resource_progress_helpers/resource_progress_helpers.gml`
-- **Did that action complete an objective, and what comes next?**  
+- Objective event handling:
   `scripts/tutorial_progression_helpers/tutorial_progression_helpers.gml`
-- **Where should the yellow arrow point right now?**  
+- Task acceptance, completion, claims, quests, stages, and story unlocks:
+  `scripts/progression_helpers/progression_helpers.gml`
+- Read-only guidance descriptors:
   `scripts/tutorial_guidance_helpers/tutorial_guidance_helpers.gml`
+- Missing durable room objects:
+  `scripts/room_reconciliation_helpers/room_reconciliation_helpers.gml`
 
-Winch mechanics remain in `scripts/winch_helpers/winch_helpers.gml`. Dialogue
-completion callbacks remain in `scripts/dialogue_helpers/dialogue_helpers.gml`.
-The complete list of durable tutorial stages is `TutorialStage` in
-`scripts/game_enums/game_enums.gml`.
+Winch mechanics remain in `winch_helpers`. Dialogue dispatch remains in
+`dialogue_helpers`. Persisted enum IDs remain in `game_enums`.
 
 ## Player-facing sequence
 
-1. Talk to the Farmer.
-2. Talk to the Farmer's Wife and finish her task dialogue.
-3. Gather six small fieldstones by hand.
-4. Receive the axe and chop the marked standing tree.
-5. Inspect the resulting downed tree and stump.
-6. Enter the skidsteer and crush ten Fieldrocks into Fieldstone cargo.
-7. Deliver all sixteen Fieldstones to Home Delivery.
-8. Collect the mailed winch package beside Home Delivery.
-9. Install the winch on the skidsteer.
-10. Take the cable from the skidsteer's rear hitch.
-11. Attach the cable to the downed tree and haul it into Home Delivery.
-12. Attach the cable to the stump and deliver it as Small Lumber.
-13. Open Inventory with `I` or `Tab` to inspect the resulting supplies and tools.
-14. Place the cabin site.
-15. Rest at the cabin site to open the first homestead day.
+1. Talk to the Farmer; `A Firm Foundation` starts.
+2. Talk to the Farmer's Wife; she posts the first board assignment.
+3. Accept `Fieldstone by Hand`, gather six loose Fieldstones, then claim it.
+4. Accept `A Fallen Tree`, fell and inspect a tree, then claim it.
+5. Accept `Stone Haul`, crush ten Fieldrocks, deliver all sixteen Fieldstones,
+   then claim it to trigger the mailed winch.
+6. Accept `Fit the Winch`, collect and install the attachment, then claim it.
+7. Accept `Timber Delivery`, deliver the log and stump, then claim it.
+8. `A Firm Foundation` completes and `A Place of Your Own` starts.
+9. Accept `Park the Skidsteer`; park inside the pad, stop, detach any tow, exit,
+   and claim the task.
+10. Accept `Mark the Cabin Site`; choose the site, create the fixed boundary,
+    add one front gate, and claim the task.
+11. Accept `Build the Cabin`; build at the marked site and claim the task.
+12. Rest at the finished cabin to open the first homestead day.
 
-## How the systems communicate
+## Communication rules
 
-Collection code creates a small delivery result struct. It passes that result to
-`tutorial_process_delivery`, which may advance the stage and annotate the result
-with events such as `mail_became_ready` or `quest_completed`. The Wife and Home
-Delivery use those event fields to choose the appropriate dialogue.
+World systems report facts. Progression validates the currently active task and
+performs the durable transition. A completed task returns guidance to the Task
+Board; claiming it applies its complete reward transaction and exposes the next
+assignment.
 
-The arrow does not change tutorial progress. Every frame it reads the current
-stage and returns either one world position or no target. This keeps visual
-guidance from accidentally completing objectives.
+Task start/completion presentations queue while the board is open and play only
+after the world is visible. Objective completion in the world uses the smaller
+return-to-board hint.
 
-The winch package is not placed manually in the room. It is reconstructed beside
-Home Delivery whenever the durable state says the mail is ready. Collecting it
-updates the durable attachment and tutorial states, so saving and loading cannot
-lose the package milestone.
+Guidance returns a descriptor containing room, target kind, stable world ID
+when available, coordinates, and label. `obj_tutorial_guidance` owns the world
+marker and the labeled edge arrow. Guidance never advances progression or
+creates objects.
 
-The Inventory menu is a separate read-only UI object. It reads the player
-backpack and Homebase inventories from durable game state, vehicle cargo from
-the live skidsteer, and tool unlocks from the persistent tools and attachment
-state. It pauses gameplay like the Quest Journal without owning or copying any
-inventory values.
+The room reconciler reconstructs the mailed winch package beside Home Delivery
+when durable state requires it. Cabin and fence restoration use the same
+idempotent room-change path.
 
-After Quest 1 completes, `HomesteadStage` owns the bridge out of the tutorial.
-Quest completion unlocks cabin placement; placing the site sets
-`FIRST_REST_REQUIRED`; sleeping there sets `HUB_OPEN`.
-
-Cabin placement is not paused. The player can walk or drive while marking a
-site, so the site is not limited to the camera view where the reward dialogue
-finished. Before the first rest, `B` or the Farmer's Wife can reopen placement
-to move the stakes.
-
-While `FIRST_REST_REQUIRED` is active, the right-side status panel and yellow
-guidance arrow point to the placed cabin site. They only read state; the cabin
-interaction performs the actual transition.
-
-Sleeping at the cabin moves the player to a temporary doorway exit below the
-site before the morning fade completes. That exit beat is the intended hook for
-the Farmer approaching about the future workbench area.
+`TutorialStage` numeric values are persisted and intentionally append-only.
+Never compare their raw values for story order; use `tutorial_stage_rank` or an
+explicit predicate.
 
 ## Safe editing rules
 
-- Add a new durable milestone to `TutorialStage` before targeting it with an arrow.
-- Advance stages in progression or domain-action code, never in drawing code.
-- Keep `tutorial_guidance_target` read-only except for reconstructing a missing
-  package instance.
-- Preserve the explicit numeric values of existing stages for save compatibility.
-- If a temporary action cannot be reconstructed after loading, recover to the
-  nearest earlier actionable stage, as the held winch cable currently does.
+- Append persisted enum IDs; never reorder them.
+- Add definitions and durable fields before adding presentation.
+- Route runtime task, quest, stage, and story-unlock writes through progression.
+- Complete tasks from gameplay events, not from Draw/status queries.
+- Validate every reward before applying any reward.
+- Keep guidance and journal/task read models free of world mutation.
+- Add room restoration to the reconciler rather than a per-frame Draw query.
+- Preserve the one-active-task invariant.
+- Add v3 migration before changing the v2 schema incompatibly.

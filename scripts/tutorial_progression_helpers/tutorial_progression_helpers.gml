@@ -71,7 +71,9 @@ function tutorial_report_hand_collection(_resource_id)
     if (_resource_id != ResourceId.FIELDSTONE) return false;
 
     var game_state = game_state_ensure();
-    if (game_state.tutorial_stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE)
+    if (!task_is_active(TaskId.FIELDSTONE_BY_HAND, game_state)
+    || game_state.tutorial_stage
+        != TutorialStage.TRIP_ONE_HAND_FIELDSTONE)
     {
         return false;
     }
@@ -81,21 +83,16 @@ function tutorial_report_hand_collection(_resource_id)
         game_state.tutorial_fieldstones_collected + 1
     );
 
-    if (game_state.tutorial_fieldstones_collected < 6
-    || game_state.tools.axe_owned)
+    if (!progression_complete_hand_gathering_state(game_state))
     {
         return false;
     }
-
-    // Grant before displaying or saving so reloads can never repeat the gift.
-    game_state.tools.axe_owned = true;
-    game_state.tutorial_stage = TutorialStage.CHOP_TREE;
 
     var wife = instance_find(obj_farmers_wife, 0);
     notification_show_dialogue(
         [
             "Six good Fieldstones. The Farmer has gifted you an axe for the next part of the work.",
-            "You do not need to equip it. Find a standing tree and use E nearby to begin chopping."
+            "Your assignment is complete. Return to the Task Board to record it and accept the next work."
         ],
         wife,
         0,
@@ -104,8 +101,8 @@ function tutorial_report_hand_collection(_resource_id)
     );
 
     notification_show_hint(
-        "Axe received - find a standing tree.",
-        game_get_speed(gamespeed_fps) * 5,
+        "Task complete - return to the Task Board to claim it.",
+        game_get_speed(gamespeed_fps) * 6,
         false
     );
 
@@ -115,20 +112,27 @@ function tutorial_report_hand_collection(_resource_id)
 
 function tutorial_can_use_skidsteer()
 {
-    var stage = game_state_ensure().tutorial_stage;
-    return stage != TutorialStage.TALK_TO_FARMER
-        && stage != TutorialStage.TALK_TO_FARMERS_WIFE
-        && stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE
-        && stage != TutorialStage.CHOP_TREE
-        && stage != TutorialStage.INSPECT_FALLEN_TREE;
+    var game_state = game_state_ensure();
+    if (game_state.tutorial_stage == TutorialStage.COMPLETE) return true;
+
+    return task_is_active(TaskId.STONE_HAUL, game_state)
+        || task_is_active(TaskId.FIT_THE_WINCH, game_state)
+        || task_is_active(TaskId.TIMBER_DELIVERY, game_state);
 }
 
 function tutorial_report_tree_felled()
 {
     var game_state = game_state_ensure();
-    if (game_state.tutorial_stage != TutorialStage.CHOP_TREE) return false;
+    if (!task_is_active(TaskId.FALLEN_TREE, game_state)
+    || game_state.tutorial_stage != TutorialStage.CHOP_TREE)
+    {
+        return false;
+    }
 
-    game_state.tutorial_stage = TutorialStage.INSPECT_FALLEN_TREE;
+    progression_set_tutorial_stage(
+        game_state,
+        TutorialStage.INSPECT_FALLEN_TREE
+    );
     notification_show_hint(
         "The trunk and stump are too heavy to carry. Inspect the fallen tree.",
         game_get_speed(gamespeed_fps) * 5,
@@ -141,25 +145,16 @@ function tutorial_report_tree_felled()
 function tutorial_report_felled_tree_inspected()
 {
     var game_state = game_state_ensure();
-    if (game_state.tutorial_stage != TutorialStage.INSPECT_FALLEN_TREE)
+    if (!task_is_active(TaskId.FALLEN_TREE, game_state)
+    || game_state.tutorial_stage
+        != TutorialStage.INSPECT_FALLEN_TREE)
     {
         return false;
     }
 
-    game_state.tutorial_stage = TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE;
-    var wife = instance_find(obj_farmers_wife, 0);
-    notification_show_dialogue(
-        [
-            "That trunk and stump are too heavy to carry. Leave them here until the winch is available.",
-            "Keep your six Fieldstones in the backpack. Use the skidsteer to crush 10 Fieldrocks, then bring both loads to Home Delivery."
-        ],
-        wife,
-        0,
-        NotificationStyle.PROMPT,
-        "FARMER'S WIFE"
-    );
+    task_complete(TaskId.FALLEN_TREE);
     notification_show_hint(
-        "Crush 10 Fieldrocks, then deliver all 16 Fieldstones at Home Delivery.",
+        "Task complete - return to the Task Board to claim it.",
         game_get_speed(gamespeed_fps) * 6,
         false
     );
@@ -177,20 +172,32 @@ function tutorial_process_delivery(_delivery)
         ResourceId.SMALL_LUMBER
     );
 
-    if (game_state.tutorial_stage == TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE
+    if (task_is_active(TaskId.STONE_HAUL, game_state)
+    && game_state.tutorial_stage
+        == TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE
     && home_stones >= 16
-    && game_state.winch_attachment_state == AttachmentState.LOCKED)
+    && game_state.tutorial_fieldrocks_crushed >= 10)
     {
-        game_state.winch_attachment_state = AttachmentState.MAIL_READY;
-        game_state.tutorial_stage = TutorialStage.WINCH_PACKAGE_READY;
-        _delivery.mail_became_ready = true;
+        _delivery.task_completed = task_complete(TaskId.STONE_HAUL);
+        if (_delivery.task_completed)
+        {
+            notification_show_hint(
+                "Stone Haul complete - return to the Task Board.",
+                game_get_speed(gamespeed_fps) * 6,
+                false
+            );
+        }
     }
 
-    if (game_state.tutorial_stage == TutorialStage.HAUL_FIRST_LOG
+    if (task_is_active(TaskId.TIMBER_DELIVERY, game_state)
+    && game_state.tutorial_stage == TutorialStage.HAUL_FIRST_LOG
     && home_stones >= 16
     && home_logs >= 1)
     {
-        game_state.tutorial_stage = TutorialStage.PULL_STUMP;
+        progression_set_tutorial_stage(
+            game_state,
+            TutorialStage.PULL_STUMP
+        );
 
         if (home_small_lumber < 1)
         {
@@ -204,16 +211,21 @@ function tutorial_process_delivery(_delivery)
 
     // Separate checks intentionally allow a player who delivered both physical
     // pieces together to complete the sequence in the same unloading action.
-    if (game_state.tutorial_stage == TutorialStage.PULL_STUMP
+    if (task_is_active(TaskId.TIMBER_DELIVERY, game_state)
+    && game_state.tutorial_stage == TutorialStage.PULL_STUMP
     && home_stones >= 16
     && home_logs >= 1
     && home_small_lumber >= 1)
     {
-        game_state.tutorial_stage = TutorialStage.COMPLETE;
-        _delivery.quest_completed = quest_complete(QuestId.FIRM_FOUNDATION);
+        progression_set_tutorial_stage(
+            game_state,
+            TutorialStage.COMPLETE
+        );
+        _delivery.task_completed =
+            task_complete(TaskId.TIMBER_DELIVERY);
         notification_show_hint(
-            "Stump delivered as Small Lumber. The cabin materials are home.",
-            game_get_speed(gamespeed_fps) * 5,
+            "Timber Delivery complete - return to the Task Board.",
+            game_get_speed(gamespeed_fps) * 6,
             false
         );
     }
@@ -222,10 +234,9 @@ function tutorial_process_delivery(_delivery)
 function tutorial_collect_winch_package()
 {
     var game_state = game_state_ensure();
-    if (game_state.winch_attachment_state != AttachmentState.MAIL_READY) return false;
+    if (!progression_collect_winch_package_state(game_state))
+        return false;
 
-    game_state.winch_attachment_state = AttachmentState.STORED_AT_HOME;
-    game_state.tutorial_stage = TutorialStage.WINCH_INSTALL_REQUIRED;
     save_write();
     return true;
 }

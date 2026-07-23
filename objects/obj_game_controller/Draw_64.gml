@@ -1,5 +1,5 @@
 /// obj_game_controller - Draw GUI Event
-/// Full-screen day transition and standalone daily resource summary.
+/// Full-screen day transition and daily summary.
 
 if (!day_transition_active) exit;
 

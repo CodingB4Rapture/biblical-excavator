@@ -41,13 +41,27 @@ if (!preview_in_room)
 }
 else if (gate_mode)
 {
-    placement_result = fence_try_place_gate(
-        planned_records,
-        planning_room_name,
-        preview_x,
-        preview_y,
-        outside_gate_count
-    );
+    if (cabin_tutorial_mode && preview_y != tutorial_bounds.max_y)
+    {
+        placement_result = {
+            valid: false,
+            message: "Place the gate on the highlighted front (south) side.",
+            records: planned_records,
+            gate_x: preview_x,
+            gate_y: preview_y
+        };
+    }
+    else
+    {
+        placement_result = fence_try_place_gate(
+            planned_records,
+            planning_room_name,
+            preview_x,
+            preview_y,
+            outside_gate_count,
+            planning_purpose
+        );
+    }
 }
 else if (anchor_set)
 {
@@ -56,17 +70,38 @@ else if (anchor_set)
         anchor_x,
         anchor_y,
         preview_x,
-        preview_y
+        preview_y,
+        planning_purpose
     );
-    placement_result = fence_try_add_rectangle(
-        planned_records,
-        planning_room_name,
-        anchor_x,
-        anchor_y,
+
+    if (cabin_tutorial_mode
+    && !cabin_fence_point_is_opposite_corner(
         preview_x,
         preview_y,
-        outside_gate_count
-    );
+        anchor_x,
+        anchor_y,
+        tutorial_bounds
+    ))
+    {
+        placement_result = {
+            valid: false,
+            message: "Click the highlighted corner opposite your first choice.",
+            records: planned_records
+        };
+    }
+    else
+    {
+        placement_result = fence_try_add_rectangle(
+            planned_records,
+            planning_room_name,
+            anchor_x,
+            anchor_y,
+            preview_x,
+            preview_y,
+            outside_gate_count,
+            planning_purpose
+        );
+    }
     placement_result.gate_x = preview_x;
     placement_result.gate_y = preview_y;
 }
@@ -77,11 +112,19 @@ else
         preview_x,
         preview_y
     ) == -1;
+    var first_corner_allowed = !cabin_tutorial_mode
+        || cabin_fence_point_is_corner(
+            preview_x,
+            preview_y,
+            tutorial_bounds
+        );
     placement_result = {
-        valid: first_corner_clear,
-        message: first_corner_clear
-            ? "Click to set the first corner."
-            : "Choose an empty grid cell for the first corner.",
+        valid: first_corner_clear && first_corner_allowed,
+        message: !first_corner_allowed
+            ? "Choose one of the four highlighted corners."
+            : (first_corner_clear
+                ? "Click to set the first corner."
+                : "Choose an empty grid cell for the first corner."),
         records: planned_records,
         gate_x: preview_x,
         gate_y: preview_y
@@ -100,8 +143,12 @@ if (keyboard_check_pressed(ord("G")))
     anchor_set = false;
     preview_records = [];
     status_message = gate_mode
-        ? "Gate mode ON: click a straight horizontal fence side."
-        : "Rectangle mode: click the first corner.";
+        ? (cabin_tutorial_mode
+            ? "Step 2: click the highlighted front side to install one gate."
+            : "Gate mode ON: click a straight horizontal fence side.")
+        : (cabin_tutorial_mode
+            ? "Step 1: click a highlighted corner, then its opposite."
+            : "Rectangle mode: click the first corner.");
     exit;
 }
 
@@ -122,7 +169,13 @@ if (keyboard_check_pressed(ord("F")))
 {
     anchor_set = false;
     preview_records = [];
-    layout_status = fence_layout_status(planned_records, outside_gate_count);
+    layout_status = cabin_tutorial_mode
+        ? cabin_fence_plot_status(
+            planned_records,
+            planning_room_name,
+            tutorial_bounds
+        )
+        : fence_layout_status(planned_records, outside_gate_count);
 
     if (!layout_status.valid)
     {
@@ -136,12 +189,20 @@ if (keyboard_check_pressed(ord("F")))
     }
 
     fence_commit_room_records(planning_room_name, planned_records);
+
+    if (cabin_tutorial_mode)
+    {
+        progression_complete_cabin_fence_state(game_state_ensure());
+    }
+
     save_write();
     global.fence_toggle_ready_at = current_time + 100;
     notification_show_hint(
-        "Fence plan saved.",
-        game_get_speed(gamespeed_fps) * 3,
-        false
+        cabin_tutorial_mode
+            ? "Objective complete — return to the Task Board."
+            : "Fence plan saved.",
+        game_get_speed(gamespeed_fps) * (cabin_tutorial_mode ? 5 : 3),
+        cabin_tutorial_mode
     );
     instance_destroy();
     exit;
@@ -157,6 +218,21 @@ if (mouse_check_button_pressed(mb_right))
     }
     else
     {
+        var selected_index = fence_find_record(
+            planned_records,
+            preview_x,
+            preview_y
+        );
+
+        if (!cabin_tutorial_mode
+        && selected_index != -1
+        && fence_record_purpose(planned_records[selected_index])
+            == FENCE_PURPOSE_CABIN_SITE)
+        {
+            status_message = "The marked cabin boundary is part of the established site.";
+            exit;
+        }
+
         var removal = fence_remove_gate_at(
             planned_records,
             preview_x,
@@ -177,10 +253,16 @@ if (mouse_check_button_pressed(mb_right))
         if (removal.removed)
         {
             planned_records = removal.records;
-            layout_status = fence_layout_status(
-                planned_records,
-                outside_gate_count
-            );
+            layout_status = cabin_tutorial_mode
+                ? cabin_fence_plot_status(
+                    planned_records,
+                    planning_room_name,
+                    tutorial_bounds
+                )
+                : fence_layout_status(
+                    planned_records,
+                    outside_gate_count
+                );
             fence_refresh_room_instances(
                 planned_records,
                 true,
@@ -206,11 +288,19 @@ if (mouse_check_button_pressed(mb_left))
     if (gate_mode)
     {
         planned_records = placement_result.records;
-        layout_status = fence_layout_status(
-            planned_records,
-            outside_gate_count
-        );
-        status_message = "Gate installed. Press G to return to rectangle mode.";
+        layout_status = cabin_tutorial_mode
+            ? cabin_fence_plot_status(
+                planned_records,
+                planning_room_name,
+                tutorial_bounds
+            )
+            : fence_layout_status(
+                planned_records,
+                outside_gate_count
+            );
+        status_message = cabin_tutorial_mode
+            ? layout_status.message
+            : "Gate installed. Press G to return to rectangle mode.";
         fence_refresh_room_instances(
             planned_records,
             true,
@@ -229,11 +319,19 @@ if (mouse_check_button_pressed(mb_left))
         planned_records = placement_result.records;
         anchor_set = false;
         preview_records = [];
-        layout_status = fence_layout_status(
-            planned_records,
-            outside_gate_count
-        );
-        status_message = "Enclosure placed. Add another or press F to save.";
+        layout_status = cabin_tutorial_mode
+            ? cabin_fence_plot_status(
+                planned_records,
+                planning_room_name,
+                tutorial_bounds
+            )
+            : fence_layout_status(
+                planned_records,
+                outside_gate_count
+            );
+        status_message = cabin_tutorial_mode
+            ? layout_status.message
+            : "Enclosure placed. Add another or press F to save.";
         fence_refresh_room_instances(
             planned_records,
             true,

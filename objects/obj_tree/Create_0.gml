@@ -47,6 +47,13 @@ interaction_get_prompt = function(_actor)
         return "Inspect standing tree";
     }
 
+    var game_state = game_state_ensure();
+    if (game_state.tutorial_stage != TutorialStage.COMPLETE
+    && !task_is_active(TaskId.FALLEN_TREE, game_state))
+    {
+        return "Accept A Fallen Tree at the Task Board";
+    }
+
     if (tree_state == TreeState.CHOPPING)
     {
         return "Chopping - stay close";
@@ -62,6 +69,18 @@ interaction_run = function(_actor)
         notification_show_hint(
             "You would need an axe for this.",
             game_get_speed(gamespeed_fps) * 2,
+            false
+        );
+        return;
+    }
+
+    var game_state = game_state_ensure();
+    if (game_state.tutorial_stage != TutorialStage.COMPLETE
+    && !task_is_active(TaskId.FALLEN_TREE, game_state))
+    {
+        notification_show_hint(
+            "Accept A Fallen Tree at the Task Board before chopping.",
+            game_get_speed(gamespeed_fps) * 3,
             false
         );
         return;

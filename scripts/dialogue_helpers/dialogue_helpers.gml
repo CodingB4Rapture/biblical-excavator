@@ -228,53 +228,67 @@ function dialogue_draw_portrait_placeholder(_layout, _palette)
     );
 }
 
-function dialogue_run_completion_action(_action)
+function dialogue_action_normalize(_action)
 {
     switch (_action)
     {
         case "finish_farmer_intro":
-        {
-            var game_state = game_state_ensure();
-
-            if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
-            {
-                game_state.tutorial_stage = TutorialStage.TALK_TO_FARMERS_WIFE;
-            }
-
-            quest_start(QuestId.FIRM_FOUNDATION);
-            break;
-        }
+        case DIALOGUE_ACTION_FINISH_FARMER_INTRO:
+            return DIALOGUE_ACTION_FINISH_FARMER_INTRO;
 
         case "start_hand_gathering":
-        {
-            var game_state = game_state_ensure();
+        case DIALOGUE_ACTION_POST_FIRST_TASK:
+            return DIALOGUE_ACTION_POST_FIRST_TASK;
 
-            if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMERS_WIFE)
+        case "unlock_cabin_placement":
+        case DIALOGUE_ACTION_UNLOCK_CABIN:
+            return DIALOGUE_ACTION_UNLOCK_CABIN;
+
+        case "begin_cabin_placement":
+        case DIALOGUE_ACTION_BEGIN_CABIN:
+            return DIALOGUE_ACTION_BEGIN_CABIN;
+
+        case "move_cabin_site":
+        case DIALOGUE_ACTION_MOVE_CABIN:
+            return DIALOGUE_ACTION_MOVE_CABIN;
+    }
+
+    return "";
+}
+
+function dialogue_run_completion_action(_action)
+{
+    switch (dialogue_action_normalize(_action))
+    {
+        case DIALOGUE_ACTION_FINISH_FARMER_INTRO:
+            progression_finish_farmer_intro();
+            break;
+
+        case DIALOGUE_ACTION_POST_FIRST_TASK:
+        {
+            if (task_board_begin_first_assignment())
             {
-                game_state.tutorial_stage = TutorialStage.TRIP_ONE_HAND_FIELDSTONE;
-                tutorial_spawn_hand_fieldstones();
+                notification_show_hint(
+                    "Follow the arrow to the Task Board and accept Fieldstone by Hand.",
+                    game_get_speed(gamespeed_fps) * 6,
+                    false
+                );
                 save_write();
             }
 
             break;
         }
 
-        case "unlock_cabin_placement":
-        {
-            cabin_unlock_placement();
+        case DIALOGUE_ACTION_UNLOCK_CABIN:
+            progression_unlock_cabin_from_legacy_dialogue();
             break;
-        }
 
-        case "begin_cabin_placement":
-        {
+        case DIALOGUE_ACTION_BEGIN_CABIN:
             cabin_begin_placement(false);
             break;
-        }
 
-        case "move_cabin_site":
-        {
+        case DIALOGUE_ACTION_MOVE_CABIN:
             cabin_begin_placement(true);
             break;
-        }
     }
 }

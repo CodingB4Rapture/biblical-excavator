@@ -10,7 +10,7 @@ function calendar_should_run()
 {
     var game_state = game_state_ensure();
     return game_state.tutorial_stage == TutorialStage.COMPLETE
-        && game_state.cabin_site_placed
+        && game_state.cabin_built
         && game_state.homestead_stage == HomesteadStage.HUB_OPEN;
 }
 
@@ -104,10 +104,20 @@ function cabin_sleep_until_morning(_actor = noone)
 
     if (game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
     {
+        if (task_get_status(TaskId.PLACE_CABIN) != TaskStatus.CLAIMED)
+        {
+            notification_show_hint(
+                "Claim the completed cabin task at the Task Board before resting.",
+                game_get_speed(gamespeed_fps) * 4,
+                false
+            );
+            return false;
+        }
+
+        if (!progression_open_homestead_hub_state(game_state))
+            return false;
         game_state.day_number += 1;
         game_state.time_of_day = CALENDAR_MORNING_MINUTE;
-        game_state.homestead_stage = HomesteadStage.HUB_OPEN;
-        game_state.first_hub_hint_pending = true;
         cabin_place_actor_at_exit(_actor);
         calendar_show_day_transition();
         save_write();

@@ -123,10 +123,24 @@ switch (game_state.tutorial_stage)
     case TutorialStage.COMPLETE: trip_label = "Complete"; tutorial_text = "Cabin materials delivered"; break;
 }
 
-if (game_state.cabin_placement_unlocked && !game_state.cabin_site_placed)
+if (task_is_active(TaskId.PARK_SKIDSTEER, game_state))
+{
+    trip_label = "Cabin Work";
+    tutorial_text = instance_exists(vehicle) && vehicle.has_driver
+        ? "Park fully inside the marked pad, stop, detach any tow, and exit"
+        : "Get in the skidsteer and drive it to the marked parking pad";
+}
+else if (task_is_active(TaskId.MARK_CABIN_SITE, game_state))
 {
     trip_label = "Cabin Site";
-    tutorial_text = "Walk to your chosen spot, then press B";
+    tutorial_text = game_state.cabin_site_placed
+        ? "Go to the cabin stakes and press E to mark the boundary"
+        : "Press B to choose a fixed cabin-and-yard area";
+}
+else if (task_is_active(TaskId.PLACE_CABIN, game_state))
+{
+    trip_label = "Cabin Build";
+    tutorial_text = "Go to the marked cabin site and press E to build";
 }
 else if (game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
 {
@@ -265,7 +279,8 @@ draw_text(trip_left + 12, trip_top + 126, "[I/Tab] Inventory");
 
 var journal_prompt = "[Q] Quest Journal";
 
-if (game_state.cabin_placement_unlocked && !game_state.cabin_site_placed)
+if (task_is_active(TaskId.MARK_CABIN_SITE, game_state)
+&& !game_state.cabin_site_placed)
 {
     journal_prompt += "    [B] Cabin Site";
 }

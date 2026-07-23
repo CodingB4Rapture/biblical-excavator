@@ -4,15 +4,27 @@ The game now begins with free movement. A short hint points the player to the Fa
 
 1. Talk to the Farmer.
 2. Talk to the Farmer's Wife.
-3. Collect six small Fieldstones by hand and receive the axe.
-4. Use the axe to fell the marked standing tree, creating a downed tree and stump.
-5. **Trip 1:** use the skidsteer to crush Fieldrocks, then deliver all sixteen Fieldstones.
-6. Completing the Fieldstone delivery makes the winch attachment arrive.
-7. Install the attachment, then use it to haul the downed tree into Home Delivery.
-8. Use the same winch to pull the stump into Home Delivery, where it becomes one Small Lumber.
+3. Follow the guidance arrow to the Task Board and accept `Fieldstone by Hand`.
+4. Collect six small Fieldstones by hand, receive the axe, and claim the task.
+5. Accept `A Fallen Tree`, fell and inspect a tree, then claim the task.
+6. Accept `Stone Haul`, crush ten Fieldrocks, deliver all sixteen Fieldstones,
+   and claim the task to make the winch attachment arrive.
+7. Accept `Fit the Winch`, collect and install the attachment, then claim it.
+8. Accept `Timber Delivery`, haul the log and stump into Home Delivery, then
+   claim it to finish `A Firm Foundation`.
+9. Accept `Park the Skidsteer` under `A Place of Your Own`; park on the pad
+   beside the Farmer, stop, detach any tow, exit, and claim it.
+10. Accept `Mark the Cabin Site`; press `B` to choose the site, use the fixed
+    fence boundary with one front gate, and claim it.
+11. Accept `Build the Cabin`; build on the marked site and claim it.
 
-Turning in the log advances Trip 3 to the stump objective. Delivering the stump
-as Small Lumber completes both Trip 3 and Quest 1.
+The normal yellow marker sits above an objective while it is inside the camera.
+When the objective is outside the camera, a labeled yellow arrow at the screen
+edge points in its direction.
+
+Turning in the log advances the active timber task to the stump objective.
+Delivering the stump as Small Lumber completes the task; claiming it at the
+board completes Quest 1 and unlocks the short cabin quest.
 
 The first six hand-pickable Fieldstones prefer registered spawn-area positions,
 with nearby one-time stones used only as a fallback. The `obj_fieldrock`

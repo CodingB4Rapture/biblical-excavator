@@ -41,13 +41,9 @@ function winch_install_attachment(_vehicle)
 {
     var game_state = game_state_ensure();
 
-    if (game_state.winch_attachment_state != AttachmentState.STORED_AT_HOME)
-    {
+    if (!progression_install_winch_state(game_state))
         return false;
-    }
 
-    game_state.winch_attachment_state = AttachmentState.INSTALLED;
-    game_state.tutorial_stage = TutorialStage.INSPECT_FIRST_LOG;
     _vehicle.winch_state = WinchState.STOWED;
 
     progress_show_reward_summary(
@@ -56,8 +52,8 @@ function winch_install_attachment(_vehicle)
     );
 
     notification_show_hint(
-        "Winch installed. Inspect the marked log before taking the cable.",
-        game_get_speed(gamespeed_fps) * 5,
+        "Fit the Winch complete - return to the Task Board.",
+        game_get_speed(gamespeed_fps) * 6,
         false
     );
 
@@ -77,10 +73,16 @@ function winch_take_cable(_vehicle, _actor)
     _vehicle.winch_handler = _actor;
 
     var game_state = game_state_ensure();
-    if (game_state.tutorial_stage == TutorialStage.TAKE_WINCH_CABLE
-    || game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG)
+    if (task_is_active(TaskId.TIMBER_DELIVERY, game_state)
+    && (
+        game_state.tutorial_stage == TutorialStage.TAKE_WINCH_CABLE
+        || game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG
+    ))
     {
-        game_state.tutorial_stage = TutorialStage.ATTACH_CABLE_TO_LOG;
+        progression_set_tutorial_stage(
+            game_state,
+            TutorialStage.ATTACH_CABLE_TO_LOG
+        );
     }
 
     notification_show_hint(
@@ -105,7 +107,10 @@ function winch_stow_cable(_vehicle)
     var game_state = game_state_ensure();
     if (game_state.tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG)
     {
-        game_state.tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
+        progression_set_tutorial_stage(
+            game_state,
+            TutorialStage.TAKE_WINCH_CABLE
+        );
     }
     return true;
 }
@@ -154,10 +159,14 @@ function winch_attach_target(_vehicle, _target, _actor)
     _target.pullable_state = PullableState.ATTACHED;
 
     var game_state = game_state_ensure();
-    if (game_state.tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG
+    if (task_is_active(TaskId.TIMBER_DELIVERY, game_state)
+    && game_state.tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG
     && _target.resource_id == ResourceId.TIMBER_LOG)
     {
-        game_state.tutorial_stage = TutorialStage.HAUL_FIRST_LOG;
+        progression_set_tutorial_stage(
+            game_state,
+            TutorialStage.HAUL_FIRST_LOG
+        );
         save_write();
     }
 
@@ -296,10 +305,14 @@ function winch_get_target_prompt(_target, _actor)
 function winch_interact_with_target(_target, _actor)
 {
     var game_state = game_state_ensure();
-    if (game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG
+    if (task_is_active(TaskId.TIMBER_DELIVERY, game_state)
+    && game_state.tutorial_stage == TutorialStage.INSPECT_FIRST_LOG
     && _target.resource_id == ResourceId.TIMBER_LOG)
     {
-        game_state.tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
+        progression_set_tutorial_stage(
+            game_state,
+            TutorialStage.TAKE_WINCH_CABLE
+        );
         notification_show_hint(
             "The log needs the winch. Take the cable from the skidsteer's rear hitch.",
             game_get_speed(gamespeed_fps) * 5,
@@ -316,7 +329,10 @@ function winch_interact_with_target(_target, _actor)
 
         if (game_state.tutorial_stage == TutorialStage.HAUL_FIRST_LOG)
         {
-            game_state.tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
+            progression_set_tutorial_stage(
+                game_state,
+                TutorialStage.TAKE_WINCH_CABLE
+            );
             save_write();
         }
 

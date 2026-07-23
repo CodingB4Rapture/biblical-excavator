@@ -5,6 +5,57 @@ var preview_colour = (preview_in_room && placement_result.valid)
     : make_color_rgb(224, 82, 72);
 var half_grid = fence_grid_size() * 0.5;
 
+if (cabin_tutorial_mode)
+{
+    draw_set_alpha(0.10);
+    draw_set_color(make_color_rgb(255, 206, 103));
+    draw_rectangle(
+        tutorial_bounds.min_x,
+        tutorial_bounds.min_y,
+        tutorial_bounds.max_x,
+        tutorial_bounds.max_y,
+        false
+    );
+
+    draw_set_alpha(0.75);
+    draw_rectangle(
+        tutorial_bounds.min_x,
+        tutorial_bounds.min_y,
+        tutorial_bounds.max_x,
+        tutorial_bounds.max_y,
+        true
+    );
+
+    var corner_xs = [tutorial_bounds.min_x, tutorial_bounds.max_x];
+    var corner_ys = [tutorial_bounds.min_y, tutorial_bounds.max_y];
+
+    for (var corner_x_index = 0; corner_x_index < 2; corner_x_index++)
+    {
+        for (var corner_y_index = 0; corner_y_index < 2; corner_y_index++)
+        {
+            var corner_x = corner_xs[corner_x_index];
+            var corner_y = corner_ys[corner_y_index];
+            draw_rectangle(
+                corner_x - half_grid,
+                corner_y - half_grid,
+                corner_x + half_grid,
+                corner_y + half_grid,
+                true
+            );
+        }
+    }
+
+    draw_set_alpha(0.9);
+    draw_set_color(make_color_rgb(112, 220, 132));
+    draw_line_width(
+        tutorial_bounds.min_x + fence_grid_size(),
+        tutorial_bounds.max_y,
+        tutorial_bounds.max_x - fence_grid_size(),
+        tutorial_bounds.max_y,
+        3
+    );
+}
+
 if (gate_mode)
 {
     var gate_left_x = placement_result.gate_x;

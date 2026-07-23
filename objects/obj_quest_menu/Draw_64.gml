@@ -11,6 +11,8 @@ var panel_right = layout.panel_right;
 var panel_bottom = layout.panel_bottom;
 var quest = quest_get_definition(selected_quest);
 var objectives = quest_get_objectives(selected_quest);
+var grouped_tasks = task_get_ids_for_quest(selected_quest);
+var shows_grouped_tasks = array_length(grouped_tasks) > 0;
 var quest_locked = quest_get_status(selected_quest) == QuestStatus.LOCKED;
 var quest_finished = quest_get_status(selected_quest) == QuestStatus.COMPLETE;
 
@@ -79,22 +81,70 @@ draw_text_ext(detail_left, layout.content_top + 24, summary_text, 14, detail_wid
 
 var objective_top = layout.content_top + 78;
 draw_set_color(make_color_rgb(255, 220, 92));
-draw_text(detail_left, objective_top, "OBJECTIVES");
+draw_text(
+    detail_left,
+    objective_top,
+    shows_grouped_tasks ? "TASKS" : "OBJECTIVES"
+);
 
-for (var i = 0; i < array_length(objectives); i++)
+if (shows_grouped_tasks)
 {
-    var objective = objectives[i];
-    draw_set_color(objective.complete
-        ? make_color_rgb(151, 194, 126)
-        : make_color_rgb(238, 225, 195));
-    draw_text(
-        detail_left + 4,
-        objective_top + 22 + i * 16,
-        (objective.complete ? "[x] " : "[ ] ") + objective.text
-    );
+    for (var task_index = 0;
+        task_index < array_length(grouped_tasks);
+        task_index++)
+    {
+        var task_id = grouped_tasks[task_index];
+        var task_status = task_get_status(task_id);
+        var task_prefix = "[ ] ";
+        var task_color = make_color_rgb(166, 151, 126);
+
+        if (task_status == TaskStatus.AVAILABLE)
+        {
+            task_prefix = "[+] ";
+            task_color = make_color_rgb(232, 190, 65);
+        }
+        else if (task_status == TaskStatus.ACTIVE)
+        {
+            task_prefix = "[>] ";
+            task_color = make_color_rgb(255, 220, 92);
+        }
+        else if (task_status >= TaskStatus.COMPLETE)
+        {
+            task_prefix = "[x] ";
+            task_color = make_color_rgb(151, 194, 126);
+        }
+
+        draw_set_color(task_color);
+        draw_text(
+            detail_left + 4,
+            objective_top + 22 + task_index * 20,
+            task_prefix + task_get_definition(task_id).title
+            + " - " + task_get_status_text(task_id)
+        );
+    }
+}
+else
+{
+    for (var i = 0; i < array_length(objectives); i++)
+    {
+        var objective = objectives[i];
+        draw_set_color(objective.complete
+            ? make_color_rgb(151, 194, 126)
+            : make_color_rgb(238, 225, 195));
+        draw_text(
+            detail_left + 4,
+            objective_top + 22 + i * 16,
+            (objective.complete ? "[x] " : "[ ] ") + objective.text
+        );
+    }
 }
 
-var rewards_top = objective_top + 28 + array_length(objectives) * 16;
+var detail_row_count = shows_grouped_tasks
+    ? array_length(grouped_tasks)
+    : array_length(objectives);
+var detail_row_height = shows_grouped_tasks ? 20 : 16;
+var rewards_top = objective_top + 28
+    + detail_row_count * detail_row_height;
 draw_set_color(make_color_rgb(255, 220, 92));
 draw_text(detail_left, rewards_top, quest_finished ? "REWARDS RECEIVED" : "REWARDS");
 draw_set_color(make_color_rgb(238, 225, 195));

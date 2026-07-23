@@ -13,8 +13,16 @@ commercialized, or incorporated into another project without permission.
 - `WASD` or arrow keys: walk or drive.
 - `E` while driving: exit the vehicle.
 - `E` on foot: use the currently displayed contextual action.
-- `F`: enter fence planning; click two opposite corners to preview and place a
-  rectangular enclosure, then press `F` again to save and exit.
+- `E` at the Task Board: open the board after the Farmer's Wife posts the
+  first assignment. Accept each assignment there, then return to claim
+  completed work before the next one unlocks. Use Up/Down or click to select,
+  Enter/Space to act, the mouse wheel to scroll, and `E`/Escape to close.
+- The yellow world marker points at an on-camera objective. When that objective
+  is outside the camera, a labeled yellow arrow appears at the screen edge.
+- `B` during `Mark the Cabin Site`: choose the fixed cabin-and-yard area.
+- `F`: enter fence planning after choosing that site; click two highlighted
+  opposite corners, add the required front gate, then press `F` to finish.
+  Fence planning remains available after the lesson.
 - Right click: cancel the current corner or remove the gate/enclosure under
   the cursor.
 - `G`: toggle gate placement, then click a straight horizontal fence side.

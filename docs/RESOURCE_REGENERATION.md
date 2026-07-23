@@ -14,7 +14,7 @@ short real-time timer.
 - The old 12-second respawn loop has been removed.
 
 The respawn delay is `FIELDROCK_RESPAWN_DAYS` in
-`scripts/resource_regeneration_helpers/resource_regeneration_helpers.gml`.
+`scripts/fieldrock_regeneration_helpers/fieldrock_regeneration_helpers.gml`.
 
 ## Trees
 
@@ -26,9 +26,10 @@ The respawn delay is `FIELDROCK_RESPAWN_DAYS` in
 - Regrowth currently restores the mature standing-tree sprite immediately;
   seedling and growth-stage art are a future visual pass.
 
-The delay is `TREE_REGROWTH_DAYS` in the same regeneration helper. Tree records
-remain owned by `tree_persistence_helpers`, and `obj_tree_controller` performs
-the room-level regrowth check. Trees are not managed by `obj_rock_controller`.
+The delay is `TREE_REGROWTH_DAYS` in the small shared
+`resource_regeneration_helpers` module. Tree records remain owned by
+`tree_persistence_helpers`, and `obj_tree_controller` performs the room-level
+regrowth check. Trees are not managed by `obj_fieldrock_controller`.
 
 ## Fieldstones
 
@@ -69,16 +70,15 @@ For every registered candidate:
 Tune each area's density and chance through its Object Variables. The
 `FIELDSTONE_DAILY_SPAWN_CHANCE` macro controls one-off `obj_fieldstone`
 markers, and `FIELDSTONE_NOON_MINUTE` controls the shared reroll time; both live
-in `scripts/resource_regeneration_helpers/resource_regeneration_helpers.gml`.
+in `scripts/fieldstone_regeneration_helpers/fieldstone_regeneration_helpers.gml`.
 
 ## Saves And Map Editing
 
 Fieldstone rolls, Fieldrock schedules, and tree schedules are stored in the
-existing version-one save snapshot as optional fields, so earlier saves still
-load. When an older save contains a permanently removed Fieldrock, it is
-migrated into a one-day regeneration schedule. Fieldrock IDs now include the
-room name; coordinate-only IDs from earlier saves migrate when their room
-resource is constructed.
+version-two save snapshot. Version-one saves migrate before hydration. When an
+older save contains a permanently removed Fieldrock, it receives a one-day
+regeneration schedule. Fieldrock IDs include the room name; coordinate-only IDs
+from earlier saves migrate when their room resource is constructed.
 
 Room resources mark their records when the room is constructed. Records for
 resource positions removed or moved in the room editor are ignored and pruned

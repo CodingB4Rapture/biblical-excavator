@@ -1,57 +1,80 @@
 # Quest System
 
+## Quest, task, and objective roles
+
+- A **quest** is a larger story arc shown in the Quest Journal.
+- A **task** is one board-sized assignment within a quest.
+- An **objective** is a checklist item within a task.
+
+The Task Board uses one explicit state flow:
+
+```text
+LOCKED -> AVAILABLE -> ACTIVE -> COMPLETE -> CLAIMED
+```
+
+Only one tutorial task can be `ACTIVE`. Every task must be accepted at the
+board before its mechanics unlock. Gameplay events complete the active task;
+completion never derives continuously from inventory or drawing code. A
+completed task must be claimed at the board before the next assignment becomes
+available.
+
 ## Quest 1: A Firm Foundation
 
-This quest is the complete introductory gameplay loop:
+`A Firm Foundation` contains five tasks:
 
-1. Speak with the Farmer.
-2. Receive the first task from the Farmer's Wife.
-3. Collect 6 small Fieldstones by hand and receive the axe.
-4. Chop the marked tree and inspect its downed tree and stump.
-5. Crush 10 Fieldrocks with the work vehicle and deliver all 16 Fieldstones.
-6. Receive and install the winch attachment.
-7. Winch the downed tree into Home Delivery as a Timber Log.
-8. Winch the stump into Home Delivery as Small Lumber.
+1. `Fieldstone by Hand`
+2. `A Fallen Tree`
+3. `Stone Haul`
+4. `Fit the Winch`
+5. `Timber Delivery`
 
-The quest begins after the player reaches the final page of the Farmer's first
-conversation. A centered banner announces its start. Delivering the Timber Log
-reveals the final stump objective; delivering the stump as Small Lumber finishes
-the quest and displays a centered completion banner.
+The Farmer starts the quest. The Farmer's Wife then posts the first assignment
+and points the player to the Task Board. Claiming `Timber Delivery` completes
+the quest, records the gathered foundation materials, unlocks the cabin plan,
+and starts `A Place of Your Own`.
 
-Completing the quest records these rewards in the journal:
+## Quest 2: A Place of Your Own
 
-- Cabin Site Plan
-- Cabin Placement Unlocked
+This quest contains three tasks:
 
-The Farmer's Wife then says, "Now you've got the supplies to build your own
-cabin!" Finishing her dialogue opens cabin-site placement. Move the mouse to
-choose a 16-pixel-grid position, left-click a clear green area to confirm, or
-use right-click/Escape to cancel. Press `B` later to resume placement.
+1. `Park the Skidsteer`
+2. `Mark the Cabin Site`
+3. `Build the Cabin`
 
-The placed 64 x 64 marker is deliberately a construction site rather than a
-finished cabin. Its room and position are saved. Future crafting work can turn
-that site into readable construction stages without rewriting Quest 1.
+Parking requires the whole stopped skidsteer inside the visible pad, no tow
+target, and the player on foot. Site marking uses a fixed 32-pixel-grid
+enclosure around `spr_cabin_before` with exactly one front gate. Building
+changes that same saved site to `spr_cabin_after`. Claiming the build task
+completes the quest and allows the first rest.
 
-Press `Q` during gameplay to open the Quest Journal. `Q` or Escape closes it.
-The journal pauses gameplay and uses a reusable two-pane layout:
+## Ownership
 
-- The left pane is a clickable and keyboard-navigable quest list.
-- Red quest names have not started, yellow quests are active, and green quests
-  are complete.
-- The right pane shows the selected quest's summary, objectives, and rewards.
-- Completed quests retain a checked objective history and use their completion
-  summary to explain what the player accomplished.
+Definitions, summaries, objective read models, and reward payloads live in
+`scripts/task_helpers/task_helpers.gml`. Runtime writes to task, quest,
+tutorial-stage, and story-unlock state go through
+`scripts/progression_helpers/progression_helpers.gml`.
 
-The list supports mouse-wheel scrolling and Up/Down navigation, so future
-quests only need a `QuestId`, definition, status entry, and objective provider;
-they do not need a custom journal object.
+Small Equipment XP or Homebase-resource rewards can be attached to tasks.
+Claiming first validates the complete reward array and applies nothing if any
+entry is invalid. The current task payloads remain empty until their balance is
+chosen. Story effects such as the axe, winch delivery, and cabin plan remain
+explicit progression effects rather than duplicate task rewards.
 
-Press `I` or `Tab` to open the separate Inventory menu. It pauses gameplay and
-reads Backpack, Vehicle, Homebase, and Tools data without owning those values.
+The Quest Journal groups task summaries beneath their parent quest. The Task
+Board shows detailed objectives and reward labels for one selected task. Both
+lists support keyboard/mouse selection and wheel scrolling.
 
-Quest status is included in `save_slot_1.json`. Older version-one saves infer
-the first quest's status from their tutorial stage.
+Quest and task state are saved in format version 3. Version-one saves migrate
+through v2; v2 saves with an already placed cabin preserve that cabin as built
+and claim the two newly inserted tutorial tasks. Pre-cabin saves resume at
+`Park the Skidsteer`.
 
-Crafting, general skills, and skill trees intentionally begin after this quest.
-They should be planned as their own systems instead of being embedded in the
-tutorial quest code.
+Task-start and task-complete presentations use a FIFO queue. Board actions can
+queue multiple announcements, but none display until the board closes. A
+claim-and-accept visit therefore presents completion and rewards before the new
+task-start banner.
+
+Press `Q` to open the Quest Journal. Press `E` at the board to open the Task
+Board. Press `I` or `Tab` for the separate read-only Inventory menu.
+
+Crafting, general skills, and skill trees remain outside this system.

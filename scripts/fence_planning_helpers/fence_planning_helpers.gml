@@ -12,13 +12,20 @@ function fence_snap_to_grid(_value)
     return floor(_value / grid) * grid + grid * 0.5;
 }
 
-function fence_record_create(_room_name, _x, _y, _gate_part = FenceGatePart.NONE)
+function fence_record_create(
+    _room_name,
+    _x,
+    _y,
+    _gate_part = FenceGatePart.NONE,
+    _purpose = ""
+)
 {
     return {
         room_name: _room_name,
         x: round(_x),
         y: round(_y),
-        gate_part: _gate_part
+        gate_part: _gate_part,
+        purpose: is_string(_purpose) ? _purpose : ""
     };
 }
 
@@ -37,13 +44,26 @@ function fence_record_gate_part(_record)
         : FenceGatePart.NONE;
 }
 
+function fence_record_purpose(_record)
+{
+    if (!is_struct(_record)
+    || !variable_struct_exists(_record, "purpose")
+    || !is_string(_record.purpose))
+    {
+        return "";
+    }
+
+    return _record.purpose;
+}
+
 function fence_copy_record(_record)
 {
     return fence_record_create(
         _record.room_name,
         _record.x,
         _record.y,
-        fence_record_gate_part(_record)
+        fence_record_gate_part(_record),
+        fence_record_purpose(_record)
     );
 }
 
@@ -93,6 +113,53 @@ function fence_records_for_room(_records, _room_name)
         if (is_struct(record)
         && variable_struct_exists(record, "room_name")
         && record.room_name == _room_name)
+        {
+            array_push(result, fence_copy_record(record));
+        }
+    }
+
+    return result;
+}
+
+function fence_records_for_purpose(_records, _purpose, _room_name = "")
+{
+    var result = [];
+
+    if (!is_array(_records))
+    {
+        return result;
+    }
+
+    for (var i = 0; i < array_length(_records); i++)
+    {
+        var record = _records[i];
+
+        if (fence_record_purpose(record) == _purpose
+        && (_room_name == "" || record.room_name == _room_name))
+        {
+            array_push(result, fence_copy_record(record));
+        }
+    }
+
+    return result;
+}
+
+function fence_records_without_purpose(_records, _purpose, _room_name = "")
+{
+    var result = [];
+
+    if (!is_array(_records))
+    {
+        return result;
+    }
+
+    for (var i = 0; i < array_length(_records); i++)
+    {
+        var record = _records[i];
+        var remove_record = fence_record_purpose(record) == _purpose
+            && (_room_name == "" || record.room_name == _room_name);
+
+        if (!remove_record)
         {
             array_push(result, fence_copy_record(record));
         }
@@ -486,12 +553,161 @@ function fence_layout_status(_records, _outside_gate_count = 0)
     };
 }
 
+function fence_planning_is_unlocked()
+{
+    var game_state = game_state_ensure();
+    var mark_status = task_get_status(TaskId.MARK_CABIN_SITE);
+
+    if (mark_status >= TaskStatus.COMPLETE)
+    {
+        return true;
+    }
+
+    return mark_status == TaskStatus.ACTIVE
+        && game_state.cabin_site_placed;
+}
+
+/// The tutorial enclosure is four grid intervals wide by five tall.
+/// The 64 x 64 cabin fits with one-cell side/back clearance and a
+/// two-cell-deep front yard.
+function cabin_fence_plot_bounds_at(_site_x, _site_y)
+{
+    var grid = fence_grid_size();
+    var site_x = fence_snap_to_grid(_site_x);
+    var site_y = fence_snap_to_grid(_site_y);
+
+    return {
+        min_x: site_x - grid * 2,
+        max_x: site_x + grid * 2,
+        min_y: site_y - grid * 2,
+        max_y: site_y + grid * 3
+    };
+}
+
+function cabin_fence_plot_bounds()
+{
+    var game_state = game_state_ensure();
+    return cabin_fence_plot_bounds_at(
+        game_state.cabin_site_x,
+        game_state.cabin_site_y
+    );
+}
+
+function cabin_fence_point_is_corner(_x, _y, _bounds)
+{
+    return (_x == _bounds.min_x || _x == _bounds.max_x)
+        && (_y == _bounds.min_y || _y == _bounds.max_y);
+}
+
+function cabin_fence_point_is_opposite_corner(
+    _x,
+    _y,
+    _anchor_x,
+    _anchor_y,
+    _bounds
+)
+{
+    if (!cabin_fence_point_is_corner(_x, _y, _bounds))
+    {
+        return false;
+    }
+
+    return _x != _anchor_x && _y != _anchor_y;
+}
+
+function cabin_fence_plot_status(_records, _room_name, _bounds)
+{
+    var cabin_records = fence_records_for_purpose(
+        _records,
+        FENCE_PURPOSE_CABIN_SITE,
+        _room_name
+    );
+
+    if (array_length(cabin_records) == 0)
+    {
+        return {
+            valid: false,
+            message: "Step 1: click one highlighted corner, then its opposite corner.",
+            component_count: 0,
+            gate_count: 0
+        };
+    }
+
+    var layout = fence_layout_status(cabin_records, 0);
+
+    if (!layout.valid)
+    {
+        return layout;
+    }
+
+    if (layout.component_count != 1)
+    {
+        return {
+            valid: false,
+            message: "The cabin boundary must be one enclosure.",
+            component_count: layout.component_count,
+            gate_count: layout.gate_count
+        };
+    }
+
+    var component = fence_component_info(cabin_records, 0);
+
+    if (component.min_x != _bounds.min_x
+    || component.max_x != _bounds.max_x
+    || component.min_y != _bounds.min_y
+    || component.max_y != _bounds.max_y)
+    {
+        return {
+            valid: false,
+            message: "Use the highlighted boundary exactly; its size is fixed for this task.",
+            component_count: 1,
+            gate_count: layout.gate_count
+        };
+    }
+
+    if (layout.gate_count != 1)
+    {
+        return {
+            valid: false,
+            message: "Step 2: press G, then place one gate on the highlighted front side.",
+            component_count: 1,
+            gate_count: layout.gate_count
+        };
+    }
+
+    for (var gate_index = 0;
+        gate_index < array_length(cabin_records);
+        gate_index++)
+    {
+        var record = cabin_records[gate_index];
+
+        if (fence_record_gate_part(record) != FenceGatePart.NONE
+        && record.y != _bounds.max_y)
+        {
+            return {
+                valid: false,
+                message: "The cabin gate belongs on the front (south) side of the yard.",
+                component_count: 1,
+                gate_count: layout.gate_count
+            };
+        }
+    }
+
+    return {
+        valid: true,
+        message: "Boundary and front gate are ready. Press F to finish the task.",
+        component_count: 1,
+        gate_count: 1
+    };
+}
+
 function fence_make_rectangle_records(
     _room_name,
     _first_x,
     _first_y,
     _second_x,
-    _second_y
+    _second_y,
+    _purpose = ""
 )
 {
     var records = [];
@@ -512,11 +728,23 @@ function fence_make_rectangle_records(
     {
         array_push(
             records,
-            fence_record_create(_room_name, x_position, min_y)
+            fence_record_create(
+                _room_name,
+                x_position,
+                min_y,
+                FenceGatePart.NONE,
+                _purpose
+            )
         );
         array_push(
             records,
-            fence_record_create(_room_name, x_position, max_y)
+            fence_record_create(
+                _room_name,
+                x_position,
+                max_y,
+                FenceGatePart.NONE,
+                _purpose
+            )
         );
     }
 
@@ -526,11 +754,23 @@ function fence_make_rectangle_records(
     {
         array_push(
             records,
-            fence_record_create(_room_name, min_x, y_position)
+            fence_record_create(
+                _room_name,
+                min_x,
+                y_position,
+                FenceGatePart.NONE,
+                _purpose
+            )
         );
         array_push(
             records,
-            fence_record_create(_room_name, max_x, y_position)
+            fence_record_create(
+                _room_name,
+                max_x,
+                y_position,
+                FenceGatePart.NONE,
+                _purpose
+            )
         );
     }
 
@@ -544,7 +784,8 @@ function fence_try_add_rectangle(
     _first_y,
     _second_x,
     _second_y,
-    _outside_gate_count = 0
+    _outside_gate_count = 0,
+    _purpose = ""
 )
 {
     var rectangle = fence_make_rectangle_records(
@@ -552,7 +793,8 @@ function fence_try_add_rectangle(
         _first_x,
         _first_y,
         _second_x,
-        _second_y
+        _second_y,
+        _purpose
     );
 
     if (array_length(rectangle) == 0)
@@ -607,7 +849,8 @@ function fence_try_place_gate(
     _room_name,
     _x,
     _y,
-    _outside_gate_count = 0
+    _outside_gate_count = 0,
+    _purpose = ""
 )
 {
     if (fence_count_gates(_records) + _outside_gate_count >= 1)
@@ -665,7 +908,8 @@ function fence_try_place_gate(
             left_x,
             _y,
             true,
-            _outside_gate_count
+            _outside_gate_count,
+            _purpose
         );
 
         return {
@@ -722,7 +966,8 @@ function fence_remove_gate_at(_records, _x, _y)
                     record.room_name,
                     record.x,
                     record.y,
-                    FenceGatePart.NONE
+                    FenceGatePart.NONE,
+                    fence_record_purpose(record)
                 )
                 : fence_copy_record(record)
         );
@@ -781,7 +1026,8 @@ function fence_try_place(
     _x,
     _y,
     _gate_mode,
-    _outside_gate_count = 0
+    _outside_gate_count = 0,
+    _purpose = ""
 )
 {
     var grid = fence_grid_size();
@@ -801,7 +1047,13 @@ function fence_try_place(
 
         array_push(
             candidate,
-            fence_record_create(_room_name, _x, _y, FenceGatePart.NONE)
+            fence_record_create(
+                _room_name,
+                _x,
+                _y,
+                FenceGatePart.NONE,
+                _purpose
+            )
         );
     }
     else
@@ -835,7 +1087,13 @@ function fence_try_place(
         {
             array_push(
                 candidate,
-                fence_record_create(_room_name, _x, _y, FenceGatePart.LEFT)
+                fence_record_create(
+                    _room_name,
+                    _x,
+                    _y,
+                    FenceGatePart.LEFT,
+                    _purpose
+                )
             );
             array_push(
                 candidate,
@@ -843,7 +1101,8 @@ function fence_try_place(
                     _room_name,
                     _x + grid,
                     _y,
-                    FenceGatePart.RIGHT
+                    FenceGatePart.RIGHT,
+                    _purpose
                 )
             );
         }
@@ -867,7 +1126,8 @@ function fence_try_place(
                             convert_record.room_name,
                             convert_record.x,
                             convert_record.y,
-                            FenceGatePart.LEFT
+                            FenceGatePart.LEFT,
+                            fence_record_purpose(convert_record)
                         )
                     );
                 }
@@ -879,7 +1139,8 @@ function fence_try_place(
                             convert_record.room_name,
                             convert_record.x,
                             convert_record.y,
-                            FenceGatePart.RIGHT
+                            FenceGatePart.RIGHT,
+                            fence_record_purpose(convert_record)
                         )
                     );
                 }
@@ -1350,6 +1611,66 @@ function fence_planning_run_tests()
     if (!fence_test_expect(
         !fence_layout_status(loose_end).valid,
         "a loose end cannot be committed"
+    )) failures += 1;
+
+    var cabin_bounds = cabin_fence_plot_bounds_at(240, 240);
+    var cabin_rectangle = fence_make_rectangle_records(
+        room_name,
+        cabin_bounds.min_x,
+        cabin_bounds.min_y,
+        cabin_bounds.max_x,
+        cabin_bounds.max_y,
+        FENCE_PURPOSE_CABIN_SITE
+    );
+    var cabin_gate = fence_try_place_gate(
+        cabin_rectangle,
+        room_name,
+        cabin_bounds.min_x + grid,
+        cabin_bounds.max_y,
+        0,
+        FENCE_PURPOSE_CABIN_SITE
+    );
+    var cabin_status = cabin_fence_plot_status(
+        cabin_gate.records,
+        room_name,
+        cabin_bounds
+    );
+    var restored_cabin_records = fence_copy_records(
+        json_parse(
+            json_stringify({records: cabin_gate.records})
+        ).records
+    );
+
+    if (!fence_test_expect(
+        cabin_gate.valid
+        && cabin_status.valid
+        && cabin_fence_plot_status(
+            restored_cabin_records,
+            room_name,
+            cabin_bounds
+        ).valid
+        && fence_record_purpose(restored_cabin_records[0])
+            == FENCE_PURPOSE_CABIN_SITE,
+        "the exact cabin boundary, front gate, and purpose survive save data"
+    )) failures += 1;
+
+    var back_gate = fence_try_place_gate(
+        cabin_rectangle,
+        room_name,
+        cabin_bounds.min_x + grid,
+        cabin_bounds.min_y,
+        0,
+        FENCE_PURPOSE_CABIN_SITE
+    );
+
+    if (!fence_test_expect(
+        back_gate.valid
+        && !cabin_fence_plot_status(
+            back_gate.records,
+            room_name,
+            cabin_bounds
+        ).valid,
+        "the bounded cabin plot rejects a gate away from the front side"
     )) failures += 1;
 
     var encoded = json_stringify({fence_records: gate_result.records});

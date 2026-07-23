@@ -80,7 +80,7 @@ After the sixteen-Fieldstone tutorial delivery, the wife reports that a winch
 attachment has arrived by mail. The player installs it, delivers the downed tree
 as a Timber Log, then returns for the stump and delivers it as Small Lumber.
 
-The `obj_rock_controller` now restores depleted Fieldrocks at their original
+The `obj_fieldrock_controller` restores depleted Fieldrocks at their original
 spawn after one in-game day. `obj_tree_controller` separately restores a felled
 tree three days after both its downed tree and stump have been delivered. Neither
 resource appears while its spawn point is occupied. Tutorial hand-Fieldstones

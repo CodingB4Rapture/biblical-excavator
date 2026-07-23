@@ -15,6 +15,7 @@ function notification_show_hint(_text, _duration, _sticky)
     hint.life_max = _duration;
     hint.age = 0;
     hint.sticky = _sticky;
+    hint.context_key = "";
 
     return hint;
 }

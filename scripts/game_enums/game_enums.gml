@@ -58,8 +58,10 @@ enum TutorialStage
 
 enum QuestId
 {
-    FIRM_FOUNDATION,
-    COUNT
+    FIRM_FOUNDATION = 0,
+    // Append-only: version-one saves persist quest arrays by numeric ID.
+    PLACE_OF_YOUR_OWN = 1,
+    COUNT = 2
 }
 
 enum QuestStatus
@@ -68,6 +70,43 @@ enum QuestStatus
     ACTIVE,
     COMPLETE
 }
+
+enum TaskId
+{
+    // Append future tasks so saved array indices remain stable.
+    FIELDSTONE_BY_HAND = 0,
+    FALLEN_TREE = 1,
+    STONE_HAUL = 2,
+    FIT_THE_WINCH = 3,
+    TIMBER_DELIVERY = 4,
+    PLACE_CABIN = 5,
+    PARK_SKIDSTEER = 6,
+    MARK_CABIN_SITE = 7,
+    COUNT
+}
+
+enum TaskStatus
+{
+    LOCKED = 0,
+    AVAILABLE = 1,
+    ACTIVE = 2,
+    COMPLETE = 3,
+    CLAIMED = 4
+}
+
+enum TaskRewardType
+{
+    EQUIPMENT_XP = 0,
+    HOME_RESOURCE = 1
+}
+
+/// Stable string IDs are persisted when a dialogue is saved mid-conversation.
+/// Keep the legacy aliases in dialogue_action_normalize when these evolve.
+#macro DIALOGUE_ACTION_FINISH_FARMER_INTRO "tutorial.finish_farmer_intro.v1"
+#macro DIALOGUE_ACTION_POST_FIRST_TASK "tutorial.post_first_task.v1"
+#macro DIALOGUE_ACTION_UNLOCK_CABIN "tutorial.unlock_cabin.v1"
+#macro DIALOGUE_ACTION_BEGIN_CABIN "tutorial.begin_cabin.v1"
+#macro DIALOGUE_ACTION_MOVE_CABIN "tutorial.move_cabin.v1"
 
 enum CameraMode
 {
@@ -141,4 +180,6 @@ enum FenceGatePart
     LEFT = 1,
     RIGHT = 2
 }
+
+#macro FENCE_PURPOSE_CABIN_SITE "cabin_site"
 

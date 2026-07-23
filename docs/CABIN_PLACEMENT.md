@@ -1,48 +1,52 @@
-# Cabin Placement
+# Cabin Site and Construction
 
-Cabin placement is the small bridge between the introductory quest and the
-future crafting system.
+The cabin arc introduces parking, bounded fence planning, and the transition
+from a marked construction site to the finished cabin.
 
-## Player Flow
+## Player flow
 
-1. Complete **A Firm Foundation** by delivering the first log.
-2. Advance through the Farmer's Wife's completion dialogue.
-3. Walk to the part of the homestead where the cabin should go.
-4. Press `B`, or speak with the Farmer's Wife, to start marking the site.
-5. Move around as needed while the 64 x 64 cabin preview follows the mouse on a
-   16-pixel grid.
-6. Left-click a green preview to place it.
-7. Before resting, press `B` or speak with the Farmer's Wife again to move the
-   cabin site.
-8. Rest at the placed cabin site to begin the first homestead morning.
-9. Right-click or press Escape to cancel placement.
+1. Claim `Timber Delivery`, then accept `Park the Skidsteer`.
+2. Get into the skidsteer and follow guidance to the 96 x 64 parking pad beside
+   the Farmer.
+3. Park fully inside the pad, stop, detach any tow target, and exit.
+4. Claim the task and accept `Mark the Cabin Site`.
+5. Press `B` to choose a clear site on the 32 x 32 grid.
+6. Go to `spr_cabin_before` and press `E` to enter the bounded fence lesson.
+7. Click one highlighted corner and its opposite to create the exact boundary.
+8. Press `G` and install one gate on the front/south side.
+9. Press `F` to validate and finish, then claim the task.
+10. Accept `Build the Cabin`, return to the site, and press `E` to replace
+    `spr_cabin_before` with `spr_cabin_after`.
+11. Claim the build task and rest at the cabin to begin the first homestead
+    morning.
 
-The preview rejects room edges and nearby gameplay objects, including the
-player, vehicle, NPCs, resources, Home Delivery, and another cabin site. The
-player still visually checks background scenery because decorative asset-layer
-art does not currently provide collision data.
+The site preview reserves a fixed four-by-five-grid-interval enclosure. The
+64 x 64 cabin has one grid cell of side/back clearance and a two-cell front
+yard. The fixed dimensions prevent the tutorial fence from being used to claim
+an arbitrarily large area.
 
-## Current Boundary
+Placement rejects room edges and nearby gameplay objects, including the
+player, vehicle, NPCs, resources, Home Delivery, and another cabin site.
+Decorative asset-layer art still has no collision data, so it remains a visual
+check.
 
-The site is a plain, readable placeholder and does not spend the delivered
-materials yet. The Homebase inventory retains the 16 fieldstones and one log.
-The next crafting pass should decide recipes, material consumption, build
-stages, cancel/refund behavior, and the temporary cabin art before converting
-the site into a finished structure.
+## Progression state
 
-## Progression State
+```text
+TUTORIAL
+-> park skidsteer
+-> choose site
+-> mark exact fence and front gate
+-> build cabin
+-> FIRST_REST_REQUIRED
+-> rest
+-> HUB_OPEN
+```
 
-The cabin site creates the post-tutorial bridge:
+Durable state records parking, the chosen room/position, the marked boundary,
+the built cabin, and purpose-tagged fence records. A site may be relocated only
+while `Mark the Cabin Site` is active and before its fence is completed.
+Relocation removes the old tutorial boundary.
 
-`TUTORIAL -> place cabin site -> FIRST_REST_REQUIRED -> rest -> HUB_OPEN`
-
-Crafting is intentionally not available in `FIRST_REST_REQUIRED`; that state
-only asks the player to rest and start the next day.
-
-The cabin site can be moved only during `FIRST_REST_REQUIRED`, while it is still
-stakes in the ground. After the first rest opens `HUB_OPEN`, moving an
-established home should be handled as its own later feature.
-
-Sleeping at the cabin places the player at a temporary doorway exit just below
-the site. Future cabin/interior art can move that anchor, and the first
-hub-morning workbench conversation should begin from that exit beat.
+This pass does not spend resources or introduce construction recipes, damage,
+livestock, NPC automation, or other crafting behavior.

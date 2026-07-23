@@ -33,7 +33,7 @@ interaction_run = function(_actor)
             0,
             NotificationStyle.PROMPT,
             "FARMER",
-            "finish_farmer_intro"
+            DIALOGUE_ACTION_FINISH_FARMER_INTRO
         );
         return;
     }
@@ -41,7 +41,7 @@ interaction_run = function(_actor)
     if (homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
     {
         notification_show_dialogue(
-            "You did good work today. Rest at the cabin site, and we'll all start fresh in the morning.",
+            "You did good work today. Rest at your new cabin, and we'll all start fresh in the morning.",
             id,
             0,
             NotificationStyle.PROMPT,
@@ -53,7 +53,7 @@ interaction_run = function(_actor)
     if (homestead_stage == HomesteadStage.HUB_OPEN)
     {
         notification_show_dialogue(
-            "You've made a fine start on your cabin site. There's plenty of homestead work waiting whenever you're ready.",
+            "You've made a fine start on your cabin. There's plenty of homestead work waiting whenever you're ready.",
             id,
             0,
             NotificationStyle.PROMPT,

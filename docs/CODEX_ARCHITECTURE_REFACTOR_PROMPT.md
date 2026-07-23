@@ -1,6 +1,9 @@
 # Biblical Excavator - Focused Architecture Refactor Prompt
 
-Use this prompt in a new Codex task when I am ready to perform the cleanup.
+> Historical specification: the focused refactor was implemented in July 2026.
+> Do not run this prompt again against the current project. See
+> `docs/FOCUSED_REFACTOR.md` for the resulting ownership model and regression
+> checklist.
 
 ## Prompt
 
@@ -113,4 +116,3 @@ When finished, give me:
 - compile/test results;
 - the human playtest checklist;
 - any remaining technical debt that was deliberately left out of scope.
-

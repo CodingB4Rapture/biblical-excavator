@@ -1,4 +1,4 @@
-/// obj_rock_controller - Step Event
+/// obj_fieldrock_controller - Step Event
 
 if (gameplay_is_paused()) exit;
 

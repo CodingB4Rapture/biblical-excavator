@@ -12,10 +12,23 @@ function quest_get_definition(_quest_id)
             return {
                 title: "A Firm Foundation",
                 summary: "Meet the homesteaders and gather the first stone and timber for the cabin foundation.",
-                completion_summary: "You helped the homesteaders secure sixteen Fieldstones, a Timber Log, and Small Lumber from the stump; learned to operate the skidsteer and winch; and unlocked a place to build your own cabin.",
+                completion_summary: "You secured sixteen Fieldstones, a Timber Log, and Small Lumber; learned the skidsteer and winch; and received a cabin site plan.",
                 rewards: [
                     "Cabin Site Plan",
                     "Cabin Placement Unlocked"
+                ]
+            };
+        }
+
+        case QuestId.PLACE_OF_YOUR_OWN:
+        {
+            return {
+                title: "A Place of Your Own",
+                summary: "Park the work vehicle, mark a bounded cabin plot with one gate, and build a place of your own.",
+                completion_summary: "You parked the skidsteer, enclosed the cabin and front yard, and raised the finished cabin.",
+                rewards: [
+                    "Homestead Site Established",
+                    "First Morning Unlocked"
                 ]
             };
         }
@@ -74,7 +87,11 @@ function quest_start(_quest_id)
         return false;
     }
 
-    game_state.quest_statuses[_quest_id] = QuestStatus.ACTIVE;
+    progression_set_quest_status(
+        game_state,
+        _quest_id,
+        QuestStatus.ACTIVE
+    );
     quest_show_notice("QUEST STARTED", _quest_id);
     return true;
 }
@@ -88,7 +105,11 @@ function quest_complete(_quest_id)
         return false;
     }
 
-    game_state.quest_statuses[_quest_id] = QuestStatus.COMPLETE;
+    progression_set_quest_status(
+        game_state,
+        _quest_id,
+        QuestStatus.COMPLETE
+    );
     quest_show_notice("QUEST COMPLETED", _quest_id, true);
     return true;
 }
@@ -97,10 +118,29 @@ function quest_get_objectives(_quest_id)
 {
     var game_state = game_state_ensure();
 
-    if (_quest_id != QuestId.FIRM_FOUNDATION)
+    if (_quest_id == QuestId.PLACE_OF_YOUR_OWN)
     {
-        return [];
+        return [
+            {
+                text: "Park the skidsteer beside the Farmer",
+                complete: game_state.skidsteer_parked
+            },
+            {
+                text: "Choose the cabin site",
+                complete: game_state.cabin_site_placed
+            },
+            {
+                text: "Enclose the cabin and front yard with one gate",
+                complete: game_state.cabin_fence_marked
+            },
+            {
+                text: "Build the cabin",
+                complete: game_state.cabin_built
+            }
+        ];
     }
+
+    if (_quest_id != QuestId.FIRM_FOUNDATION) return [];
 
     var home_stones = inventory_get_amount(
         game_state.home_inventory,
@@ -119,11 +159,14 @@ function quest_get_objectives(_quest_id)
     return [
         {
             text: "Speak with the Farmer",
-            complete: quest_finished || game_state.tutorial_stage >= TutorialStage.TALK_TO_FARMERS_WIFE
+            complete: quest_finished
+                || tutorial_stage_rank(game_state.tutorial_stage) >= 1
         },
         {
             text: "Receive the first task from the Farmer's Wife",
-            complete: quest_finished || game_state.tutorial_stage >= TutorialStage.TRIP_ONE_HAND_FIELDSTONE
+            complete: quest_finished
+                || game_state.task_statuses[TaskId.FIELDSTONE_BY_HAND]
+                    >= TaskStatus.AVAILABLE
         },
         {
             text: "Collect 6 Fieldstones by hand ("
@@ -136,18 +179,16 @@ function quest_get_objectives(_quest_id)
         },
         {
             text: "Use the axe on a standing tree",
-            complete: quest_finished || (
-                game_state.tutorial_stage != TutorialStage.CHOP_TREE
-                && game_state.tools.axe_owned
-            )
+            complete: quest_finished
+                || game_state.task_statuses[TaskId.FALLEN_TREE]
+                    >= TaskStatus.COMPLETE
+                || tutorial_stage_rank(game_state.tutorial_stage) >= 4
         },
         {
             text: "Inspect the fallen tree and stump",
-            complete: quest_finished || (
-                game_state.tools.axe_owned
-                && game_state.tutorial_stage != TutorialStage.CHOP_TREE
-                && game_state.tutorial_stage != TutorialStage.INSPECT_FALLEN_TREE
-            )
+            complete: quest_finished
+                || game_state.task_statuses[TaskId.FALLEN_TREE]
+                    >= TaskStatus.COMPLETE
         },
         {
             text: "Deliver 10 more fieldstones by work vehicle (" + string(min(home_stones, 16)) + "/16 total)",

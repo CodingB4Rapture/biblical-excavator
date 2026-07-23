@@ -15,7 +15,8 @@ resource_regeneration_begin_room();
 randomize();
 
 var game_state = game_state_ensure();
-fence_room_restored = false;
+reconciled_room_name = "";
+room_reconcile_pending = true;
 
 // The day card owns its pause and fade independently of menus and dialogue.
 day_transition_active = false;
@@ -29,12 +30,6 @@ day_transition_hold_frames = max(1, round(game_get_speed(gamespeed_fps) * 2.25))
 if (!variable_struct_exists(game_state, "tutorial_intro_seen"))
 {
     game_state.tutorial_intro_seen = false;
-}
-
-if (!variable_struct_exists(game_state, "tutorial_stage"))
-{
-    game_state.tutorial_stage = TutorialStage.TALK_TO_FARMER;
-    game_state.tutorial_hand_stones_spawned = false;
 }
 
 // The camera controller chooses the active gameplay target automatically.

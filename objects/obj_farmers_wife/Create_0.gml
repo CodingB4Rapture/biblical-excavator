@@ -31,48 +31,145 @@ interaction_run = function(_actor)
 
     if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMERS_WIFE)
     {
+        if (game_state.tutorial_board_assignment_pending)
+        {
+            notification_show_dialogue(
+                [
+                    "Your first assignment is waiting on the Task Board beside us.",
+                    "Walk up to the board, press E, select Fieldstone by Hand, and accept the task. Your work marker will lead you from there."
+                ],
+                id,
+                0,
+                NotificationStyle.PROMPT,
+                "FARMER'S WIFE"
+            );
+            return;
+        }
+
         notification_show_dialogue(
             [
                 "We're glad to have another pair of hands. For your cabin foundation, we'll need 16 Fieldstones and one good log. Begin with 6 loose Fieldstones gathered by hand.",
-                "After that, the work vehicle can handle the remaining 10. Take your time--we have something coming that will help with the log afterward."
+                "I've posted your first assignment on the Task Board beside us. Walk over, press E, and accept Fieldstone by Hand before you begin.",
+                "Once you accept it, your work marker will point you toward the loose stones. Return to the board whenever you need the details."
             ],
             id,
             0,
             NotificationStyle.PROMPT,
             "FARMER'S WIFE",
-            "start_hand_gathering"
+            DIALOGUE_ACTION_POST_FIRST_TASK
         );
         return;
     }
 
-    if (game_state.cabin_placement_unlocked && !game_state.cabin_site_placed)
+    if (game_state.cabin_placement_unlocked
+    && task_get_status(TaskId.PARK_SKIDSTEER)
+        == TaskStatus.AVAILABLE)
     {
         notification_show_dialogue(
             [
-                "You've earned a place of your own here. Walk the land and choose a clear spot for your cabin site.",
-                "I'll help you mark it. Take all the time you need before you left-click the final spot."
+                "Before we mark the cabin ground, return the skidsteer to the small parking pad beside the Farmer.",
+                "I posted Park the Skidsteer on the Task Board. Accept it there, then follow the work marker."
             ],
             id,
             0,
             NotificationStyle.PROMPT,
-            "FARMER'S WIFE",
-            "begin_cabin_placement"
+            "FARMER'S WIFE"
+        );
+        return;
+    }
+
+    if (task_is_active(TaskId.PARK_SKIDSTEER, game_state))
+    {
+        notification_show_dialogue(
+            "Park the skidsteer fully inside the pad, bring it to a stop with nothing attached, then hop out.",
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER'S WIFE"
+        );
+        return;
+    }
+
+    if (task_get_status(TaskId.MARK_CABIN_SITE)
+        == TaskStatus.AVAILABLE)
+    {
+        notification_show_dialogue(
+            [
+                "The skidsteer is settled. Your next assignment is waiting on the Task Board.",
+                "Accept Mark the Cabin Site there. You will choose the ground, then fence the exact cabin and yard boundary with one front gate."
+            ],
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER'S WIFE"
+        );
+        return;
+    }
+
+    if (task_is_active(TaskId.MARK_CABIN_SITE, game_state))
+    {
+        notification_show_dialogue(
+            game_state.cabin_site_placed
+                ? "Go to the cabin stakes and press E. Fence the highlighted boundary, then add one gate on the front side."
+                : "Press B to choose a clear cabin-and-yard area. The boundary size is fixed, so choose the whole space carefully.",
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER'S WIFE"
+        );
+        return;
+    }
+
+    if (task_get_status(TaskId.PLACE_CABIN)
+        == TaskStatus.AVAILABLE)
+    {
+        notification_show_dialogue(
+            "The site is marked. Claim that work and accept Build the Cabin at the Task Board.",
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER'S WIFE"
+        );
+        return;
+    }
+
+    if (task_is_active(TaskId.PLACE_CABIN, game_state))
+    {
+        notification_show_dialogue(
+            "The boundary is ready. Go to the marked site and press E to build the cabin inside it.",
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER'S WIFE"
         );
         return;
     }
 
     if (homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
     {
+        if (task_get_status(TaskId.PLACE_CABIN)
+            == TaskStatus.COMPLETE)
+        {
+            notification_show_dialogue(
+                "The cabin is built. Claim the completed work at the Task Board, then come back here to rest.",
+                id,
+                0,
+                NotificationStyle.PROMPT,
+                "FARMER'S WIFE"
+            );
+            return;
+        }
+
         notification_show_dialogue(
             [
-                "The cabin site is placed. If the spot doesn't feel like home yet, we can move the stakes before you rest.",
-                "Once it feels right, rest there. We'll begin the next chapter together in the morning."
+                "Your cabin is ready inside the boundary you marked.",
+                "Rest there when you are ready. We'll begin the next chapter together in the morning."
             ],
             id,
             0,
             NotificationStyle.PROMPT,
             "FARMER'S WIFE",
-            "move_cabin_site"
+            ""
         );
         return;
     }
@@ -99,7 +196,7 @@ interaction_run = function(_actor)
                 0,
                 NotificationStyle.PROMPT,
                 "FARMER'S WIFE",
-                "unlock_cabin_placement"
+                DIALOGUE_ACTION_UNLOCK_CABIN
             );
             return;
         }

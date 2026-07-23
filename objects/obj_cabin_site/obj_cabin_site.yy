@@ -34,8 +34,8 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"spr_cabin_after",
-    "path":"sprites/spr_cabin_after/spr_cabin_after.yy",
+    "name":"spr_cabin_before",
+    "path":"sprites/spr_cabin_before/spr_cabin_before.yy",
   },
   "spriteMaskId":null,
   "visible":true,

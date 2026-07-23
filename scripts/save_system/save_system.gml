@@ -165,7 +165,6 @@ function save_build_snapshot()
     var settings = settings_ensure();
     var player = instance_find(obj_player, 0);
     var vehicle = instance_find(obj_skidsteer, 0);
-    var log = instance_find(obj_log, 0);
     var dialogue = instance_find(obj_dialogue_bubble, 0);
 
     var scene = {
@@ -180,9 +179,6 @@ function save_build_snapshot()
         vehicle_cargo: instance_exists(vehicle)
             ? save_copy_amounts(vehicle.cargo_inventory)
             : array_create(ResourceId.COUNT, 0),
-        log_exists: instance_exists(log),
-        log_x: instance_exists(log) ? log.x : 0,
-        log_y: instance_exists(log) ? log.y : 0,
         dialogue_active: instance_exists(dialogue),
         dialogue_pages: instance_exists(dialogue)
             ? save_clone_array(dialogue.pages)
@@ -190,7 +186,7 @@ function save_build_snapshot()
         dialogue_page_index: instance_exists(dialogue) ? dialogue.page_index : 0,
         dialogue_speaker: instance_exists(dialogue) ? dialogue.speaker_name : "",
         dialogue_completion_action: instance_exists(dialogue)
-            ? dialogue.completion_action
+            ? dialogue_action_normalize(dialogue.completion_action)
             : "",
         dialogue_style: instance_exists(dialogue)
             ? dialogue.notification_style
@@ -198,7 +194,7 @@ function save_build_snapshot()
     };
 
     return {
-        format_version: 1,
+        format_version: SAVE_FORMAT_CURRENT,
         game_state: {
             player_inventory: save_copy_amounts(game_state.player_inventory),
             home_inventory: save_copy_amounts(game_state.home_inventory),
@@ -206,6 +202,7 @@ function save_build_snapshot()
                 axe_owned: game_state.tools.axe_owned
             },
             tutorial_fieldstones_collected: game_state.tutorial_fieldstones_collected,
+            tutorial_fieldrocks_crushed: game_state.tutorial_fieldrocks_crushed,
             fieldstone_records: save_clone_array(game_state.fieldstone_records),
             fieldrock_records: save_clone_array(game_state.fieldrock_records),
             tree_records: save_clone_array(game_state.tree_records),
@@ -218,12 +215,18 @@ function save_build_snapshot()
             tutorial_intro_seen: game_state.tutorial_intro_seen,
             tutorial_stage: game_state.tutorial_stage,
             tutorial_hand_stones_spawned: game_state.tutorial_hand_stones_spawned,
+            tutorial_board_assignment_pending: game_state.tutorial_board_assignment_pending,
             quest_statuses: save_clone_array(game_state.quest_statuses),
+            task_board_unlocked: game_state.task_board_unlocked,
+            task_statuses: save_clone_array(game_state.task_statuses),
             cabin_placement_unlocked: game_state.cabin_placement_unlocked,
+            skidsteer_parked: game_state.skidsteer_parked,
             cabin_site_placed: game_state.cabin_site_placed,
             cabin_site_room: game_state.cabin_site_room,
             cabin_site_x: game_state.cabin_site_x,
             cabin_site_y: game_state.cabin_site_y,
+            cabin_fence_marked: game_state.cabin_fence_marked,
+            cabin_built: game_state.cabin_built,
             homestead_stage: game_state.homestead_stage,
             first_hub_hint_pending: game_state.first_hub_hint_pending,
             day_number: game_state.day_number,
@@ -272,6 +275,15 @@ function save_update_settings()
     try
     {
         var data = json_parse(save_text);
+        data = save_migrate_to_current(data);
+        if (is_undefined(data)) return false;
+
+        if (!variable_struct_exists(data, "settings")
+        || !is_struct(data.settings))
+        {
+            data.settings = {};
+        }
+
         var settings = settings_ensure();
         data.settings.master_volume = settings.master_volume;
         data.settings.fullscreen = settings.fullscreen;
@@ -290,6 +302,136 @@ function save_new_game()
     global.save_restore_pending = false;
     global.save_new_game_pending = true;
     return true;
+}
+
+function save_hydrate_game_state(_saved_state)
+{
+    var game_state = game_state_create_default();
+
+    if (variable_struct_exists(_saved_state, "player_inventory")
+    && is_array(_saved_state.player_inventory))
+    {
+        save_apply_amounts(
+            game_state.player_inventory,
+            _saved_state.player_inventory
+        );
+    }
+    if (variable_struct_exists(_saved_state, "home_inventory")
+    && is_array(_saved_state.home_inventory))
+    {
+        save_apply_amounts(
+            game_state.home_inventory,
+            _saved_state.home_inventory
+        );
+    }
+
+    var scalar_fields = [
+        "trip_rocks_gathered",
+        "trip_xp_gained",
+        "equipment_xp",
+        "completed_deliveries",
+        "winch_attachment_state",
+        "tutorial_intro_seen",
+        "tutorial_stage",
+        "tutorial_hand_stones_spawned",
+        "tutorial_board_assignment_pending",
+        "tutorial_fieldstones_collected",
+        "tutorial_fieldrocks_crushed",
+        "cabin_placement_unlocked",
+        "skidsteer_parked",
+        "cabin_site_placed",
+        "cabin_site_room",
+        "cabin_site_x",
+        "cabin_site_y",
+        "cabin_fence_marked",
+        "cabin_built",
+        "day_number",
+        "time_of_day",
+        "homestead_stage",
+        "first_hub_hint_pending"
+    ];
+    for (var scalar_index = 0;
+        scalar_index < array_length(scalar_fields);
+        scalar_index++)
+    {
+        var scalar_name = scalar_fields[scalar_index];
+        if (variable_struct_exists(_saved_state, scalar_name))
+            game_state[$ scalar_name] = _saved_state[$ scalar_name];
+    }
+
+    if (variable_struct_exists(_saved_state, "tools")
+    && is_struct(_saved_state.tools)
+    && variable_struct_exists(_saved_state.tools, "axe_owned"))
+    {
+        game_state.tools.axe_owned = _saved_state.tools.axe_owned;
+    }
+    else
+    {
+        game_state.tools.axe_owned =
+            tutorial_stage_implies_axe(game_state.tutorial_stage);
+    }
+
+    if (variable_struct_exists(_saved_state, "daily_resources_gathered")
+    && is_array(_saved_state.daily_resources_gathered))
+    {
+        game_state.daily_resources_gathered =
+            save_clone_array(_saved_state.daily_resources_gathered);
+    }
+
+    var record_fields = [
+        "tree_records",
+        "fieldrock_records",
+        "fieldstone_records"
+    ];
+    for (var record_field_index = 0;
+        record_field_index < array_length(record_fields);
+        record_field_index++)
+    {
+        var record_field = record_fields[record_field_index];
+        if (!variable_struct_exists(_saved_state, record_field)
+        || !is_array(_saved_state[$ record_field]))
+        {
+            continue;
+        }
+
+        game_state[$ record_field] =
+            save_clone_array(_saved_state[$ record_field]);
+        var records = game_state[$ record_field];
+        for (var record_index = 0;
+            record_index < array_length(records);
+            record_index++)
+        {
+            if (is_struct(records[record_index]))
+                records[record_index].seen_token = -1;
+        }
+    }
+
+    if (variable_struct_exists(_saved_state, "quest_statuses")
+    && is_array(_saved_state.quest_statuses))
+    {
+        game_state.quest_statuses =
+            save_clone_array(_saved_state.quest_statuses);
+    }
+
+    if (variable_struct_exists(_saved_state, "fence_records")
+    && is_array(_saved_state.fence_records))
+    {
+        game_state.fence_records =
+            fence_copy_records(_saved_state.fence_records);
+    }
+
+    if (variable_struct_exists(_saved_state, "removed_world_ids")
+    && is_array(_saved_state.removed_world_ids))
+    {
+        game_state.removed_world_ids =
+            save_clone_array(_saved_state.removed_world_ids);
+    }
+
+    task_state_restore_from_saved(
+        game_state,
+        _saved_state
+    );
+    return game_state_normalize(game_state);
 }
 
 function save_load()
@@ -317,34 +459,20 @@ function save_load()
     }
 
     if (!is_struct(data)
-    || !variable_struct_exists(data, "format_version")
-    || data.format_version != 1)
+    || !variable_struct_exists(data, "format_version"))
     {
         return false;
     }
 
-    if (!variable_struct_exists(data, "game_state")
+    data = save_migrate_to_current(data);
+
+    if (is_undefined(data)
+    || !variable_struct_exists(data, "game_state")
     || !is_struct(data.game_state)
     || !variable_struct_exists(data, "scene")
     || !is_struct(data.scene))
     {
         return false;
-    }
-
-    // Small version-one additions remain compatible with an earlier v1 file.
-    if (!variable_struct_exists(data.scene, "dialogue_active"))
-    {
-        data.scene.dialogue_active = false;
-        data.scene.dialogue_pages = [];
-        data.scene.dialogue_page_index = 0;
-        data.scene.dialogue_speaker = "";
-        data.scene.dialogue_completion_action = "";
-        data.scene.dialogue_style = NotificationStyle.PROMPT;
-    }
-
-    if (!variable_struct_exists(data.scene, "dialogue_completion_action"))
-    {
-        data.scene.dialogue_completion_action = "";
     }
 
     if (!variable_struct_exists(data, "settings") || !is_struct(data.settings))
@@ -357,186 +485,22 @@ function save_load()
     }
 
     var saved_state = data.game_state;
-    var game_state = game_state_create_default();
-    save_apply_amounts(game_state.player_inventory, saved_state.player_inventory);
-    save_apply_amounts(game_state.home_inventory, saved_state.home_inventory);
-    game_state.trip_rocks_gathered = saved_state.trip_rocks_gathered;
-    game_state.trip_xp_gained = saved_state.trip_xp_gained;
-    if (variable_struct_exists(saved_state, "daily_resources_gathered"))
-    {
-        game_state.daily_resources_gathered = save_clone_array(saved_state.daily_resources_gathered);
-    }
-    game_state.equipment_xp = saved_state.equipment_xp;
-    game_state.completed_deliveries = saved_state.completed_deliveries;
-    game_state.winch_attachment_state = saved_state.winch_attachment_state;
-    game_state.tutorial_intro_seen = saved_state.tutorial_intro_seen;
-    game_state.tutorial_stage = saved_state.tutorial_stage;
-    game_state.tutorial_hand_stones_spawned = saved_state.tutorial_hand_stones_spawned;
+    global.game_state = save_hydrate_game_state(saved_state);
 
-    if (variable_struct_exists(saved_state, "tools")
-    && is_struct(saved_state.tools)
-    && variable_struct_exists(saved_state.tools, "axe_owned"))
-    {
-        game_state.tools.axe_owned = saved_state.tools.axe_owned;
-    }
-    else
-    {
-        // Saves from before the axe slice preserve later tutorial progress.
-        game_state.tools.axe_owned = game_state.tutorial_stage != TutorialStage.TALK_TO_FARMER
-            && game_state.tutorial_stage != TutorialStage.TALK_TO_FARMERS_WIFE
-            && game_state.tutorial_stage != TutorialStage.TRIP_ONE_HAND_FIELDSTONE;
-    }
-
-    if (variable_struct_exists(saved_state, "tutorial_fieldstones_collected"))
-    {
-        game_state.tutorial_fieldstones_collected = clamp(
-            saved_state.tutorial_fieldstones_collected,
-            0,
-            6
-        );
-    }
-    else
-    {
-        game_state.tutorial_fieldstones_collected = game_state.tools.axe_owned
-            ? 6
-            : min(
-                6,
-                inventory_get_amount(game_state.player_inventory, ResourceId.FIELDSTONE)
-            );
-    }
-
-    if (variable_struct_exists(saved_state, "tree_records")
-    && is_array(saved_state.tree_records))
-    {
-        game_state.tree_records = save_clone_array(saved_state.tree_records);
-
-        // Room-presence tokens are runtime-only. Placed trees will mark the
-        // records that still exist in the current map during room creation.
-        for (var tree_index = 0;
-            tree_index < array_length(game_state.tree_records);
-            tree_index++)
-        {
-            game_state.tree_records[tree_index].seen_token = -1;
-        }
-    }
-
-    if (variable_struct_exists(saved_state, "fieldrock_records")
-    && is_array(saved_state.fieldrock_records))
-    {
-        game_state.fieldrock_records = save_clone_array(saved_state.fieldrock_records);
-
-        for (var fieldrock_index = 0;
-            fieldrock_index < array_length(game_state.fieldrock_records);
-            fieldrock_index++)
-        {
-            game_state.fieldrock_records[fieldrock_index].seen_token = -1;
-        }
-    }
-
-    if (variable_struct_exists(saved_state, "fieldstone_records")
-    && is_array(saved_state.fieldstone_records))
-    {
-        game_state.fieldstone_records = save_clone_array(saved_state.fieldstone_records);
-
-        for (var fieldstone_index = 0;
-            fieldstone_index < array_length(game_state.fieldstone_records);
-            fieldstone_index++)
-        {
-            game_state.fieldstone_records[fieldstone_index].seen_token = -1;
-        }
-    }
-
-    if (variable_struct_exists(saved_state, "quest_statuses"))
-    {
-        game_state.quest_statuses = save_clone_array(saved_state.quest_statuses);
-    }
-    else
-    {
-        game_state.quest_statuses[QuestId.FIRM_FOUNDATION] =
-            game_state.tutorial_stage == TutorialStage.COMPLETE
-                ? QuestStatus.COMPLETE
-                : QuestStatus.ACTIVE;
-    }
-
-    // Quest 1 does not become active until the Farmer's first conversation
-    // reaches its final page.
-    if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
-    {
-        game_state.quest_statuses[QuestId.FIRM_FOUNDATION] = QuestStatus.LOCKED;
-    }
-
-    if (variable_struct_exists(saved_state, "cabin_placement_unlocked"))
-    {
-        game_state.cabin_placement_unlocked = saved_state.cabin_placement_unlocked;
-    }
-    else
-    {
-        game_state.cabin_placement_unlocked =
-            game_state.tutorial_stage == TutorialStage.COMPLETE;
-    }
-
-    if (variable_struct_exists(saved_state, "cabin_site_placed"))
-    {
-        game_state.cabin_site_placed = saved_state.cabin_site_placed;
-    }
-
-    if (variable_struct_exists(saved_state, "cabin_site_room"))
-    {
-        game_state.cabin_site_room = saved_state.cabin_site_room;
-    }
-
-    if (variable_struct_exists(saved_state, "cabin_site_x"))
-    {
-        game_state.cabin_site_x = saved_state.cabin_site_x;
-    }
-
-    if (variable_struct_exists(saved_state, "cabin_site_y"))
-    {
-        game_state.cabin_site_y = saved_state.cabin_site_y;
-    }
-
-    // These optional fields keep earlier format-version-one saves compatible.
-    if (variable_struct_exists(saved_state, "day_number"))
-    {
-        game_state.day_number = saved_state.day_number;
-    }
-
-    if (variable_struct_exists(saved_state, "time_of_day"))
-    {
-        game_state.time_of_day = saved_state.time_of_day;
-    }
-
-    if (variable_struct_exists(saved_state, "homestead_stage"))
-    {
-        game_state.homestead_stage = homestead_stage_sanitize(
-            saved_state.homestead_stage,
-            game_state
-        );
-    }
-    else
-    {
-        game_state.homestead_stage = homestead_stage_infer(game_state);
-    }
-
-    if (variable_struct_exists(saved_state, "first_hub_hint_pending"))
-    {
-        game_state.first_hub_hint_pending = saved_state.first_hub_hint_pending;
-    }
-
-    if (variable_struct_exists(saved_state, "fence_records")
-    && is_array(saved_state.fence_records))
-    {
-        game_state.fence_records = fence_copy_records(saved_state.fence_records);
-    }
-
-    game_state.removed_world_ids = variable_struct_exists(saved_state, "removed_world_ids")
-        ? saved_state.removed_world_ids
-        : [];
-    global.game_state = game_state;
-
+    var fallback_settings = settings_ensure();
     global.game_settings = {
-        master_volume: data.settings.master_volume,
-        fullscreen: data.settings.fullscreen
+        master_volume: variable_struct_exists(
+            data.settings,
+            "master_volume"
+        )
+            ? data.settings.master_volume
+            : fallback_settings.master_volume,
+        fullscreen: variable_struct_exists(
+            data.settings,
+            "fullscreen"
+        )
+            ? data.settings.fullscreen
+            : fallback_settings.fullscreen
     };
     settings_apply();
 
@@ -557,7 +521,6 @@ function save_restore_room_state()
     var scene = global.save_restore_scene;
     var vehicle = instance_find(obj_skidsteer, 0);
     var player = instance_find(obj_player, 0);
-    var log = instance_find(obj_log, 0);
 
     if (instance_exists(vehicle))
     {
@@ -580,10 +543,7 @@ function save_restore_room_state()
 
         // A held cable is intentionally reconstructed as stowed on load.
         // Return its tutorial objective to the rear hitch as well.
-        if (game_state_ensure().tutorial_stage == TutorialStage.ATTACH_CABLE_TO_LOG)
-        {
-            game_state_ensure().tutorial_stage = TutorialStage.TAKE_WINCH_CABLE;
-        }
+        progression_restore_stowed_winch_state(game_state_ensure());
     }
 
     if (scene.player_active)
@@ -602,12 +562,19 @@ function save_restore_room_state()
         with (player) instance_destroy();
     }
 
-    if (scene.log_exists && instance_exists(log))
+    // Version-one saved one live log in the scene. Version two relies on the
+    // stable tree records for every log/stump instead of duplicating one.
+    if (variable_struct_exists(scene, "log_exists")
+    && scene.log_exists)
     {
-        log.x = scene.log_x;
-        log.y = scene.log_y;
-        log.pullable_state = PullableState.FREE;
-        log.tow_vehicle = noone;
+        var legacy_log = instance_find(obj_log, 0);
+        if (instance_exists(legacy_log))
+        {
+            legacy_log.x = scene.log_x;
+            legacy_log.y = scene.log_y;
+            legacy_log.pullable_state = PullableState.FREE;
+            legacy_log.tow_vehicle = noone;
+        }
     }
 
     if (game_state_ensure().tutorial_stage == TutorialStage.TRIP_ONE_HAND_FIELDSTONE)
@@ -623,7 +590,9 @@ function save_restore_room_state()
             0,
             scene.dialogue_style,
             scene.dialogue_speaker,
-            scene.dialogue_completion_action
+            dialogue_action_normalize(
+                scene.dialogue_completion_action
+            )
         );
 
         dialogue.page_index = clamp(

@@ -452,6 +452,8 @@ This is a good example of saving outcomes rather than trying to serialize every 
 
 Primary files:
 
+- `scripts/progression_helpers/progression_helpers.gml`
+- `scripts/task_helpers/task_helpers.gml`
 - `scripts/tutorial_progression_helpers/tutorial_progression_helpers.gml`
 - `scripts/tutorial_guidance_helpers/tutorial_guidance_helpers.gml`
 - `scripts/quest_helpers/quest_helpers.gml`
@@ -467,46 +469,65 @@ Current order:
 
 1. Talk to the Farmer.
 2. Talk to the Farmer's Wife.
-3. Collect six Fieldstones by hand.
-4. Receive the persistent axe.
-5. Chop and inspect a standing tree.
-6. Use the skidsteer to obtain and deliver all 16 Fieldstones.
-7. Collect and install the mailed winch.
-8. Inspect, attach, and haul the downed tree.
-9. Haul the stump for Small Lumber.
-10. Complete A Firm Foundation and unlock cabin placement.
+3. Accept, complete, and claim `Fieldstone by Hand`.
+4. Accept, complete, and claim `A Fallen Tree`.
+5. Accept, complete, and claim `Stone Haul`.
+6. Accept, complete, and claim `Fit the Winch`.
+7. Accept, complete, and claim `Timber Delivery`.
+8. Complete `A Firm Foundation` and start `A Place of Your Own`.
+9. Accept, place, and claim the cabin-site task.
+10. Rest at the site to open the homestead hub.
 
-Stage-specific functions protect transitions. For example, `tutorial_report_tree_felled` only advances from `CHOP_TREE`, and `tutorial_process_delivery` checks actual Homebase totals before changing stages.
+Only one board task may be active. Every task must be accepted before its
+mechanics unlock. Gameplay events complete tasks, and board claims expose the
+next task. `progression_helpers` is the only runtime write API for task, quest,
+tutorial-stage, and story-unlock state.
 
 ### Guidance is read-only
 
-`tutorial_guidance_target()` reads the current stage and returns one world coordinate for the yellow arrow. It must not advance progress. It resolves the relevant NPC, nearest Fieldstone, tree, Fieldrock/vehicle, hitch, log, stump, delivery area, or cabin site.
+`tutorial_guidance_target()` reads the current stage and returns one labeled
+target descriptor for the yellow arrow. It must not advance progress. It resolves
+the relevant NPC, Task Board, nearest Fieldstone, tree, Fieldrock/vehicle,
+hitch, log, stump, delivery area, or cabin site. `obj_tutorial_guidance` draws
+the normal marker in-world when visible and a directional GUI arrow at the
+screen edge when the target is outside the camera.
 
 This split matters: drawing an arrow cannot accidentally complete an objective.
 
 ### Quest system
 
-The quest layer gives the tutorial a durable journal presentation. `quest_get_definition` provides title, summary, completion summary, and rewards. `quest_get_objectives` derives each check mark from durable state.
+The quest layer gives the tutorial a durable journal presentation.
+`A Firm Foundation` contains the five resource/equipment tasks.
+`A Place of Your Own` contains the cabin-site task.
 
 The quest status array stores locked, active, or complete. The journal reads these definitions and objectives; it does not own them.
 
-Currently there is one quest ID. Adding many quests will eventually justify moving definitions into data structs, but the current switch is appropriate for this scale.
+The Task Board owns acceptance and reward claiming UI. It scrolls independently
+so additional definitions do not overflow the panel.
 
 ### Dialogue and completion actions
 
-NPC interactions call `notification_show_dialogue` with pages, speaker, style, and an optional completion action string. `obj_dialogue_bubble` owns presentation and page advancement. Dialogue helpers map completion actions to progression behavior.
+NPC interactions call `notification_show_dialogue` with pages, speaker, style,
+and an optional completion action ID. New actions use stable versioned strings.
+Permanent aliases normalize the older saved callback strings before dispatch.
 
 Dialogue pages, page index, speaker, style, and completion action can be saved. Short-lived hints and reward popups are intentionally not saved.
 
-### Current coupling risk
+### Stage coupling rule
 
 `TutorialStage` is referenced in many systems: progression, guidance, HUD, NPCs, resource availability, vehicle restrictions, winch behavior, quests, saving, and dialogue. The build works, but a new stage requires checking many files.
 
-The planned refactor should centralize transitions and stage queries without rewriting the tutorial content.
+Persisted stage numbers are append-only and are not in logical story order.
+Use `tutorial_stage_rank` or explicit predicates for ordering. Route all runtime
+writes through progression.
 
 ## 12. Save, load, migration, and room restoration
 
-Primary file: `scripts/save_system/save_system.gml`
+Primary files:
+
+- `scripts/save_migration_helpers/save_migration_helpers.gml`
+- `scripts/save_system/save_system.gml`
+- `scripts/room_reconciliation_helpers/room_reconciliation_helpers.gml`
 
 [[DIAGRAM:save_flow]]
 
@@ -519,7 +540,7 @@ The single JSON snapshot contains three top-level parts:
 - `scene` for current room and live actor/vehicle/dialogue placement;
 - `settings` for volume and fullscreen.
 
-The current format number is 1 even though optional fields have been added over time.
+The current format number is 2. Version-one data migrates before hydration.
 
 ### Snapshot creation
 
@@ -530,10 +551,10 @@ Scene data includes:
 - room name;
 - whether an on-foot player exists and its position;
 - vehicle position, angle, cargo, and driver state;
-- the standalone/tutorial log position;
 - active dialogue state.
 
-Tree-derived log/stump positions are primarily stored in their tree records.
+All tree-derived log/stump positions are stored in their tree records. The old
+standalone tutorial-log fields are read only when migrating a v1 scene.
 
 ### Writing
 
@@ -544,19 +565,20 @@ Tree-derived log/stump positions are primarily stored in their tree records.
 `save_load()`:
 
 1. Reads and parses JSON in a try/catch.
-2. Checks top-level shape and supported version.
-3. Supplies optional older-v1 fields.
-4. Starts from a fresh default game state.
-5. Copies saved values into the fresh schema.
-6. Resets runtime-only resource record tokens.
-7. Infers newer fields when an older save lacks them.
-8. stores a pending scene and sends GameMaker to the saved room.
+2. Migrates older versions through `save_migrate_to_current`.
+3. Starts from a fresh default game state.
+4. Hydrates the normalized current schema.
+5. Resets runtime-only resource record tokens.
+6. Stores the pending scene and sends GameMaker to the saved room.
 
 Starting from defaults is important. It gives new fields safe values even when an old save lacks them.
 
 ### Room restoration
 
-After room instances exist, `save_restore_room_state()` restores vehicle and player placement, cargo, standalone log position, and saved dialogue. It intentionally clears live winch pointers and restores the mechanism stowed.
+After room instances exist, `save_restore_room_state()` restores vehicle and
+player placement, cargo, and saved dialogue. It intentionally clears live
+winch pointers and restores the mechanism stowed. The room reconciler then
+restores the cabin site, fences, and mailed winch package idempotently.
 
 Separating state hydration from room restoration avoids trying to move instances before the room has constructed them.
 
@@ -574,18 +596,23 @@ Do not save values that can be safely reconstructed:
 
 Save durable outcomes instead: inventory, unlocks, stages, record positions, depletion and respawn days, current room, actor position, and dialogue page.
 
-### Why version 2 is the next cleanup
+### Version-one compatibility
 
-Optional-v1 compatibility checks now appear in several places. The next refactor should create explicit `v1 -> v2` migration functions, then hydrate one normalized schema. This will make future versions easier to reason about and test.
+`save_migrate_v1_to_v2` adds the dedicated Fieldrock counter, normalizes task
+and quest states, preserves post-stump cabin access, repairs the stored-package
+edge case, and maps saved dialogue actions to stable IDs. Compatibility is
+centralized here rather than scattered through hydration.
 
 ## 13. Resource regeneration
 
 Primary files:
 
 - `scripts/resource_regeneration_helpers/resource_regeneration_helpers.gml`
+- `scripts/fieldstone_regeneration_helpers/fieldstone_regeneration_helpers.gml`
+- `scripts/fieldrock_regeneration_helpers/fieldrock_regeneration_helpers.gml`
 - `scripts/tree_persistence_helpers/tree_persistence_helpers.gml`
 - `objects/obj_fieldstone_controller/`
-- `objects/obj_rock_controller/`
+- `objects/obj_fieldrock_controller/`
 - `objects/obj_tree_controller/`
 
 ### Room registration tokens
@@ -606,7 +633,9 @@ The tutorial can promote enough clear candidates to guarantee the remaining firs
 
 A placed Fieldrock ensures a record containing its original room/position, depleted state, and return day. Crushing schedules one-day regeneration. The controller respawns it only after the due day and only when the spawn is clear.
 
-The object remains named `obj_rock_controller`; renaming it to `obj_fieldrock_controller` is a clarity cleanup, not a behavior change.
+`obj_fieldrock_controller` performs the current-room Fieldrock regeneration
+check. Fieldstone candidate lifecycle and Fieldrock lifecycle are separate
+modules; the shared regeneration helper owns only room tokens and clearance.
 
 ### Trees
 
@@ -621,23 +650,40 @@ Clearance checks prevent resources from appearing inside the player, vehicle, NP
 Primary files:
 
 - `scripts/cabin_placement_helpers/cabin_placement_helpers.gml`
+- `scripts/fence_planning_helpers/fence_planning_helpers.gml`
 - `scripts/calendar_helpers/calendar_helpers.gml`
 - `objects/obj_cabin_placement_controller/`
 - `objects/obj_cabin_site/`
+- `objects/obj_skidsteer_parking_pad/`
 
 ### Cabin placement
 
-Quest completion unlocks a placement mode. The placement controller converts mouse position through the active camera into room coordinates, snaps to a 16-pixel grid, and validates a 64 by 64 site.
+Claiming `Timber Delivery` unlocks the second quest. Its explicit story order is
+`Park the Skidsteer`, `Mark the Cabin Site`, then `Build the Cabin`. Parking
+requires the whole stopped vehicle inside the 96 by 64 pad, no attached tow
+target, and the player on foot.
+
+Site placement begins only while `Mark the Cabin Site` is active. The
+controller converts mouse position through the active camera, snaps to the
+32-pixel fence grid, and validates the full fixed cabin-and-yard boundary.
 
 Validation rejects room edges, actors, NPCs, Fieldrocks, logs, ponds, the delivery area, and an existing site. Decorative asset-layer art still needs human visual checking because it has no collision objects.
 
-On confirmation, the site room and coordinates are stored in game state, `obj_cabin_site` is created, the homestead stage becomes `FIRST_REST_REQUIRED`, and the game saves.
+On confirmation, the site room and coordinates are stored and
+`obj_cabin_site` is created with `spr_cabin_before`. Interacting with it opens
+the bounded fence lesson. The exact four-by-five-interval rectangle and one
+front gate complete the marking task. `Build the Cabin` then changes the same
+site to `spr_cabin_after` and enters `FIRST_REST_REQUIRED`. Rest remains blocked
+until the build task is claimed.
 
-The site may be relocated before the first rest. After the hub opens, relocation is intentionally closed.
+The site may be relocated only while the marking task is active and before its
+fence is completed.
 
 ### Calendar
 
-Durable calendar values are `day_number` and minutes since midnight in `time_of_day`. A full day currently takes 900 real seconds once the tutorial is complete, the cabin is placed, and the hub is open.
+Durable calendar values are `day_number` and minutes since midnight in
+`time_of_day`. A full day currently takes 900 real seconds once the tutorial is
+complete, the cabin is built, and the hub is open.
 
 Sleeping at the cabin:
 
@@ -697,9 +743,10 @@ This is one of the larger draw files. It is acceptable now, but future HUD panel
 
 These are presentation objects. Durable progress is updated before they appear.
 
-## 16. Current code health and the planned refactor
+## 16. Current code health and the focused architecture
 
-The project is not too large or out of control. It has reached a sensible cleanup milestone.
+The project keeps its small GameMaker object/helper style, with explicit
+ownership at the seams that were beginning to accumulate.
 
 ### Healthy boundaries to keep
 
@@ -711,25 +758,20 @@ The project is not too large or out of control. It has reached a sensible cleanu
 - World records separate persistence from live instances.
 - Controllers keep spawn-area marker counts low.
 
-### Pressure points
+### Ownership now enforced
 
-1. `save_system.gml` is responsible for file I/O, snapshots, compatibility, hydration, settings, and scene restoration.
-2. `resource_inventory_helpers.gml` also owns the game-state schema and homestead compatibility.
-3. `resource_regeneration_helpers.gml` owns both Fieldstone and Fieldrock lifecycles.
-4. Direct `TutorialStage` knowledge is spread across many files.
-5. A few Draw GUI events are becoming long.
+1. `game_state_helpers` owns defaults and structural normalization.
+2. `save_migration_helpers` owns pure v1-to-v2 conversion.
+3. `save_system` owns snapshots, file I/O, hydration, and scene restoration.
+4. `progression_helpers` owns runtime tutorial/task/quest/story transitions.
+5. Guidance returns read-only target descriptors; its object owns rendering.
+6. Room reconciliation owns durable instance reconstruction.
+7. Fieldstone and Fieldrock lifecycle code lives in separate modules.
+8. Task Board scrolling prevents additional tasks from overflowing the panel.
 
-### Refactor order
-
-1. Extract game-state schema/validation from inventory.
-2. Add save format version 2 and explicit v1 migration.
-3. Route tutorial transitions through a central API.
-4. Split Fieldstone and Fieldrock regeneration modules.
-5. Rename `obj_rock_controller` to `obj_fieldrock_controller`.
-
-Do not combine this with new gameplay. The known-good playtest is valuable; structural changes should preserve it exactly.
-
-The ready-to-use prompt is in `docs/CODEX_ARCHITECTURE_REFACTOR_PROMPT.md`.
+The remaining large Draw events can be split only when a second consumer makes
+the shared panel/list behavior concrete. Avoid adding a generic framework in
+advance of that need.
 
 [[PAGEBREAK]]
 
@@ -1041,14 +1083,15 @@ function clay_regeneration_update()
 
 For multiple deposits, avoid `instance_nearest` as the final identity test if another deposit can be nearby. A reusable `clay_find_for_record(record)` loop that compares `world_id` is safer and matches the Fieldrock/Fieldstone record pattern.
 
-## Step 8: save version 2
+## Step 8: save version 4
 
-The recommended refactor normalizes saves before hydration.
+The current project uses format version 3. A new durable Clay record should
+advance it to version 4 and normalize before hydration.
 
 Snapshot addition:
 
 ```gml
-format_version: 2,
+format_version: 4,
 game_state: {
     // existing fields...
     clay_records: save_clone_array(game_state.clay_records)
@@ -1058,24 +1101,24 @@ game_state: {
 Migration addition:
 
 ```gml
-function save_migrate_v1_to_v2(_data)
+function save_migrate_v3_to_v4(_data)
 {
     if (!variable_struct_exists(_data.game_state, "clay_records"))
     {
         _data.game_state.clay_records = [];
     }
 
-    _data.format_version = 2;
+    _data.format_version = 4;
     return _data;
 }
 
 function save_migrate_to_current(_data)
 {
-    while (_data.format_version < 2)
+    while (_data.format_version < 4)
     {
         switch (_data.format_version)
         {
-            case 1: _data = save_migrate_v1_to_v2(_data); break;
+            case 3: _data = save_migrate_v3_to_v4(_data); break;
             default: return undefined;
         }
     }
@@ -1095,9 +1138,9 @@ for (var i = 0; i < array_length(game_state.clay_records); i++)
 }
 ```
 
-An old v1 save receives an empty record array. Existing room deposits then register normally. A v2 save retains depletion and due days.
-
-If the refactor has not happened yet, Clay can be added as another optional v1 field, but that continues the technical debt. A versioned migration is the safer long-term implementation.
+An old v3 save receives an empty record array. Existing room deposits then
+register normally. A v4 save retains depletion and due days. Existing v1 and
+v2 inputs still travel through their current migrations before v3-to-v4 runs.
 
 ## Step 9: inventory, Home Delivery, and HUD
 
@@ -1253,10 +1296,13 @@ This is what "full implementation" means in this project: data definition, live 
 - `player_interaction_helpers`: input, target selection, prompts, and player collision.
 - `skidsteer_helpers`: vehicle controls, movement, contact, enter/exit.
 - `winch_helpers`: hitch, cable, attachment, towing, detach, drawing.
-- `tutorial_progression_helpers`: tutorial transitions.
+- `progression_helpers`: runtime task, quest, stage, and story-unlock writes.
+- `tutorial_progression_helpers`: validates world events against the active task.
 - `tutorial_guidance_helpers`: read-only arrow targeting.
-- `quest_helpers`: quest presentation data/status/objectives.
-- `save_system`: snapshot, file I/O, migration, hydration, room restore.
+- `task_helpers` and `quest_helpers`: definitions and read-only status/objectives.
+- `save_migration_helpers`: pure version conversion and legacy aliases.
+- `save_system`: snapshot, file I/O, hydration, and scene restoration.
+- `room_reconciliation_helpers`: idempotent current-room object restoration.
 - resource-specific regeneration helpers: persistent resource lifecycle.
 - `tree_persistence_helpers`: multi-piece tree lifecycle.
 - `cabin_placement_helpers`: site validation, placement, restoration.
@@ -1266,7 +1312,7 @@ This is what "full implementation" means in this project: data definition, live 
 
 ## Closing perspective
 
-The current project is understandable and feature-complete for its first slice. Its next step is not a rewrite. It is a careful separation of state schema, migrations, tutorial transitions, and resource-specific regeneration while preserving the successful gameplay baseline.
-
-Use `docs/CODEX_ARCHITECTURE_REFACTOR_PROMPT.md` when ready to perform that cleanup.
-
+The first slice now has the ownership boundaries needed for additional tasks,
+quests, rooms, and resources without changing the project's established
+GameMaker development style. The historical implementation specification is
+retained in `docs/CODEX_ARCHITECTURE_REFACTOR_PROMPT.md`.

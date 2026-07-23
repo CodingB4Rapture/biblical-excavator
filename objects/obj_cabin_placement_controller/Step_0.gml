@@ -17,8 +17,8 @@ var view_h = camera_get_view_height(active_camera);
 var mouse_view_x = window_mouse_get_x() / max(1, window_get_width());
 var mouse_view_y = window_mouse_get_y() / max(1, window_get_height());
 
-preview_x = round((view_x + mouse_view_x * view_w) / grid_size) * grid_size;
-preview_y = round((view_y + mouse_view_y * view_h) / grid_size) * grid_size;
+preview_x = fence_snap_to_grid(view_x + mouse_view_x * view_w);
+preview_y = fence_snap_to_grid(view_y + mouse_view_y * view_h);
 placement_valid = cabin_placement_is_valid(preview_x, preview_y, placement_relocating);
 
 if (input_lock_frames > 0)
@@ -30,7 +30,7 @@ if (input_lock_frames > 0)
 if (keyboard_check_pressed(vk_escape) || mouse_check_button_pressed(mb_right))
 {
     instance_destroy();
-    notification_show_hint("Cabin placement cancelled. Press B when you are ready.", game_get_speed(gamespeed_fps) * 3, false);
+    notification_show_hint("Site selection cancelled. Press B when you are ready.", game_get_speed(gamespeed_fps) * 3, false);
     exit;
 }
 
@@ -42,6 +42,6 @@ if (mouse_check_button_pressed(mb_left))
     }
     else
     {
-        notification_show_hint("That space is blocked. Choose a clear 64 x 64 area.", game_get_speed(gamespeed_fps) * 2, false);
+        notification_show_hint("That cabin-and-yard area is blocked. Choose another clear space.", game_get_speed(gamespeed_fps) * 2, false);
     }
 }

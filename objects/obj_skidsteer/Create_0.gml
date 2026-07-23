@@ -7,11 +7,23 @@ mask_index = spr_contact;
 drive_speed = 0;
 turn_speed  = 0;
 
-max_drive_speed = 1.4;
-max_turn_speed  = 0.8;
+// Driving feel tuning. Speed values are pixels per step; acceleration and
+// deceleration values are speed changes per step.
+max_forward_speed = 1.4;
+max_reverse_speed = 0.9;
+forward_acceleration = 0.045;
+reverse_acceleration = 0.035;
+coast_deceleration = 0.025;
+brake_deceleration = 0.11;
 
-drive_acceleration = 0.08;
-turn_acceleration  = 0.22;
+max_turn_speed = 0.8;
+turn_acceleration = 0.14;
+turn_deceleration = 0.18;
+high_speed_turn_multiplier = 0.72;
+
+// Keyboard input remains digital. Keeping the vehicle axes normalized and
+// deadzoned here leaves a clean seam for analog controller input later.
+vehicle_input_deadzone = 0.12;
 
 // The artwork already faces north correctly.
 image_angle = 0;

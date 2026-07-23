@@ -36,7 +36,7 @@ interaction_run = function(_actor)
                 0,
                 NotificationStyle.PROMPT,
                 "FARMER'S WIFE",
-                "unlock_cabin_placement"
+                DIALOGUE_ACTION_UNLOCK_CABIN
             );
             return;
         }

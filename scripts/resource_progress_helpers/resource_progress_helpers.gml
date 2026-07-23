@@ -75,6 +75,14 @@ function progress_award_crushed_resource(_resource_id, _xp_amount, _source_insta
     inventory_add(vehicle.cargo_inventory, reward_id, reward_amount);
 
     game_state.trip_rocks_gathered += reward_amount;
+    if (_resource_id == ResourceId.FIELDROCK
+    && task_is_active(TaskId.STONE_HAUL, game_state))
+    {
+        game_state.tutorial_fieldrocks_crushed = min(
+            10,
+            game_state.tutorial_fieldrocks_crushed + 1
+        );
+    }
     game_state.daily_resources_gathered[reward_id] += reward_amount;
     game_state.trip_xp_gained += _xp_amount;
     game_state.equipment_xp += _xp_amount;
@@ -187,7 +195,8 @@ function progress_deliver_homebase(_dropoff)
         small_lumber: 0,
         vehicle_was_in_zone: false,
         mail_became_ready: false,
-        quest_completed: false
+        quest_completed: false,
+        task_completed: false
     };
 
     delivery.fieldstone += inventory_transfer_resource(

@@ -22,7 +22,7 @@ if (variable_global_exists("save_restore_pending") && global.save_restore_pendin
 {
     save_restore_room_state();
     global.save_restore_pending = false;
-    fence_room_restored = false;
+    room_reconcile_pending = true;
 }
 
 if (!instance_exists(obj_fieldstone_controller))
@@ -35,16 +35,32 @@ if (!instance_exists(obj_tree_controller))
     instance_create_depth(0, 0, 1000, obj_tree_controller);
 }
 
-gameplay_ensure_controllable_actor();
-tutorial_ensure_winch_package();
-cabin_restore_site();
-
-if (!fence_room_restored)
+if (!instance_exists(obj_fieldrock_controller))
 {
-    fence_restore_room();
-    fence_room_restored = true;
+    instance_create_depth(0, 0, 1000, obj_fieldrock_controller);
 }
 
+if (!instance_exists(obj_tutorial_guidance))
+{
+    instance_create_depth(0, 0, -1300, obj_tutorial_guidance);
+}
+
+gameplay_ensure_controllable_actor();
+var current_room_name = room_get_name(room);
+if (reconciled_room_name != current_room_name)
+{
+    resource_regeneration_sync_room();
+    reconciled_room_name = current_room_name;
+    room_reconcile_pending = true;
+}
+
+if (room_reconcile_pending)
+{
+    room_reconcile_current();
+    room_reconcile_pending = false;
+}
+
+progression_update_announcements();
 calendar_update();
 
 if (calendar_show_pending_hub_intro())
@@ -75,12 +91,18 @@ if (keyboard_check_pressed(ord("F"))
 && !instance_exists(obj_pause_menu)
 && !instance_exists(obj_cabin_placement_controller))
 {
-    instance_create_depth(0, 0, -800, obj_fence_planning_controller);
-    notification_show_hint(
-        "Fence planning: click two opposite corners, then press F to save.",
-        game_get_speed(gamespeed_fps) * 4,
-        false
-    );
+    if (fence_planning_is_unlocked())
+    {
+        instance_create_depth(0, 0, -800, obj_fence_planning_controller);
+    }
+    else
+    {
+        notification_show_hint(
+            "Fence planning unlocks when you mark the cabin site.",
+            game_get_speed(gamespeed_fps) * 3,
+            false
+        );
+    }
     exit;
 }
 
@@ -106,7 +128,8 @@ if (keyboard_check_pressed(ord("B")) && !instance_exists(obj_cabin_placement_con
 {
     var game_state = game_state_ensure();
     var allow_relocate = game_state.cabin_site_placed
-        && game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED;
+        && task_is_active(TaskId.MARK_CABIN_SITE, game_state)
+        && !game_state.cabin_fence_marked;
 
     cabin_begin_placement(allow_relocate);
 

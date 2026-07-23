@@ -1,6 +1,9 @@
 /// obj_main_menu - Create Event
 
+progression_announcement_reset();
+
 var run_fence_tests = environment_get_variable("BIBLICAL_FENCE_TESTS") == "1";
+var run_task_tests = environment_get_variable("BIBLICAL_TASK_TESTS") == "1";
 
 for (var argument_index = 1;
     argument_index <= parameter_count();
@@ -10,11 +13,17 @@ for (var argument_index = 1;
     {
         run_fence_tests = true;
     }
+
+    if (parameter_string(argument_index) == "--task-tests")
+    {
+        run_task_tests = true;
+    }
 }
 
-if (run_fence_tests)
+if (run_fence_tests || run_task_tests)
 {
-    fence_planning_run_tests();
+    if (run_fence_tests) fence_planning_run_tests();
+    if (run_task_tests) task_run_tests();
     game_end();
     exit;
 }
