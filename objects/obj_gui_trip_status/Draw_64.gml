@@ -3,6 +3,7 @@
 draw_set_font(-1);
 
 var gui_w = display_get_gui_width();
+var gui_h = display_get_gui_height();
 var game_state = game_state_ensure();
 var vehicle = progress_get_vehicle();
 var player = instance_find(obj_player, 0);
@@ -142,25 +143,25 @@ else if (game_state.homestead_stage == HomesteadStage.HUB_OPEN
 trip_heading = "Current Trip - " + trip_label;
 
 var screen_margin = 22;
-var trip_right = gui_w - screen_margin;
-var trip_left = trip_right - trip_panel_width;
-var trip_top = 22;
-var trip_bottom = trip_top + trip_panel_height;
+var trip_left = screen_margin;
+var trip_right = trip_left + trip_panel_width;
+var trip_bottom = gui_h - screen_margin;
+var trip_top = trip_bottom - trip_panel_height;
 
-var home_right = trip_left - panel_gap;
-var home_left = home_right - home_panel_width;
-var home_top = trip_top;
+var home_left = trip_right + panel_gap;
+var home_right = home_left + home_panel_width;
+var home_bottom = trip_bottom;
+var home_top = home_bottom - home_panel_height;
 
-// A narrow gameplay GUI cannot hold both cards side by side. Keep them
-// right-aligned and stack Homebase beneath Current Trip in that case.
-if (home_left < screen_margin)
+// A narrow gameplay GUI cannot hold both cards side by side. Keep Current
+// Trip anchored at bottom-left and stack Homebase directly above it.
+if (home_right > gui_w - screen_margin)
 {
     home_left = trip_left;
     home_right = trip_right;
-    home_top = trip_bottom + panel_gap;
+    home_bottom = trip_top - panel_gap;
+    home_top = home_bottom - home_panel_height;
 }
-
-var home_bottom = home_top + home_panel_height;
 
 var panel_color = make_color_rgb(21, 25, 24);
 var panel_edge = make_color_rgb(74, 57, 30);
@@ -205,7 +206,9 @@ draw_set_alpha(0.88);
 draw_set_color(panel_color);
 draw_roundrect(trip_left + 4, trip_top + 4, trip_right - 4, trip_bottom - 4, false);
 
-if (show_homebase)
+// Conversation takes visual priority beside Current Trip. The contextual
+// Homebase card returns as soon as the dialogue closes.
+if (show_homebase && !dialogue_is_active())
 {
     draw_set_alpha(0.92);
     draw_set_color(panel_edge);
@@ -237,38 +240,39 @@ draw_text_ext(
 
 draw_text(
     trip_left + 12,
-    trip_top + 64,
+    trip_top + 70,
     "Backpack: " + string(pocket_fieldstones)
     + " / " + string(game_state.player_inventory.capacity)
 );
 
 draw_text(
     trip_left + 12,
-    trip_top + 82,
+    trip_top + 88,
     "Vehicle stone: " + string(vehicle_fieldstones)
     + " / " + string(vehicle_capacity)
 );
 
 draw_text(
     trip_left + 12,
-    trip_top + 100,
+    trip_top + 106,
     "Gathered: " + string(game_state.trip_rocks_gathered)
     + "    Trip XP: " + string(game_state.trip_xp_gained)
 );
 
 draw_set_color(accent_color);
-draw_set_halign(fa_right);
-var journal_prompt = "[I/Tab] Inventory  [Q] Quest Journal";
+draw_set_halign(fa_left);
+draw_text(trip_left + 12, trip_top + 126, "[I/Tab] Inventory");
+
+var journal_prompt = "[Q] Quest Journal";
 
 if (game_state.cabin_placement_unlocked && !game_state.cabin_site_placed)
 {
-    journal_prompt = "[I/Tab] Inventory  [Q] Journal  [B] Cabin Site";
+    journal_prompt += "    [B] Cabin Site";
 }
 
-draw_text(trip_right - 12, trip_top + 118, journal_prompt);
-draw_set_halign(fa_left);
+draw_text(trip_left + 12, trip_top + 144, journal_prompt);
 
-if (show_homebase)
+if (show_homebase && !dialogue_is_active())
 {
     draw_set_color(accent_color);
     draw_text(home_left + 12, home_top + 10, "Homebase");

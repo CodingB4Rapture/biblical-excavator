@@ -29,8 +29,8 @@ interaction_run = function(_actor)
         {
             notification_show_dialogue(
                 [
-                    "Now you've got the supplies to build your own cabin!",
-                    "Choose a clear place for the cabin site. We can work out the construction stages next."
+                    "You've done wonderful work--there are enough supplies now to build your own cabin!",
+                    "Choose a clear place for the cabin site, and we'll work through the construction together."
                 ],
                 speaker,
                 0,
@@ -42,7 +42,7 @@ interaction_run = function(_actor)
         }
 
         notification_show_dialogue(
-            "Thank you. I'll put these with our supplies.",
+            "Thank you. I'll keep these safe with our supplies.",
             speaker,
             game_get_speed(gamespeed_fps) * 3,
             NotificationStyle.PROMPT
@@ -51,7 +51,7 @@ interaction_run = function(_actor)
         if (delivery.mail_became_ready)
         {
             notification_show_dialogue(
-                "A winch attachment came in the mail. The package is beside Home Delivery.",
+                "Good news--a winch attachment came in the mail. I left the package beside Home Delivery for you.",
                 speaker,
                 game_get_speed(gamespeed_fps) * 6,
                 NotificationStyle.PROMPT

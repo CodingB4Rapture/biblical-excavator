@@ -15,6 +15,7 @@ resource_regeneration_begin_room();
 randomize();
 
 var game_state = game_state_ensure();
+fence_room_restored = false;
 
 // The day card owns its pause and fade independently of menus and dialogue.
 day_transition_active = false;

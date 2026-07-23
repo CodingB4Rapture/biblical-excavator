@@ -29,12 +29,12 @@ function dialogue_get_speaker_name(_speaker)
 function dialogue_get_palette(_speaker_name)
 {
     var palette = {
-        panel_color: make_color_rgb(35, 29, 23),
+        panel_color: make_color_rgb(43, 31, 23),
         panel_shadow: make_color_rgb(12, 10, 8),
-        border_dark: make_color_rgb(74, 48, 21),
-        border_gold: make_color_rgb(220, 170, 70),
-        text_color: make_color_rgb(255, 240, 208),
-        prompt_color: make_color_rgb(232, 209, 158),
+        border_dark: make_color_rgb(82, 51, 25),
+        border_gold: make_color_rgb(226, 164, 72),
+        text_color: make_color_rgb(255, 229, 190),
+        prompt_color: make_color_rgb(242, 195, 128),
         portrait_bg: make_color_rgb(105, 79, 48),
         skin: make_color_rgb(224, 183, 132),
         hair: make_color_rgb(77, 52, 34),
@@ -72,25 +72,56 @@ function dialogue_get_layout(_body_text)
 {
     var gui_w = display_get_gui_width();
     var gui_h = display_get_gui_height();
-    var margin = clamp(gui_w * 0.035, 20, 36);
-    var panel_height = clamp(gui_h * 0.34, 210, 252);
-    var panel_left = margin;
+    var margin = 22;
+    var trip_hud = instance_find(obj_gui_trip_status, 0);
+    var info_width = instance_exists(trip_hud)
+        ? trip_hud.trip_panel_width
+        : 300;
+    var info_height = instance_exists(trip_hud)
+        ? trip_hud.trip_panel_height
+        : 172;
+    var panel_gap = instance_exists(trip_hud)
+        ? trip_hud.panel_gap
+        : 12;
+    // A few extra pixels above the trip card preserve three comfortable body
+    // lines while remaining much smaller than the former full-width panel.
+    var panel_height = min(184, info_height + 12);
+    var panel_left = margin + info_width + panel_gap;
     var panel_right = gui_w - margin;
     var panel_bottom = gui_h - margin;
     var panel_top = panel_bottom - panel_height;
-    var inner_padding = 20;
-    var portrait_size = min(132, panel_height - inner_padding * 2);
+    var inner_padding = 14;
+
+    // The standard 1280 x 720 layout places conversation immediately to the
+    // right of Current Trip. On a genuinely narrow GUI, move it above the
+    // information card rather than crushing the text into an unreadable strip.
+    if (panel_right - panel_left < 540)
+    {
+        panel_left = margin;
+        panel_right = gui_w - margin;
+        panel_height = max(
+            132,
+            min(
+                panel_height,
+                gui_h - margin * 2 - info_height - panel_gap
+            )
+        );
+        panel_bottom = gui_h - margin - info_height - panel_gap;
+        panel_top = panel_bottom - panel_height;
+    }
+
+    var portrait_size = min(108, panel_height - inner_padding * 2);
     var portrait_left = panel_left + inner_padding;
     var portrait_top = panel_top + (panel_height - portrait_size) * 0.5;
-    var text_left = portrait_left + portrait_size + 26;
+    var text_left = portrait_left + portrait_size + 18;
     var text_right = panel_right - inner_padding;
     var speaker_top = panel_top + inner_padding + 2;
-    var speaker_height = 24;
-    var prompt_height = 20;
-    var body_top = speaker_top + speaker_height + 16;
-    var body_bottom = panel_bottom - inner_padding - prompt_height - 10;
+    var speaker_height = 20;
+    var prompt_height = 18;
+    var body_top = speaker_top + speaker_height + 10;
+    var body_bottom = panel_bottom - inner_padding - prompt_height - 8;
     var body_width = max(220, text_right - text_left);
-    var body_line_sep = font_get_size(description_font) + 12;
+    var body_line_sep = font_get_size(description_font) + 8;
 
     draw_set_font(description_font);
     var body_height = string_height_ext(_body_text, body_line_sep, body_width);

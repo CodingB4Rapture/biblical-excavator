@@ -245,6 +245,7 @@ function game_state_create_default()
         day_number: 1,
         // Minutes since midnight; 1080 is 6:00 PM.
         time_of_day: 1080,
+        fence_records: [],
         removed_world_ids: []
     };
 }
@@ -420,6 +421,12 @@ function game_state_ensure()
     if (!variable_struct_exists(global.game_state, "first_hub_hint_pending"))
     {
         global.game_state.first_hub_hint_pending = false;
+    }
+
+    if (!variable_struct_exists(global.game_state, "fence_records")
+    || !is_array(global.game_state.fence_records))
+    {
+        global.game_state.fence_records = [];
     }
 
     // Earlier tutorial code collected the mail automatically but left the

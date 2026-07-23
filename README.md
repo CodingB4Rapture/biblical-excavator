@@ -13,6 +13,12 @@ commercialized, or incorporated into another project without permission.
 - `WASD` or arrow keys: walk or drive.
 - `E` while driving: exit the vehicle.
 - `E` on foot: use the currently displayed contextual action.
+- `F`: enter fence planning; click two opposite corners to preview and place a
+  rectangular enclosure, then press `F` again to save and exit.
+- Right click: cancel the current corner or remove the gate/enclosure under
+  the cursor.
+- `G`: toggle gate placement, then click a straight horizontal fence side.
+  The first version supports one gate.
 
 The current loop supports backpack collection, vehicle rock hauling,
 wife-managed Homebase deliveries, and a placeholder winch attachment unlocked

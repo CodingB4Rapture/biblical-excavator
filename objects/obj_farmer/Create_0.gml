@@ -26,8 +26,8 @@ interaction_run = function(_actor)
                 "Work that didn't have to be done in vain.",
                 "A good book says, 'The righteous shall inherit the land, and dwell in it forever.'",
                 "My wife makes sure I stay busy enough to dwell on it forever, that's for certain.",
-                "Still, I'm not as young as I used to be. That's why we put out the notice, and why you're standing here now. I'm glad you came.",
-                "Let's hope you prove to be as good as your application. Talk to my wife for your first task."
+                "Still, I'm not as young as I used to be. That's why we put out the notice, and why you're standing here now. I'm truly glad you came.",
+                "We're grateful for the help. Go introduce yourself to my wife; she'll get you settled with your first task."
             ],
             id,
             0,
@@ -41,7 +41,7 @@ interaction_run = function(_actor)
     if (homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
     {
         notification_show_dialogue(
-            "Cabin site's set. Best thing now is to rest there and start fresh in the morning.",
+            "You did good work today. Rest at the cabin site, and we'll all start fresh in the morning.",
             id,
             0,
             NotificationStyle.PROMPT,
@@ -53,7 +53,7 @@ interaction_run = function(_actor)
     if (homestead_stage == HomesteadStage.HUB_OPEN)
     {
         notification_show_dialogue(
-            "Your cabin site's established. Ordinary homestead work can begin now.",
+            "You've made a fine start on your cabin site. There's plenty of homestead work waiting whenever you're ready.",
             id,
             0,
             NotificationStyle.PROMPT,
@@ -62,5 +62,5 @@ interaction_run = function(_actor)
         return;
     }
 
-    notification_show_dialogue("My wife keeps the work list straight. Speak with her when you need direction.", id, 0, NotificationStyle.PROMPT, "FARMER");
+    notification_show_dialogue("My wife keeps our work list straight. Speak with her whenever you need a little direction.", id, 0, NotificationStyle.PROMPT, "FARMER");
 };

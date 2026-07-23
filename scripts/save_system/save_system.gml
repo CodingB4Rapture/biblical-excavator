@@ -228,6 +228,7 @@ function save_build_snapshot()
             first_hub_hint_pending: game_state.first_hub_hint_pending,
             day_number: game_state.day_number,
             time_of_day: game_state.time_of_day,
+            fence_records: fence_copy_records(game_state.fence_records),
             removed_world_ids: save_clone_array(game_state.removed_world_ids)
         },
         scene: scene,
@@ -520,6 +521,12 @@ function save_load()
     if (variable_struct_exists(saved_state, "first_hub_hint_pending"))
     {
         game_state.first_hub_hint_pending = saved_state.first_hub_hint_pending;
+    }
+
+    if (variable_struct_exists(saved_state, "fence_records")
+    && is_array(saved_state.fence_records))
+    {
+        game_state.fence_records = fence_copy_records(saved_state.fence_records);
     }
 
     game_state.removed_world_ids = variable_struct_exists(saved_state, "removed_world_ids")

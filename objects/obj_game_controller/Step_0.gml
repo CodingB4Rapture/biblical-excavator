@@ -22,6 +22,7 @@ if (variable_global_exists("save_restore_pending") && global.save_restore_pendin
 {
     save_restore_room_state();
     global.save_restore_pending = false;
+    fence_room_restored = false;
 }
 
 if (!instance_exists(obj_fieldstone_controller))
@@ -37,6 +38,13 @@ if (!instance_exists(obj_tree_controller))
 gameplay_ensure_controllable_actor();
 tutorial_ensure_winch_package();
 cabin_restore_site();
+
+if (!fence_room_restored)
+{
+    fence_restore_room();
+    fence_room_restored = true;
+}
+
 calendar_update();
 
 if (calendar_show_pending_hub_intro())
@@ -49,6 +57,31 @@ if (variable_global_exists("save_new_game_pending") && global.save_new_game_pend
     // Wait until all room instances exist, then create the first usable save.
     save_write();
     global.save_new_game_pending = false;
+}
+
+if (instance_exists(obj_fence_planning_controller))
+{
+    exit;
+}
+
+var fence_toggle_ready = !variable_global_exists("fence_toggle_ready_at")
+    || current_time >= global.fence_toggle_ready_at;
+
+if (keyboard_check_pressed(ord("F"))
+&& fence_toggle_ready
+&& !dialogue_is_active()
+&& !instance_exists(obj_quest_menu)
+&& !instance_exists(obj_inventory_menu)
+&& !instance_exists(obj_pause_menu)
+&& !instance_exists(obj_cabin_placement_controller))
+{
+    instance_create_depth(0, 0, -800, obj_fence_planning_controller);
+    notification_show_hint(
+        "Fence planning: click two opposite corners, then press F to save.",
+        game_get_speed(gamespeed_fps) * 4,
+        false
+    );
+    exit;
 }
 
 if (keyboard_check_pressed(ord("Q"))

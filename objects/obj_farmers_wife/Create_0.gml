@@ -33,8 +33,8 @@ interaction_run = function(_actor)
     {
         notification_show_dialogue(
             [
-                "For the cabin foundation, we need 16 Fieldstones and one good log. First, gather 6 small loose Fieldstones by hand.",
-                "After that, the work vehicle can handle the remaining 10. Take your time—something is coming that will help us handle the log afterward."
+                "We're glad to have another pair of hands. For your cabin foundation, we'll need 16 Fieldstones and one good log. Begin with 6 loose Fieldstones gathered by hand.",
+                "After that, the work vehicle can handle the remaining 10. Take your time--we have something coming that will help with the log afterward."
             ],
             id,
             0,
@@ -49,8 +49,8 @@ interaction_run = function(_actor)
     {
         notification_show_dialogue(
             [
-                "Walk the land and choose a clear place for the cabin site.",
-                "I can help you mark it now, and you can still move around before you left-click the final spot."
+                "You've earned a place of your own here. Walk the land and choose a clear spot for your cabin site.",
+                "I'll help you mark it. Take all the time you need before you left-click the final spot."
             ],
             id,
             0,
@@ -65,8 +65,8 @@ interaction_run = function(_actor)
     {
         notification_show_dialogue(
             [
-                "The cabin site is placed. If that spot doesn't feel right yet, we can move the stakes before you rest.",
-                "After the site feels right, rest there and we'll begin the next chapter in the morning."
+                "The cabin site is placed. If the spot doesn't feel like home yet, we can move the stakes before you rest.",
+                "Once it feels right, rest there. We'll begin the next chapter together in the morning."
             ],
             id,
             0,
@@ -92,8 +92,8 @@ interaction_run = function(_actor)
         {
             notification_show_dialogue(
                 [
-                    "Now you've got the supplies to build your own cabin!",
-                    "Choose a clear place for the cabin site. We can work out the construction stages next."
+                    "You've done wonderful work--there are enough supplies now to build your own cabin!",
+                    "Choose a clear place for the cabin site, and we'll work through the construction together."
                 ],
                 id,
                 0,
@@ -108,7 +108,7 @@ interaction_run = function(_actor)
         if (delivery.mail_became_ready)
         {
             notification_show_dialogue(
-                "A winch attachment came in the mail. The package is beside Home Delivery.",
+                "Good news--a winch attachment came in the mail. I left the package beside Home Delivery for you.",
                 id,
                 0,
                 NotificationStyle.PROMPT,
@@ -126,7 +126,7 @@ interaction_run = function(_actor)
     if (delivery.total > 0)
     {
         notification_show_dialogue(
-            "Thank you. I'll put these with our cabin supplies.",
+            "Thank you. I'll keep these safe with your cabin supplies.",
             id,
             game_get_speed(gamespeed_fps) * 3,
             NotificationStyle.PROMPT
@@ -144,11 +144,11 @@ interaction_run = function(_actor)
         return;
     }
 
-    var empty_message = "Nothing to put away yet. Bring home whatever you can use.";
+    var empty_message = "Nothing to put away just yet. Bring home whatever looks useful, and I'll keep it safe.";
 
     if (homestead_stage == HomesteadStage.HUB_OPEN)
     {
-        empty_message = "The cabin site is established. Bring home what you can use, and we'll keep building from there.";
+        empty_message = "Your cabin site is established. Bring home what you can use, and we'll keep building from there together.";
     }
 
     if (game_state.winch_attachment_state == AttachmentState.INSTALLED)

@@ -3,7 +3,7 @@
 progress_ensure_inventory();
 
 trip_panel_width = 300;
-trip_panel_height = 140;
+trip_panel_height = 172;
 home_panel_width = 300;
 home_panel_height = 122;
 panel_gap = 12;

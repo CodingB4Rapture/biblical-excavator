@@ -127,3 +127,18 @@ enum HomesteadStage
     HUB_OPEN
 }
 
+enum FenceNeighbor
+{
+    NORTH = 1,
+    EAST = 2,
+    SOUTH = 4,
+    WEST = 8
+}
+
+enum FenceGatePart
+{
+    NONE = 0,
+    LEFT = 1,
+    RIGHT = 2
+}
+

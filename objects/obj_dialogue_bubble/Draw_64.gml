@@ -42,7 +42,7 @@ draw_set_valign(fa_bottom);
 draw_set_font(-1);
 draw_set_color(palette.prompt_color);
 
-var advance_text = "Click / E / Enter / Space";
+var advance_text = "Continue: Click / E / Enter / Space";
 if (array_length(pages) > 1)
 {
     advance_text += "    " + string(page_index + 1) + "/" + string(array_length(pages));
