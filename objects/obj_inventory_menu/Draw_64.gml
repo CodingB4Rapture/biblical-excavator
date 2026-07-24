@@ -157,6 +157,20 @@ else
         var capacity_text = shown_inventory.capacity < 0
             ? "Storage: Unlimited"
             : "Capacity: " + string(storage_total) + " / " + string(shown_inventory.capacity);
+        if (selected_category == 0)
+        {
+            capacity_text = "Limits: "
+                + string(inventory_get_resource_capacity(
+                    shown_inventory,
+                    ResourceId.FIELDSTONE
+                ))
+                + " stone | "
+                + string(inventory_get_resource_capacity(
+                    shown_inventory,
+                    ResourceId.TIMBER_PLANK
+                ))
+                + " planks";
+        }
 
         draw_set_halign(fa_right);
         draw_set_color(make_color_rgb(232, 209, 158));
@@ -202,6 +216,26 @@ else
                     amount > 0 ? 1 : 0.38
                 );
             }
+            else if (resource_id == ResourceId.TIMBER_PLANK)
+            {
+                draw_set_color(amount > 0
+                    ? make_color_rgb(196, 143, 76)
+                    : make_color_rgb(92, 76, 58));
+                draw_rectangle(
+                    layout.content_left + 11,
+                    item_top + 13,
+                    layout.content_left + 38,
+                    item_top + 18,
+                    false
+                );
+                draw_rectangle(
+                    layout.content_left + 14,
+                    item_top + 21,
+                    layout.content_left + 41,
+                    item_top + 26,
+                    false
+                );
+            }
 
             draw_set_color(amount > 0
                 ? make_color_rgb(238, 225, 195)
@@ -221,6 +255,10 @@ else
             {
                 item_note = "Recovered from delivered stumps";
             }
+            else if (resource_id == ResourceId.TIMBER_PLANK)
+            {
+                item_note = "Finished craft retrieved from the chest";
+            }
 
             draw_set_color(amount > 0
                 ? make_color_rgb(178, 166, 139)
@@ -232,7 +270,18 @@ else
             draw_set_color(amount > 0
                 ? make_color_rgb(255, 220, 92)
                 : make_color_rgb(132, 125, 109));
-            draw_text(layout.content_right - 14, (item_top + item_bottom) * 0.5, "x " + string(amount));
+            var row_capacity = inventory_get_resource_capacity(
+                shown_inventory,
+                resource_id
+            );
+            var amount_text = "x " + string(amount);
+            if (row_capacity >= 0)
+                amount_text += " / " + string(row_capacity);
+            draw_text(
+                layout.content_right - 14,
+                (item_top + item_bottom) * 0.5,
+                amount_text
+            );
             draw_set_halign(fa_left);
             draw_set_valign(fa_top);
         }

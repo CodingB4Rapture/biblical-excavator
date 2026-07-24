@@ -62,8 +62,9 @@ function tutorial_stage_implies_axe(_stage)
 function game_state_create_default()
 {
     return {
-        player_inventory: inventory_create(6),
+        player_inventory: inventory_create_player(),
         home_inventory: inventory_create(-1),
+        finished_crafts_inventory: inventory_create_finished_crafts(),
         tools: {
             axe_owned: false
         },
@@ -178,13 +179,26 @@ function game_state_normalize(_game_state)
     if (!variable_struct_exists(_game_state, "player_inventory")
     || !is_struct(_game_state.player_inventory))
     {
-        _game_state.player_inventory = inventory_create(6);
+        _game_state.player_inventory = inventory_create_player();
     }
     else
     {
         _game_state.player_inventory =
             inventory_ensure_size(_game_state.player_inventory);
     }
+    // Player carrying limits are per resource. Keeping them in the inventory
+    // struct gives later task rewards a durable place to increase each limit.
+    _game_state.player_inventory.capacity = -1;
+    inventory_apply_minimum_resource_capacity(
+        _game_state.player_inventory,
+        ResourceId.FIELDSTONE,
+        PLAYER_FIELDSTONE_CAPACITY
+    );
+    inventory_apply_minimum_resource_capacity(
+        _game_state.player_inventory,
+        ResourceId.TIMBER_PLANK,
+        PLAYER_TIMBER_PLANK_CAPACITY
+    );
 
     if (!variable_struct_exists(_game_state, "home_inventory")
     || !is_struct(_game_state.home_inventory))
@@ -195,6 +209,26 @@ function game_state_normalize(_game_state)
     {
         _game_state.home_inventory =
             inventory_ensure_size(_game_state.home_inventory);
+    }
+
+    if (!variable_struct_exists(_game_state, "finished_crafts_inventory")
+    || !is_struct(_game_state.finished_crafts_inventory))
+    {
+        _game_state.finished_crafts_inventory =
+            inventory_create_finished_crafts();
+        if (variable_struct_exists(_game_state, "cabin_built")
+        && _game_state.cabin_built)
+        {
+            _game_state.finished_crafts_inventory.amounts[
+                ResourceId.TIMBER_PLANK
+            ] = 0;
+        }
+    }
+    else
+    {
+        _game_state.finished_crafts_inventory = inventory_ensure_size(
+            _game_state.finished_crafts_inventory
+        );
     }
 
     if (!variable_struct_exists(_game_state, "tools")

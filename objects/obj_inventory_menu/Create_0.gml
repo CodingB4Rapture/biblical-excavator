@@ -9,7 +9,8 @@ inventory_categories = [
 inventory_resource_rows = [
     ResourceId.FIELDSTONE,
     ResourceId.TIMBER_LOG,
-    ResourceId.SMALL_LUMBER
+    ResourceId.SMALL_LUMBER,
+    ResourceId.TIMBER_PLANK
 ];
 selected_category = 0;
 

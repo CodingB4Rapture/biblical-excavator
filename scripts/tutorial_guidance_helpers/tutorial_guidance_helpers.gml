@@ -203,6 +203,17 @@ function tutorial_guidance_target()
 
     if (task_is_active(TaskId.PLACE_CABIN, game_state))
     {
+        if (inventory_get_amount(
+            game_state.player_inventory,
+            ResourceId.TIMBER_PLANK
+        ) < CABIN_TIMBER_PLANK_COST)
+        {
+            return tutorial_guidance_from_instance(
+                instance_find(obj_finished_crafts_chest, 0),
+                "FINISHED CRAFTS"
+            );
+        }
+
         return tutorial_guidance_from_instance(
             instance_find(obj_cabin_site, 0),
             "CABIN SITE"

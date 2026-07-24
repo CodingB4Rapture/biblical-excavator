@@ -37,7 +37,7 @@ last_blocking_log = noone;
 carry_full_hint_cooldown = 0;
 
 // Loose material carried by the vehicle is separate from player pockets.
-cargo_inventory = inventory_create(10);
+cargo_inventory = inventory_create_vehicle();
 
 // The hitch and cable are drawn placeholders until attachment art exists.
 winch_hitch_distance = 18;

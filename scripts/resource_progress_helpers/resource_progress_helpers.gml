@@ -163,8 +163,15 @@ function progress_collect_resource_by_hand(_resource_instance)
 
     progress_show_reward_summary(
         "Pocketed 1 " + definition.name,
-        "Backpack " + string(inventory_get_total(game_state.player_inventory))
-        + " / " + string(game_state.player_inventory.capacity)
+        "Backpack " + string(
+            inventory_get_amount(game_state.player_inventory, resource_id)
+        )
+        + " / " + string(
+            inventory_get_resource_capacity(
+                game_state.player_inventory,
+                resource_id
+            )
+        )
     );
 
     if (game_state.tutorial_stage == TutorialStage.TRIP_ONE_HAND_FIELDSTONE)

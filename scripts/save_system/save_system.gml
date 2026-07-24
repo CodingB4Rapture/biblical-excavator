@@ -151,11 +151,32 @@ function save_copy_amounts(_inventory)
     return save_clone_array(_inventory.amounts);
 }
 
+function save_copy_resource_capacities(_inventory)
+{
+    inventory_ensure_size(_inventory);
+    return save_clone_array(_inventory.resource_capacities);
+}
+
 function save_apply_amounts(_inventory, _amounts)
 {
     for (var i = 0; i < min(array_length(_inventory.amounts), array_length(_amounts)); i++)
     {
         _inventory.amounts[i] = _amounts[i];
+    }
+}
+
+function save_apply_resource_capacities(_inventory, _capacities)
+{
+    inventory_ensure_size(_inventory);
+
+    for (var i = 0;
+        i < min(
+            array_length(_inventory.resource_capacities),
+            array_length(_capacities)
+        );
+        i++)
+    {
+        _inventory.resource_capacities[i] = _capacities[i];
     }
 }
 
@@ -197,7 +218,11 @@ function save_build_snapshot()
         format_version: SAVE_FORMAT_CURRENT,
         game_state: {
             player_inventory: save_copy_amounts(game_state.player_inventory),
+            player_resource_capacities:
+                save_copy_resource_capacities(game_state.player_inventory),
             home_inventory: save_copy_amounts(game_state.home_inventory),
+            finished_crafts_inventory:
+                save_copy_amounts(game_state.finished_crafts_inventory),
             tools: {
                 axe_owned: game_state.tools.axe_owned
             },
@@ -323,6 +348,33 @@ function save_hydrate_game_state(_saved_state)
             game_state.home_inventory,
             _saved_state.home_inventory
         );
+    }
+    if (variable_struct_exists(
+        _saved_state,
+        "player_resource_capacities"
+    ) && is_array(_saved_state.player_resource_capacities))
+    {
+        save_apply_resource_capacities(
+            game_state.player_inventory,
+            _saved_state.player_resource_capacities
+        );
+    }
+    if (variable_struct_exists(_saved_state, "finished_crafts_inventory")
+    && is_array(_saved_state.finished_crafts_inventory))
+    {
+        save_apply_amounts(
+            game_state.finished_crafts_inventory,
+            _saved_state.finished_crafts_inventory
+        );
+    }
+    else if (variable_struct_exists(_saved_state, "cabin_built")
+    && _saved_state.cabin_built)
+    {
+        // The four tutorial planks were already consumed in a completed
+        // pre-chest save; do not grant a duplicate stack during migration.
+        game_state.finished_crafts_inventory.amounts[
+            ResourceId.TIMBER_PLANK
+        ] = 0;
     }
 
     var scalar_fields = [

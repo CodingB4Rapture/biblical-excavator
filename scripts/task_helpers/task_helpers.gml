@@ -60,8 +60,8 @@ function task_get_definition(_task_id)
             return {
                 quest_id: QuestId.PLACE_OF_YOUR_OWN,
                 title: "Build the Cabin",
-                summary: "Raise the cabin on the site you enclosed and prepared.",
-                completion_summary: "The marked site became a finished cabin and a place of your own.",
+                summary: "Retrieve four finished Timber Planks, then raise the cabin on the enclosed site.",
+                completion_summary: "Four finished planks became a cabin and a place of your own.",
                 reward_labels: ["Homestead Cabin", "First Morning Unlocked"],
                 rewards: []
             };
@@ -515,10 +515,29 @@ function task_get_objectives(_task_id)
             ];
 
         case TaskId.PLACE_CABIN:
-            return [{
-                text: "Build the cabin on the prepared site",
-                complete: task_finished || game_state.cabin_built
-            }];
+            var carried_planks = inventory_get_amount(
+                game_state.player_inventory,
+                ResourceId.TIMBER_PLANK
+            );
+            return [
+                {
+                    text: "Retrieve 4 Timber Planks from Finished Crafts ("
+                        + string(min(
+                            CABIN_TIMBER_PLANK_COST,
+                            carried_planks
+                        ))
+                        + "/"
+                        + string(CABIN_TIMBER_PLANK_COST)
+                        + ")",
+                    complete: task_finished
+                        || game_state.cabin_built
+                        || carried_planks >= CABIN_TIMBER_PLANK_COST
+                },
+                {
+                    text: "Build the cabin on the prepared site",
+                    complete: task_finished || game_state.cabin_built
+                }
+            ];
 
         case TaskId.PARK_SKIDSTEER:
             return [
@@ -607,6 +626,118 @@ function task_run_tests()
             task_get_ids_for_quest(QuestId.PLACE_OF_YOUR_OWN)
         ) == 3,
         "parking, site marking, and cabin building share the homestead quest"
+    ) && passed;
+
+    var capacity_state = game_state_create_default();
+    var player_stones_added = inventory_add(
+        capacity_state.player_inventory,
+        ResourceId.FIELDSTONE,
+        99
+    );
+    var player_planks_added = inventory_add(
+        capacity_state.player_inventory,
+        ResourceId.TIMBER_PLANK,
+        99
+    );
+    var vehicle_capacity_test = inventory_create_vehicle();
+    var vehicle_stones_added = inventory_add(
+        vehicle_capacity_test,
+        ResourceId.FIELDSTONE,
+        99
+    );
+    passed = task_test_expect(
+        player_stones_added == PLAYER_FIELDSTONE_CAPACITY
+        && player_planks_added == PLAYER_TIMBER_PLANK_CAPACITY
+        && inventory_get_amount(
+            capacity_state.player_inventory,
+            ResourceId.FIELDSTONE
+        ) == PLAYER_FIELDSTONE_CAPACITY
+        && inventory_get_amount(
+            capacity_state.player_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == PLAYER_TIMBER_PLANK_CAPACITY
+        && vehicle_stones_added == VEHICLE_FIELDSTONE_CAPACITY,
+        "player and vehicle enforce independent resource capacities"
+    ) && passed;
+
+    var chest_state = game_state_create_default();
+    var chest_planks_moved = finished_crafts_take(
+        chest_state,
+        ResourceId.TIMBER_PLANK,
+        CABIN_TIMBER_PLANK_COST
+    );
+    passed = task_test_expect(
+        chest_planks_moved == CABIN_TIMBER_PLANK_COST
+        && inventory_get_amount(
+            chest_state.finished_crafts_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == 0
+        && inventory_get_amount(
+            chest_state.player_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == CABIN_TIMBER_PLANK_COST,
+        "finished-crafts transfer moves the four starting planks once"
+    ) && passed;
+
+    inventory_set_resource_capacity(
+        chest_state.player_inventory,
+        ResourceId.TIMBER_PLANK,
+        PLAYER_TIMBER_PLANK_CAPACITY + 2
+    );
+    var chest_round_trip = json_parse(json_stringify({
+        player_inventory: save_copy_amounts(
+            chest_state.player_inventory
+        ),
+        player_resource_capacities: save_copy_resource_capacities(
+            chest_state.player_inventory
+        ),
+        finished_crafts_inventory: save_copy_amounts(
+            chest_state.finished_crafts_inventory
+        )
+    }));
+    var hydrated_chest_state = save_hydrate_game_state(chest_round_trip);
+    passed = task_test_expect(
+        inventory_get_amount(
+            hydrated_chest_state.finished_crafts_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == 0
+        && inventory_get_amount(
+            hydrated_chest_state.player_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == CABIN_TIMBER_PLANK_COST
+        && inventory_get_resource_capacity(
+            hydrated_chest_state.player_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == PLAYER_TIMBER_PLANK_CAPACITY + 2,
+        "chest stock, carried planks, and future capacity upgrades survive JSON hydration"
+    ) && passed;
+
+    var additive_save_state = save_hydrate_game_state({});
+    passed = task_test_expect(
+        inventory_get_amount(
+            additive_save_state.finished_crafts_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == CABIN_TIMBER_PLANK_COST
+        && inventory_get_resource_capacity(
+            additive_save_state.player_inventory,
+            ResourceId.FIELDSTONE
+        ) == PLAYER_FIELDSTONE_CAPACITY
+        && inventory_get_resource_capacity(
+            additive_save_state.player_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == PLAYER_TIMBER_PLANK_CAPACITY,
+        "older saves receive chest stock and the new per-item limits"
+    ) && passed;
+
+    var completed_additive_save_state = save_hydrate_game_state({
+        cabin_built: true
+    });
+    passed = task_test_expect(
+        inventory_get_amount(
+            completed_additive_save_state.finished_crafts_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == 0,
+        "completed older saves do not receive duplicate cabin planks"
     ) && passed;
 
     global.game_state = game_state_create_default();
@@ -851,6 +982,13 @@ function task_run_tests()
         TaskId.PLACE_CABIN,
         story_state
     );
+    var cabin_blocked_without_planks =
+        !progression_build_cabin_state(story_state);
+    inventory_add(
+        story_state.player_inventory,
+        ResourceId.TIMBER_PLANK,
+        CABIN_TIMBER_PLANK_COST
+    );
     var cabin_completed = progression_build_cabin_state(story_state);
     var cabin_claimed = progression_claim_task_state(
         TaskId.PLACE_CABIN,
@@ -866,8 +1004,13 @@ function task_run_tests()
         && marking_completed
         && marking_claimed
         && cabin_accepted
+        && cabin_blocked_without_planks
         && cabin_completed
         && cabin_claimed
+        && inventory_get_amount(
+            story_state.player_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == 0
         && story_state.quest_statuses[QuestId.FIRM_FOUNDATION]
             == QuestStatus.COMPLETE
         && story_state.quest_statuses[QuestId.PLACE_OF_YOUR_OWN]

@@ -121,9 +121,9 @@ function dialogue_get_layout(_body_text)
     var body_top = speaker_top + speaker_height + 10;
     var body_bottom = panel_bottom - inner_padding - prompt_height - 8;
     var body_width = max(220, text_right - text_left);
-    var body_line_sep = font_get_size(description_font) + 8;
+    var body_line_sep = font_get_size(dialogue_font) + 10;
 
-    draw_set_font(description_font);
+    draw_set_font(dialogue_font);
     var body_height = string_height_ext(_body_text, body_line_sep, body_width);
     var body_space = max(0, body_bottom - body_top);
     var body_y = body_top + max(0, (body_space - body_height) * 0.5);

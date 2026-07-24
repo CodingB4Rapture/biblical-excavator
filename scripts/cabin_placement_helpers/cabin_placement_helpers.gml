@@ -255,6 +255,19 @@ function cabin_build_at_site(_site)
 
     var game_state = game_state_ensure();
 
+    if (inventory_get_amount(
+        game_state.player_inventory,
+        ResourceId.TIMBER_PLANK
+    ) < CABIN_TIMBER_PLANK_COST)
+    {
+        notification_show_hint(
+            "Retrieve 4 Timber Planks from the Finished Crafts chest first.",
+            game_get_speed(gamespeed_fps) * 4,
+            false
+        );
+        return false;
+    }
+
     if (!progression_build_cabin_state(game_state))
     {
         return false;

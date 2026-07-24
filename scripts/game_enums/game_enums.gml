@@ -121,6 +121,8 @@ enum ResourceId
     TIMBER_LOG = 1,
     FIELDROCK = 2,
     SMALL_LUMBER = 3,
+    // Append-only: inventory arrays are persisted by numeric resource ID.
+    TIMBER_PLANK = 4,
     COUNT
 }
 
@@ -182,4 +184,9 @@ enum FenceGatePart
 }
 
 #macro FENCE_PURPOSE_CABIN_SITE "cabin_site"
+
+#macro PLAYER_FIELDSTONE_CAPACITY 6
+#macro PLAYER_TIMBER_PLANK_CAPACITY 8
+#macro VEHICLE_FIELDSTONE_CAPACITY 10
+#macro CABIN_TIMBER_PLANK_COST 4
 

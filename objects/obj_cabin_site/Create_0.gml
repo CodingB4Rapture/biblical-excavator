@@ -25,6 +25,14 @@ interaction_get_prompt = function(_actor)
     if (task_is_active(TaskId.PLACE_CABIN, game_state)
     && !game_state.cabin_built)
     {
+        if (inventory_get_amount(
+            game_state.player_inventory,
+            ResourceId.TIMBER_PLANK
+        ) < CABIN_TIMBER_PLANK_COST)
+        {
+            return "Need 4 Timber Planks";
+        }
+
         return "Build the cabin";
     }
 

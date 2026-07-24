@@ -85,6 +85,7 @@ function progression_update_announcements()
     || instance_exists(obj_task_board_menu)
     || instance_exists(obj_quest_menu)
     || instance_exists(obj_inventory_menu)
+    || instance_exists(obj_finished_crafts_menu)
     || instance_exists(obj_pause_menu)
     || instance_exists(obj_gui_quest_notice)
     || dialogue_is_active())
@@ -303,7 +304,7 @@ function progression_present_task_started(_task_id)
             break;
 
         case TaskId.PLACE_CABIN:
-            followup_hint = "Go to the prepared cabin site and press E to build.";
+            followup_hint = "Retrieve 4 Timber Planks from the Finished Crafts chest.";
             break;
 
         case TaskId.PARK_SKIDSTEER:
@@ -463,11 +464,20 @@ function progression_build_cabin_state(_game_state)
     if (!task_is_active(TaskId.PLACE_CABIN, _game_state)
     || !_game_state.cabin_site_placed
     || !_game_state.cabin_fence_marked
-    || _game_state.cabin_built)
+    || _game_state.cabin_built
+    || inventory_get_amount(
+        _game_state.player_inventory,
+        ResourceId.TIMBER_PLANK
+    ) < CABIN_TIMBER_PLANK_COST)
     {
         return false;
     }
 
+    inventory_remove(
+        _game_state.player_inventory,
+        ResourceId.TIMBER_PLANK,
+        CABIN_TIMBER_PLANK_COST
+    );
     _game_state.cabin_built = true;
     _game_state.homestead_stage = HomesteadStage.FIRST_REST_REQUIRED;
     return progression_complete_task_state(

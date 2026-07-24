@@ -11,11 +11,11 @@ dialogue_draw_portrait_placeholder(layout, palette);
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 
-draw_set_font(UI_font);
+draw_set_font(dialogue_font);
 draw_set_color(make_color_rgb(18, 14, 10));
-draw_text_transformed(layout.text_left + 1, layout.speaker_top + 1, speaker_name, 0.55, 0.55, 0);
+draw_text_transformed(layout.text_left + 1, layout.speaker_top + 1, speaker_name, 0.70, 0.70, 0);
 draw_set_color(palette.border_gold);
-draw_text_transformed(layout.text_left, layout.speaker_top, speaker_name, 0.55, 0.55, 0);
+draw_text_transformed(layout.text_left, layout.speaker_top, speaker_name, 0.70, 0.70, 0);
 
 draw_set_alpha(0.42);
 draw_set_color(palette.border_gold);
@@ -27,7 +27,7 @@ draw_line(
 );
 draw_set_alpha(1);
 
-draw_set_font(description_font);
+draw_set_font(dialogue_font);
 draw_set_color(palette.text_color);
 draw_text_ext(
     layout.text_left,

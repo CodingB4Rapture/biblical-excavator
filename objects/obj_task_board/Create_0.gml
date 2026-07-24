@@ -31,6 +31,7 @@ interaction_run = function(_actor)
     if (instance_exists(obj_task_board_menu)
     || instance_exists(obj_quest_menu)
     || instance_exists(obj_inventory_menu)
+    || instance_exists(obj_finished_crafts_menu)
     || dialogue_is_active())
     {
         return;

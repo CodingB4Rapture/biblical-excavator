@@ -8,7 +8,10 @@ var panel_width = min(gui_w - 32, 320);
 var showing_rewards = array_length(reward_lines) > 0;
 var panel_height = showing_rewards ? 112 : 64;
 var panel_left = (gui_w - panel_width) * 0.5;
-var panel_top = gui_h * 0.42 - panel_height * 0.5;
+var is_task_notice = string_pos("TASK", string_upper(notice_heading)) == 1;
+var panel_top = is_task_notice
+    ? gui_h - panel_height - 28
+    : gui_h * 0.42 - panel_height * 0.5;
 var panel_right = panel_left + panel_width;
 var panel_bottom = panel_top + panel_height;
 var fade_in = min(1, age / 12);

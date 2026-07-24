@@ -13,6 +13,14 @@ var pocket_fieldstones = inventory_get_amount(
     game_state.player_inventory,
     ResourceId.FIELDSTONE
 );
+var pocket_planks = inventory_get_amount(
+    game_state.player_inventory,
+    ResourceId.TIMBER_PLANK
+);
+var player_fieldstone_capacity = inventory_get_resource_capacity(
+    game_state.player_inventory,
+    ResourceId.FIELDSTONE
+);
 
 var vehicle_fieldstones = 0;
 var vehicle_capacity = 0;
@@ -24,7 +32,10 @@ if (instance_exists(vehicle))
         ResourceId.FIELDSTONE
     );
 
-    vehicle_capacity = vehicle.cargo_inventory.capacity;
+    vehicle_capacity = inventory_get_resource_capacity(
+        vehicle.cargo_inventory,
+        ResourceId.FIELDSTONE
+    );
 }
 
 var home_fieldstones = inventory_get_amount(
@@ -140,7 +151,11 @@ else if (task_is_active(TaskId.MARK_CABIN_SITE, game_state))
 else if (task_is_active(TaskId.PLACE_CABIN, game_state))
 {
     trip_label = "Cabin Build";
-    tutorial_text = "Go to the marked cabin site and press E to build";
+    tutorial_text = pocket_planks < CABIN_TIMBER_PLANK_COST
+        ? "Retrieve 4 Timber Planks from the Finished Crafts chest ("
+            + string(pocket_planks) + "/"
+            + string(CABIN_TIMBER_PLANK_COST) + ")"
+        : "Take the 4 Timber Planks to the marked cabin site and press E";
 }
 else if (game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
 {
@@ -255,8 +270,8 @@ draw_text_ext(
 draw_text(
     trip_left + 12,
     trip_top + 70,
-    "Backpack: " + string(pocket_fieldstones)
-    + " / " + string(game_state.player_inventory.capacity)
+    "Backpack stone: " + string(pocket_fieldstones)
+    + " / " + string(player_fieldstone_capacity)
 );
 
 draw_text(
