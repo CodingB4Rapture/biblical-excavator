@@ -1,21 +1,20 @@
 # Task Board Art Handoff
 
-The functional board is `obj_task_board`. Its temporary room instance is
-`inst_task_board` at `(1120, 208)` in `Room1`.
+The functional board is `obj_task_board`. Its room instance is
+`inst_task_board` at `(784, 112)` in `Room1`.
 
-## Replacing the placeholder
+## Current world art
 
-Assign the finished board sprite directly to `obj_task_board`. Its Draw event
-automatically uses `draw_self()` when a sprite exists and only draws the
-temporary wooden sign when no sprite is assigned.
+`spr_task_board` is assigned directly to `obj_task_board`. The Draw event uses
+the sprite and adds only the contextual world marker. The interaction radius
+and task behavior remain on the object rather than depending on the art.
 
-Recommended starting specification:
+Current art specification:
 
-- canvas: roughly 32 x 40 pixels at the current world scale;
-- origin: bottom-center, at the foot of the board post;
-- collision: none for the first art pass;
-- readable silhouette: notice surface above one or two narrow posts;
-- palette: warm wood with a parchment, cloth, or lighter pinned-note area.
+- canvas: 32 x 32 pixels at the current world scale;
+- origin: center;
+- one static frame;
+- palette and footprint coordinated with the nearby fence art.
 
 The interaction radius is 38 world pixels and does not depend on the sprite's
 mask. The object may be moved in the Room Editor without changing save data.

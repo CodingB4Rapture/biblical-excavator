@@ -19,6 +19,11 @@ finished_crafts_menu_get_layout = function()
     var panel_right = panel_left + panel_width;
     var panel_bottom = panel_top + panel_height;
     var preview_width = clamp(panel_width * 0.34, 180, 250);
+    var content_bottom = panel_bottom - 72;
+    var list_left = panel_left + 24;
+    var list_right = panel_right - preview_width - 34;
+    var quantity_left = panel_left + 42;
+    var quantity_right = panel_right - preview_width - 52;
 
     return {
         gui_w: gui_w,
@@ -28,13 +33,30 @@ finished_crafts_menu_get_layout = function()
         panel_right: panel_right,
         panel_bottom: panel_bottom,
         content_top: panel_top + 68,
-        content_bottom: panel_bottom - 72,
-        list_left: panel_left + 24,
-        list_right: panel_right - preview_width - 34,
+        content_bottom: content_bottom,
+        list_left: list_left,
+        list_right: list_right,
         preview_left: panel_right - preview_width,
         preview_right: panel_right - 24,
-        quantity_left: panel_left + 42,
-        quantity_right: panel_right - preview_width - 52
+        row_height: 54,
+        close_left: panel_right - 50,
+        close_top: panel_top + 14,
+        close_right: panel_right - 18,
+        close_bottom: panel_top + 42,
+        quantity_panel_top: content_bottom - 104,
+        quantity_left: quantity_left,
+        quantity_right: quantity_right,
+        quantity_track_left: quantity_left + 30,
+        quantity_track_right: quantity_right - 30,
+        quantity_track_y: content_bottom - 25,
+        quantity_back_left: list_left + 12,
+        quantity_back_top: content_bottom - 92,
+        quantity_back_right: list_left + 112,
+        quantity_back_bottom: content_bottom - 56,
+        quantity_take_left: list_right - 132,
+        quantity_take_top: content_bottom - 92,
+        quantity_take_right: list_right - 12,
+        quantity_take_bottom: content_bottom - 56
     };
 };
 
@@ -69,6 +91,59 @@ finished_crafts_menu_close = function()
     input_lock_interaction(3);
     gameplay_set_paused(false);
     instance_destroy();
+};
+
+finished_crafts_menu_leave_quantity = function()
+{
+    quantity_mode = false;
+    selected_quantity = 1;
+    action_message = "";
+};
+
+finished_crafts_menu_begin_quantity = function()
+{
+    var maximum = finished_crafts_menu_get_max_quantity();
+    if (maximum > 0)
+    {
+        quantity_mode = true;
+        selected_quantity = 1;
+        action_message = "";
+        return true;
+    }
+
+    var resource_id = finished_crafts_menu_get_selected_resource();
+    var game_state = game_state_ensure();
+    var chest_amount = resource_id < 0
+        ? 0
+        : inventory_get_amount(
+            game_state.finished_crafts_inventory,
+            resource_id
+        );
+    action_message = chest_amount <= 0
+        ? "This finished craft is out of stock."
+        : "Your backpack is at its limit for this item.";
+    return false;
+};
+
+finished_crafts_menu_set_quantity_from_x = function(_mouse_x, _layout)
+{
+    var maximum = finished_crafts_menu_get_max_quantity();
+    if (maximum <= 1)
+    {
+        selected_quantity = 1;
+        return;
+    }
+
+    var track_width = max(
+        1,
+        _layout.quantity_track_right - _layout.quantity_track_left
+    );
+    var track_ratio = clamp(
+        (_mouse_x - _layout.quantity_track_left) / track_width,
+        0,
+        1
+    );
+    selected_quantity = 1 + round(track_ratio * (maximum - 1));
 };
 
 finished_crafts_menu_take_selected = function()

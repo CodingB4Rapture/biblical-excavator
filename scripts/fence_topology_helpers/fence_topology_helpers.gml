@@ -372,20 +372,6 @@ function fence_layout_status(_records, _outside_gate_count = 0)
     };
 }
 
-function fence_planning_is_unlocked()
-{
-    var game_state = game_state_ensure();
-    var mark_status = task_get_status(TaskId.MARK_CABIN_SITE);
-
-    if (mark_status >= TaskStatus.COMPLETE)
-    {
-        return true;
-    }
-
-    return mark_status == TaskStatus.ACTIVE
-        && game_state.cabin_site_placed;
-}
-
 function cabin_fence_plot_bounds_at(_site_x, _site_y)
 {
     var grid = fence_grid_size();

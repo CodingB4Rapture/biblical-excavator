@@ -450,6 +450,14 @@ function skidsteer_try_move()
         return;
     }
 
+    if (skidsteer_object_blocks_escape(next_x, next_y, obj_world_collision_blocker)
+    || skidsteer_object_blocks_escape(next_x, next_y, obj_task_board))
+    {
+        drive_speed = 0;
+        skidsteer_start_contact_visual(SkidsteerState.CONTACT_BLOCKED);
+        return;
+    }
+
     x = next_x;
     y = next_y;
 

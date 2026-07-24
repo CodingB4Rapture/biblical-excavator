@@ -69,6 +69,24 @@ function fence_refresh_room_instances(_records, _planning = false, _layout_valid
         instance_destroy();
     }
 
+    with (obj_world_collision_blocker)
+    {
+        if (variable_instance_exists(id, "collision_owner")
+        && collision_owner == "placed_fence")
+        {
+            instance_destroy();
+        }
+    }
+
+    with (obj_gate_overpass)
+    {
+        if (variable_instance_exists(id, "overpass_owner")
+        && overpass_owner == "placed_fence")
+        {
+            instance_destroy();
+        }
+    }
+
     for (var i = 0; i < array_length(_records); i++)
     {
         var fence_sprite = fence_sprite_for_record(_records, i);
@@ -89,5 +107,28 @@ function fence_refresh_room_instances(_records, _planning = false, _layout_valid
         piece.piece_colour = (_planning && !_layout_valid)
             ? make_color_rgb(255, 184, 92)
             : c_white;
+
+        var gate_part = fence_record_gate_part(record);
+        if (gate_part == FenceGatePart.NONE)
+        {
+            var blocker = instance_create_depth(
+                record.x,
+                record.y,
+                10000,
+                obj_world_collision_blocker
+            );
+            blocker.mask_index = fence_sprite;
+            blocker.collision_owner = "placed_fence";
+        }
+        else if (gate_part == FenceGatePart.LEFT)
+        {
+            var overpass = instance_create_depth(
+                record.x + fence_grid_size() * 0.5,
+                record.y,
+                -25,
+                obj_gate_overpass
+            );
+            overpass.overpass_owner = "placed_fence";
+        }
     }
 }

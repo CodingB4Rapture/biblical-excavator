@@ -27,14 +27,16 @@ framework.
 | Module | Owns |
 |---|---|
 | `game_state_helpers` | Defaults and structural validation |
-| `progression_helpers` | Runtime task, quest, stage, and story-unlock writes |
-| `task_helpers` / `quest_helpers` | Definitions and read-only status/objective models |
+| progression state/command/effect helpers | Runtime writes and explicit side effects |
+| progression announcement/presentation helpers | Plain notices and their UI consumption |
+| task definition/read/state/reward helpers | Focused task ownership |
+| quest definition/read/command helpers | Focused quest ownership |
 | `tutorial_progression_helpers` | Validating gameplay facts against the active task |
 | `tutorial_guidance_helpers` | Pure target descriptors |
 | `obj_tutorial_guidance` | World marker and screen-edge arrow presentation |
 | `room_reconciliation_helpers` | Cabin, fence, and winch-package restoration |
 | `save_migration_helpers` | Pure v1-to-v2 conversion |
-| `save_system` | Snapshot, JSON I/O, hydration, and scene restoration |
+| `save_system` and focused save/session helpers | Snapshot, JSON I/O, hydration, settings, session, and restoration |
 | resource-specific regeneration helpers | Fieldstone or Fieldrock lifecycle |
 
 The intended extension path remains:
@@ -46,13 +48,13 @@ definition -> durable state -> explicit progression event
 
 ## Automated verification
 
-The final GameMaker VM build completed successfully on July 23, 2026 with 468
-compiled scripts and 40 object types. The automated run passed:
+The current GameMaker VM build completed successfully on July 24, 2026. The
+automated run passed:
 
-- 17 fence planning, validation, removal, sprite-selection, and persistence
+- 19 fence planning, validation, removal, sprite-selection, and persistence
   checks;
-- 12 task, progression, reward, guidance, v1 migration, and v2 hydration
-  checks;
+- 20 task, response-descriptor, progression, reward, guidance, migration, and
+  hydration checks;
 - `git diff --check`.
 
 ## Human regression checklist

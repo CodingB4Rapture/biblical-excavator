@@ -417,3 +417,16 @@ function game_state_ensure()
 
     return game_state_normalize(global.game_state);
 }
+
+/// Read-only access for descriptors and UI models. It never installs or
+/// normalizes durable state; callers that perform commands use ensure instead.
+function game_state_read()
+{
+    if (variable_global_exists("game_state")
+    && is_struct(global.game_state))
+    {
+        return global.game_state;
+    }
+
+    return game_state_create_default();
+}

@@ -24,7 +24,9 @@ switch (player_state)
             && !player_movement_is_blocked(id, next_x, next_y, 6, obj_tree)
             && !player_movement_is_blocked(id, next_x, next_y, 6, obj_log)
             && !player_movement_is_blocked(id, next_x, next_y, 6, obj_stump)
-            && !player_movement_is_blocked(id, next_x, next_y, 6, obj_pond))
+            && !player_movement_is_blocked(id, next_x, next_y, 6, obj_pond)
+            && !player_movement_is_blocked(id, next_x, next_y, 6, obj_world_collision_blocker)
+            && !player_movement_is_blocked(id, next_x, next_y, 6, obj_task_board))
             {
                 x = clamp(next_x, 0, room_width);
                 y = clamp(next_y, 0, room_height);

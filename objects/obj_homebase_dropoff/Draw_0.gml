@@ -14,7 +14,23 @@ draw_circle(x, y, dropoff_radius - 3, true);
 
 world_draw_location_marker(x, y, "HOME DELIVERY", make_color_rgb(226, 178, 73), 9);
 
+// Keep the parking circle beneath the physical delivery point. The second
+// chest frame remains open until the interacting player leaves the zone.
+var chest_frame = chest_open ? 1 : 0;
+draw_sprite_ext(
+    spr_chest,
+    chest_frame,
+    chest_draw_x,
+    chest_draw_y,
+    chest_scale_x,
+    chest_scale_y,
+    0,
+    c_white,
+    1
+);
+
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
+draw_set_alpha(1);
 draw_set_color(c_white);
 

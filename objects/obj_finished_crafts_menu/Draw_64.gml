@@ -11,6 +11,16 @@ var panel_gold = make_color_rgb(224, 169, 73);
 var text_color = make_color_rgb(247, 229, 198);
 var muted_color = make_color_rgb(191, 171, 139);
 var selected_color = make_color_rgb(255, 220, 92);
+var mouse_gui_x = device_mouse_x_to_gui(0);
+var mouse_gui_y = device_mouse_y_to_gui(0);
+var close_hovered = point_in_rectangle(
+    mouse_gui_x,
+    mouse_gui_y,
+    layout.close_left,
+    layout.close_top,
+    layout.close_right,
+    layout.close_bottom
+);
 
 draw_set_alpha(0.74);
 draw_set_color(make_color_rgb(14, 11, 9));
@@ -58,7 +68,31 @@ draw_text(
     "Completed materials ready for use."
 );
 
-var row_height = 54;
+draw_set_color(close_hovered
+    ? make_color_rgb(85, 65, 43)
+    : make_color_rgb(55, 45, 35));
+draw_roundrect(
+    layout.close_left,
+    layout.close_top,
+    layout.close_right,
+    layout.close_bottom,
+    false
+);
+draw_set_color(close_hovered ? selected_color : muted_color);
+draw_line(
+    layout.close_left + 9,
+    layout.close_top + 8,
+    layout.close_right - 9,
+    layout.close_bottom - 8
+);
+draw_line(
+    layout.close_right - 9,
+    layout.close_top + 8,
+    layout.close_left + 9,
+    layout.close_bottom - 8
+);
+
+var row_height = layout.row_height;
 for (var row = 0; row < array_length(finished_craft_rows); row++)
 {
     var row_resource_id = finished_craft_rows[row];
@@ -68,10 +102,22 @@ for (var row = 0; row < array_length(finished_craft_rows); row++)
         game_state.finished_crafts_inventory,
         row_resource_id
     );
+    var row_hovered = !quantity_mode
+        && point_in_rectangle(
+            mouse_gui_x,
+            mouse_gui_y,
+            layout.list_left,
+            row_top,
+            layout.list_right,
+            row_bottom
+        );
 
-    draw_set_color(row == selected_row
-        ? make_color_rgb(68, 53, 37)
-        : make_color_rgb(49, 42, 34));
+    var row_color = make_color_rgb(49, 42, 34);
+    if (row_hovered) row_color = make_color_rgb(61, 49, 37);
+    if (row == selected_row) row_color = make_color_rgb(68, 53, 37);
+    if (row_hovered && row == selected_row)
+        row_color = make_color_rgb(77, 59, 39);
+    draw_set_color(row_color);
     draw_roundrect(
         layout.list_left,
         row_top,
@@ -217,32 +263,123 @@ if (resource_id >= 0)
 if (quantity_mode)
 {
     var maximum = max(1, finished_crafts_menu_get_max_quantity());
-    var track_left = layout.quantity_left + 30;
-    var track_right = layout.quantity_right - 30;
-    var track_y = layout.content_bottom - 28;
+    var track_left = layout.quantity_track_left;
+    var track_right = layout.quantity_track_right;
+    var track_y = layout.quantity_track_y;
     var knob_ratio = maximum <= 1
         ? 0.5
         : (selected_quantity - 1) / (maximum - 1);
     var knob_x = lerp(track_left, track_right, knob_ratio);
+    var back_hovered = point_in_rectangle(
+        mouse_gui_x,
+        mouse_gui_y,
+        layout.quantity_back_left,
+        layout.quantity_back_top,
+        layout.quantity_back_right,
+        layout.quantity_back_bottom
+    );
+    var take_hovered = point_in_rectangle(
+        mouse_gui_x,
+        mouse_gui_y,
+        layout.quantity_take_left,
+        layout.quantity_take_top,
+        layout.quantity_take_right,
+        layout.quantity_take_bottom
+    );
+    var left_hovered = point_in_rectangle(
+        mouse_gui_x,
+        mouse_gui_y,
+        layout.quantity_left - 12,
+        track_y - 14,
+        layout.quantity_left + 14,
+        track_y + 14
+    );
+    var right_hovered = point_in_rectangle(
+        mouse_gui_x,
+        mouse_gui_y,
+        layout.quantity_right - 14,
+        track_y - 14,
+        layout.quantity_right + 12,
+        track_y + 14
+    );
+    var track_hovered = point_in_rectangle(
+        mouse_gui_x,
+        mouse_gui_y,
+        track_left - 10,
+        track_y - 12,
+        track_right + 10,
+        track_y + 12
+    );
 
     draw_set_color(make_color_rgb(60, 49, 37));
     draw_roundrect(
         layout.list_left,
-        layout.content_bottom - 96,
+        layout.quantity_panel_top,
         layout.list_right,
         layout.content_bottom,
         false
     );
+
+    draw_set_color(back_hovered
+        ? make_color_rgb(89, 68, 45)
+        : make_color_rgb(70, 56, 42));
+    draw_roundrect(
+        layout.quantity_back_left,
+        layout.quantity_back_top,
+        layout.quantity_back_right,
+        layout.quantity_back_bottom,
+        false
+    );
     draw_set_halign(fa_center);
+    draw_set_valign(fa_middle);
+    draw_set_color(back_hovered ? selected_color : text_color);
+    draw_text(
+        (
+            layout.quantity_back_left
+                + layout.quantity_back_right
+        ) * 0.5,
+        (
+            layout.quantity_back_top
+                + layout.quantity_back_bottom
+        ) * 0.5,
+        "BACK"
+    );
+
+    draw_set_color(take_hovered
+        ? make_color_rgb(115, 82, 38)
+        : make_color_rgb(83, 61, 35));
+    draw_roundrect(
+        layout.quantity_take_left,
+        layout.quantity_take_top,
+        layout.quantity_take_right,
+        layout.quantity_take_bottom,
+        false
+    );
     draw_set_color(selected_color);
     draw_text(
-        (layout.list_left + layout.list_right) * 0.5,
-        layout.content_bottom - 84,
+        (
+            layout.quantity_take_left
+                + layout.quantity_take_right
+        ) * 0.5,
+        (
+            layout.quantity_take_top
+                + layout.quantity_take_bottom
+        ) * 0.5,
         "TAKE " + string(selected_quantity)
     );
 
-    draw_set_color(muted_color);
+    draw_set_valign(fa_top);
+    draw_set_color(text_color);
+    draw_text(
+        (layout.list_left + layout.list_right) * 0.5,
+        layout.quantity_panel_top + 14,
+        "AMOUNT  " + string(selected_quantity)
+            + " / " + string(maximum)
+    );
+
+    draw_set_color(track_hovered ? text_color : muted_color);
     draw_line(track_left, track_y, track_right, track_y);
+    draw_set_color(left_hovered ? selected_color : muted_color);
     draw_triangle(
         layout.quantity_left,
         track_y,
@@ -252,6 +389,7 @@ if (quantity_mode)
         track_y + 7,
         false
     );
+    draw_set_color(right_hovered ? selected_color : muted_color);
     draw_triangle(
         layout.quantity_right,
         track_y,
@@ -281,8 +419,8 @@ draw_text(
     layout.gui_w * 0.5,
     layout.panel_bottom - 12,
     quantity_mode
-        ? "Left/Right choose amount    E/Space take    Escape back"
-        : "Up/Down select    E/Space choose    Escape close"
+        ? "Click or drag amount    Take / Back buttons    Escape backs up"
+        : "Click a craft to choose amount    Mouse wheel or Up/Down    Escape closes"
 );
 
 draw_set_halign(fa_left);

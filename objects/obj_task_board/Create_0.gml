@@ -1,6 +1,9 @@
 /// obj_task_board - Create Event
-/// Assign finished art directly to this object later; the interaction and save
-/// behavior do not depend on a particular sprite.
+/// The sprite is presentation only; interaction and save behavior remain here.
+
+// Draw in front of the player/skid-steer when their collision masks allow
+// them to pass along the inside edge of the fence.
+depth = -2;
 
 interaction_enabled = true;
 interaction_radius = 38;

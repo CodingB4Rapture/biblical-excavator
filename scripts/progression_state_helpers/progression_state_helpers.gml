@@ -1,131 +1,4 @@
-/// The only runtime write API for tutorial, task, quest, and story unlocks.
-///
-/// World systems report facts to tutorial_progression_helpers. Board/NPC UI
-/// invokes the commands here. Save migration derives legacy state separately.
-
-function progression_announcement_reset()
-{
-    global.progression_announcement_queue = [];
-}
-
-function progression_announcement_ensure()
-{
-    if (!variable_global_exists("progression_announcement_queue")
-    || !is_array(global.progression_announcement_queue))
-    {
-        progression_announcement_reset();
-    }
-
-    return global.progression_announcement_queue;
-}
-
-function progression_queue_announcement(
-    _heading,
-    _title,
-    _reward_lines = undefined,
-    _followup_hint = ""
-)
-{
-    var reward_lines = is_array(_reward_lines) ? _reward_lines : [];
-    var queue = progression_announcement_ensure();
-    array_push(
-        queue,
-        {
-            heading: _heading,
-            title: _title,
-            reward_lines: reward_lines,
-            followup_hint: _followup_hint
-        }
-    );
-    global.progression_announcement_queue = queue;
-}
-
-function progression_queue_task_started(_task_id, _followup_hint = "")
-{
-    progression_queue_announcement(
-        "TASK STARTED",
-        task_get_definition(_task_id).title,
-        [],
-        _followup_hint
-    );
-}
-
-function progression_queue_task_completed(_task_id, _followup_hint = "")
-{
-    var definition = task_get_definition(_task_id);
-    progression_queue_announcement(
-        "TASK COMPLETE",
-        definition.title,
-        definition.reward_labels,
-        _followup_hint
-    );
-}
-
-function progression_queue_quest_notice(
-    _heading,
-    _quest_id,
-    _show_rewards = false,
-    _followup_hint = ""
-)
-{
-    var definition = quest_get_definition(_quest_id);
-    progression_queue_announcement(
-        _heading,
-        definition.title,
-        _show_rewards ? definition.rewards : [],
-        _followup_hint
-    );
-}
-
-function progression_update_announcements()
-{
-    var queue = progression_announcement_ensure();
-
-    if (array_length(queue) == 0
-    || instance_exists(obj_task_board_menu)
-    || instance_exists(obj_quest_menu)
-    || instance_exists(obj_inventory_menu)
-    || instance_exists(obj_finished_crafts_menu)
-    || instance_exists(obj_pause_menu)
-    || instance_exists(obj_gui_quest_notice)
-    || dialogue_is_active())
-    {
-        return false;
-    }
-
-    var announcement = queue[0];
-    var remaining = [];
-    for (var queue_index = 1;
-        queue_index < array_length(queue);
-        queue_index++)
-    {
-        array_push(remaining, queue[queue_index]);
-    }
-    global.progression_announcement_queue = remaining;
-
-    var notice = instance_create_depth(
-        0,
-        0,
-        -1400,
-        obj_gui_quest_notice
-    );
-    notice.notice_heading = announcement.heading;
-    notice.quest_title = announcement.title;
-    notice.reward_lines = announcement.reward_lines;
-    notice.age = 0;
-    notice.life = notice.life_max;
-
-    if (announcement.followup_hint != "")
-    {
-        notification_show_hint(
-            announcement.followup_hint,
-            game_get_speed(gamespeed_fps) * 6,
-            false
-        );
-    }
-
-    return true;
-}
+/// Validated runtime tutorial, task, quest, and story-state commands.
 
 function progression_set_tutorial_stage(_game_state, _stage)
 {
@@ -147,19 +20,17 @@ function progression_set_quest_status(_game_state, _quest_id, _status)
     return true;
 }
 
-function progression_finish_farmer_intro()
+function progression_finish_farmer_intro_state(_game_state)
 {
-    var game_state = game_state_ensure();
-    if (game_state.tutorial_stage != TutorialStage.TALK_TO_FARMER)
+    if (_game_state.tutorial_stage != TutorialStage.TALK_TO_FARMER)
         return false;
 
     progression_set_tutorial_stage(
-        game_state,
+        _game_state,
         TutorialStage.TALK_TO_FARMERS_WIFE
     );
-    game_state.quest_statuses[QuestId.FIRM_FOUNDATION] =
+    _game_state.quest_statuses[QuestId.FIRM_FOUNDATION] =
         QuestStatus.ACTIVE;
-    quest_show_notice("QUEST STARTED", QuestId.FIRM_FOUNDATION);
     return true;
 }
 
@@ -272,62 +143,6 @@ function progression_accept_task_state(_task_id, _game_state)
     }
 
     _game_state.task_statuses[_task_id] = TaskStatus.ACTIVE;
-    return true;
-}
-
-function progression_present_task_started(_task_id)
-{
-    var followup_hint = "";
-
-    switch (_task_id)
-    {
-        case TaskId.FIELDSTONE_BY_HAND:
-            tutorial_spawn_hand_fieldstones();
-            followup_hint = "Gather 6 loose Fieldstones by hand.";
-            break;
-
-        case TaskId.FALLEN_TREE:
-            followup_hint = "Find a standing tree and press E to chop it.";
-            break;
-
-        case TaskId.STONE_HAUL:
-            followup_hint = "Crush 10 Fieldrocks and deliver all 16 Fieldstones.";
-            break;
-
-        case TaskId.FIT_THE_WINCH:
-            room_reconcile_winch_package();
-            followup_hint = "Collect the marked winch package.";
-            break;
-
-        case TaskId.TIMBER_DELIVERY:
-            followup_hint = "Enter the skidsteer and drive to the marked log.";
-            break;
-
-        case TaskId.PLACE_CABIN:
-            followup_hint = "Retrieve 4 Timber Planks from the Finished Crafts chest.";
-            break;
-
-        case TaskId.PARK_SKIDSTEER:
-            followup_hint = "Return the skidsteer to the marked pad beside the Farmer, stop, and hop out.";
-            break;
-
-        case TaskId.MARK_CABIN_SITE:
-            followup_hint = game_state_ensure().cabin_site_placed
-                ? "Go to the cabin stakes and press E to plan the boundary."
-                : "Press B to choose the cabin site, then mark its boundary.";
-            break;
-    }
-
-    progression_queue_task_started(_task_id, followup_hint);
-}
-
-function task_start(_task_id)
-{
-    var game_state = game_state_ensure();
-    if (!progression_accept_task_state(_task_id, game_state))
-        return false;
-
-    progression_present_task_started(_task_id);
     return true;
 }
 
@@ -586,37 +401,6 @@ function progression_apply_task_claim_effects(_task_id, _game_state)
     }
 }
 
-function progression_present_task_claimed(_task_id)
-{
-    // The board may claim one task and accept the next before closing.
-    // Keep completion banners free of "accept next" hints that could already
-    // be stale by the time the queued presentation reaches the world.
-    progression_queue_task_completed(_task_id);
-
-    switch (_task_id)
-    {
-        case TaskId.TIMBER_DELIVERY:
-            progression_queue_quest_notice(
-                "QUEST COMPLETED",
-                QuestId.FIRM_FOUNDATION,
-                true
-            );
-            progression_queue_quest_notice(
-                "QUEST STARTED",
-                QuestId.PLACE_OF_YOUR_OWN
-            );
-            break;
-
-        case TaskId.PLACE_CABIN:
-            progression_queue_quest_notice(
-                "QUEST COMPLETED",
-                QuestId.PLACE_OF_YOUR_OWN,
-                true
-            );
-            break;
-    }
-}
-
 function progression_claim_task_state(_task_id, _game_state)
 {
     if (_task_id < 0
@@ -635,16 +419,6 @@ function progression_claim_task_state(_task_id, _game_state)
     return true;
 }
 
-function task_claim_reward(_task_id)
-{
-    var game_state = game_state_ensure();
-    if (!progression_claim_task_state(_task_id, game_state))
-        return false;
-
-    progression_present_task_claimed(_task_id);
-    return true;
-}
-
 function progression_restore_stowed_winch_state(_game_state)
 {
     if (_game_state.tutorial_stage
@@ -660,28 +434,19 @@ function progression_restore_stowed_winch_state(_game_state)
     return false;
 }
 
-/// Compatibility path for a version-one save captured on the final page of
-/// the old stump-delivery dialogue.
-function progression_unlock_cabin_from_legacy_dialogue()
+function progression_unlock_cabin_from_legacy_state(_game_state)
 {
-    var game_state = game_state_ensure();
-    game_state.cabin_placement_unlocked = true;
+    _game_state.cabin_placement_unlocked = true;
     progression_set_quest_status(
-        game_state,
+        _game_state,
         QuestId.FIRM_FOUNDATION,
         QuestStatus.COMPLETE
     );
     progression_set_quest_status(
-        game_state,
+        _game_state,
         QuestId.PLACE_OF_YOUR_OWN,
         QuestStatus.ACTIVE
     );
-    progression_make_task_available(TaskId.PARK_SKIDSTEER, game_state);
-    notification_show_hint(
-        "Cabin work unlocked. Accept Park the Skidsteer at the Task Board.",
-        game_get_speed(gamespeed_fps) * 6,
-        false
-    );
-    save_write();
+    progression_make_task_available(TaskId.PARK_SKIDSTEER, _game_state);
     return true;
 }

@@ -13,8 +13,13 @@ JSON file read -> migrate to current -> hydrate game state
 -> enter saved room -> reconcile saved room instances
 ```
 
-- `save_system` owns snapshots, file I/O, hydration, and restoration
+- `save_system` owns snapshots, file I/O, hydration, and scene-restoration
   coordination.
+- `gameplay_session_helpers` owns pause state, actor recovery, and pending
+  restore-room selection.
+- `settings_helpers` owns runtime settings and save-slot settings updates.
+- `world_removal_helpers` owns one-time removed-world-ID state.
+- `save_data_helpers` owns plain array and inventory copy/apply utilities.
 - `save_migration_helpers` owns pure version-to-version conversion.
 - `game_state_helpers` owns defaults and structural normalization.
 - `room_reconciliation_helpers` restores the cabin site, fences, and mailed

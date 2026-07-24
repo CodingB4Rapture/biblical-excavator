@@ -180,15 +180,6 @@ function fence_find_record(_records, _x, _y)
     return -1;
 }
 
-function fence_restore_room()
-{
-    var game_state = game_state_ensure();
-    var room_name = room_get_name(room);
-    var records = fence_records_for_room(game_state.fence_records, room_name);
-    fence_refresh_room_instances(records, false, true);
-    return array_length(records);
-}
-
 function fence_commit_room_records(_room_name, _room_records)
 {
     var game_state = game_state_ensure();
@@ -212,6 +203,5 @@ function fence_commit_room_records(_room_name, _room_records)
     }
 
     game_state.fence_records = merged;
-    fence_refresh_room_instances(_room_records, false, true);
     return true;
 }

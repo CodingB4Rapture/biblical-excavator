@@ -8,8 +8,14 @@
   "managed":true,
   "name":"obj_task_board",
   "overriddenProperties":[],
-  "parent":{"name":"Homestead","path":"folders/World/Homestead.yy",},
-  "parentObjectId":{"name":"obj_interactable_parent","path":"objects/obj_interactable_parent/obj_interactable_parent.yy",},
+  "parent":{
+    "name":"Homestead",
+    "path":"folders/World/Homestead.yy",
+  },
+  "parentObjectId":{
+    "name":"obj_interactable_parent",
+    "path":"objects/obj_interactable_parent/obj_interactable_parent.yy",
+  },
   "persistent":false,
   "physicsAngularDamping":0.1,
   "physicsDensity":0.5,
@@ -27,7 +33,10 @@
   "resourceType":"GMObject",
   "resourceVersion":"2.0",
   "solid":false,
-  "spriteId":null,
+  "spriteId":{
+    "name":"spr_task_board",
+    "path":"sprites/spr_task_board/spr_task_board.yy",
+  },
   "spriteMaskId":null,
   "visible":true,
 }

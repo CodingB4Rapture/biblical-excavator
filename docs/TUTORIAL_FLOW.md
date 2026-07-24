@@ -8,8 +8,14 @@ This document is the plain-language map for changing the tutorial.
   `scripts/resource_progress_helpers/resource_progress_helpers.gml`
 - Objective event handling:
   `scripts/tutorial_progression_helpers/tutorial_progression_helpers.gml`
-- Task acceptance, completion, claims, quests, stages, and story unlocks:
-  `scripts/progression_helpers/progression_helpers.gml`
+- Validated task, quest, stage, and story-state transitions:
+  `scripts/progression_state_helpers/progression_state_helpers.gml`
+- Command orchestration and explicit world effects:
+  `scripts/progression_command_helpers/progression_command_helpers.gml` and
+  `scripts/progression_effect_helpers/progression_effect_helpers.gml`
+- Plain announcement descriptors and presentation consumption:
+  `scripts/progression_announcement_helpers/progression_announcement_helpers.gml`
+  and `scripts/progression_presentation_helpers/progression_presentation_helpers.gml`
 - Read-only guidance descriptors:
   `scripts/tutorial_guidance_helpers/tutorial_guidance_helpers.gml`
 - Missing durable room objects:

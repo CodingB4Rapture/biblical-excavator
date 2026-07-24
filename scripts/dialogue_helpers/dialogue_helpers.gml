@@ -68,6 +68,35 @@ function dialogue_get_palette(_speaker_name)
     return palette;
 }
 
+/// Read-only portrait metadata. Source rectangles use the original sprite
+/// pixels so world art remains the single source for each character's face.
+function dialogue_get_portrait_descriptor(_speaker_name)
+{
+    switch (_speaker_name)
+    {
+        case "FARMER":
+        {
+            return {
+                sprite: spr_farmer,
+                frame: 0,
+                source_x: 5,
+                source_y: 4,
+                source_width: 17,
+                source_height: 16
+            };
+        }
+    }
+
+    return {
+        sprite: -1,
+        frame: 0,
+        source_x: 0,
+        source_y: 0,
+        source_width: 0,
+        source_height: 0
+    };
+}
+
 function dialogue_get_layout(_body_text)
 {
     var gui_w = display_get_gui_width();
@@ -190,7 +219,7 @@ function dialogue_draw_panel(_layout, _palette)
     draw_set_alpha(1);
 }
 
-function dialogue_draw_portrait_placeholder(_layout, _palette)
+function dialogue_draw_portrait_frame(_layout, _palette)
 {
     var left = _layout.portrait_left;
     var top = _layout.portrait_top;
@@ -200,6 +229,15 @@ function dialogue_draw_portrait_placeholder(_layout, _palette)
     draw_rectangle(left - 3, top - 3, left + size + 3, top + size + 3, false);
     draw_set_color(_palette.portrait_bg);
     draw_rectangle(left, top, left + size, top + size, false);
+}
+
+function dialogue_draw_portrait_placeholder(_layout, _palette)
+{
+    dialogue_draw_portrait_frame(_layout, _palette);
+
+    var left = _layout.portrait_left;
+    var top = _layout.portrait_top;
+    var size = _layout.portrait_size;
 
     draw_set_color(_palette.skin);
     draw_circle(left + size * 0.5, top + size * 0.46, size * 0.25, false);
@@ -225,6 +263,53 @@ function dialogue_draw_portrait_placeholder(_layout, _palette)
         left + size * 0.5,
         top + size * 0.63,
         false
+    );
+}
+
+function dialogue_draw_portrait(_layout, _palette, _speaker_name)
+{
+    var portrait = dialogue_get_portrait_descriptor(_speaker_name);
+    if (portrait.sprite == -1)
+    {
+        dialogue_draw_portrait_placeholder(_layout, _palette);
+        return;
+    }
+
+    dialogue_draw_portrait_frame(_layout, _palette);
+
+    var usable_size = max(1, _layout.portrait_size - 12);
+    var source_span = max(
+        1,
+        portrait.source_width,
+        portrait.source_height
+    );
+    var portrait_scale = max(1, floor(usable_size / source_span));
+    var draw_width = portrait.source_width * portrait_scale;
+    var draw_height = portrait.source_height * portrait_scale;
+    var draw_x = floor(
+        _layout.portrait_left
+            + (_layout.portrait_size - draw_width) * 0.5
+    );
+    var draw_y = floor(
+        _layout.portrait_top
+            + (_layout.portrait_size - draw_height) * 0.5
+    );
+
+    draw_set_color(c_white);
+    draw_set_alpha(1);
+    draw_sprite_part_ext(
+        portrait.sprite,
+        portrait.frame,
+        portrait.source_x,
+        portrait.source_y,
+        portrait.source_width,
+        portrait.source_height,
+        draw_x,
+        draw_y,
+        portrait_scale,
+        portrait_scale,
+        c_white,
+        1
     );
 }
 

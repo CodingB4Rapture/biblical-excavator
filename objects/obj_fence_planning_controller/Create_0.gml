@@ -4,14 +4,9 @@ with (obj_gui_hint) instance_destroy();
 
 planning_room_name = room_get_name(room);
 var game_state = game_state_ensure();
-cabin_tutorial_mode = task_is_active(
-    TaskId.MARK_CABIN_SITE,
-    game_state
-) && game_state.cabin_site_placed
-    && !game_state.cabin_fence_marked;
-planning_purpose = cabin_tutorial_mode
-    ? FENCE_PURPOSE_CABIN_SITE
-    : "";
+cabin_tutorial_mode =
+    fence_planning_is_tutorial_mode(game_state);
+planning_purpose = fence_planning_get_purpose(game_state);
 tutorial_bounds = cabin_tutorial_mode
     ? cabin_fence_plot_bounds()
     : {

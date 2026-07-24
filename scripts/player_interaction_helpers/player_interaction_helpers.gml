@@ -62,6 +62,20 @@ function input_tick_interaction_lock()
     }
 }
 
+function player_interaction_target_x(_target)
+{
+    return variable_instance_exists(_target, "interaction_x")
+        ? _target.interaction_x
+        : _target.x;
+}
+
+function player_interaction_target_y(_target)
+{
+    return variable_instance_exists(_target, "interaction_y")
+        ? _target.interaction_y
+        : _target.y;
+}
+
 function player_find_interactable(_actor)
 {
     var best_target = noone;
@@ -83,7 +97,9 @@ function player_find_interactable(_actor)
             continue;
         }
 
-        var target_distance = point_distance(_actor.x, _actor.y, target.x, target.y);
+        var target_x = player_interaction_target_x(target);
+        var target_y = player_interaction_target_y(target);
+        var target_distance = point_distance(_actor.x, _actor.y, target_x, target_y);
         var allowed_distance = min(_actor.interact_distance, target.interaction_radius);
 
         if (target_distance > allowed_distance)
@@ -153,12 +169,14 @@ function player_draw_interaction(_actor)
     var key_height = string_height("E") * key_scale;
     var panel_height = max(prompt_height, key_height) + panel_padding * 2;
     var panel_width = panel_padding * 3 + key_width + prompt_width;
-    var panel_center_x = clamp(target.x, panel_width * 0.5 + 2, room_width - panel_width * 0.5 - 2);
-    var panel_bottom = max(panel_height + 4, target.y - 22);
+    var target_x = player_interaction_target_x(target);
+    var target_y = player_interaction_target_y(target);
+    var panel_center_x = clamp(target_x, panel_width * 0.5 + 2, room_width - panel_width * 0.5 - 2);
+    var panel_bottom = max(panel_height + 4, target_y - 22);
     var panel_top = panel_bottom - panel_height;
     var panel_left = panel_center_x - panel_width * 0.5;
     var panel_right = panel_center_x + panel_width * 0.5;
-    var pointer_x = clamp(target.x, panel_left + 8, panel_right - 8);
+    var pointer_x = clamp(target_x, panel_left + 8, panel_right - 8);
 
     // A compact version of the dialogue palette keeps interaction prompts in
     // the same visual language without competing with full conversations.

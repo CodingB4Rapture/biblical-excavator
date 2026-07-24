@@ -1,9 +1,9 @@
 {
   "$GMSprite":"v2",
   "%Name":"spr_right_fence_corner",
-  "bboxMode":0,
+  "bboxMode":2,
   "bbox_bottom":31,
-  "bbox_left":0,
+  "bbox_left":9,
   "bbox_right":18,
   "bbox_top":0,
   "collisionKind":1,

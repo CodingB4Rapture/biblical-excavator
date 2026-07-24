@@ -452,11 +452,21 @@ This is a good example of saving outcomes rather than trying to serialize every 
 
 Primary files:
 
-- `scripts/progression_helpers/progression_helpers.gml`
-- `scripts/task_helpers/task_helpers.gml`
+- `scripts/progression_state_helpers/progression_state_helpers.gml`
+- `scripts/progression_command_helpers/progression_command_helpers.gml`
+- `scripts/progression_effect_helpers/progression_effect_helpers.gml`
+- `scripts/progression_announcement_helpers/progression_announcement_helpers.gml`
+- `scripts/progression_presentation_helpers/progression_presentation_helpers.gml`
+- `scripts/task_definition_helpers/task_definition_helpers.gml`
+- `scripts/task_read_model_helpers/task_read_model_helpers.gml`
+- `scripts/task_state_helpers/task_state_helpers.gml`
+- `scripts/task_reward_helpers/task_reward_helpers.gml`
+- `scripts/task_tests/task_tests.gml`
 - `scripts/tutorial_progression_helpers/tutorial_progression_helpers.gml`
 - `scripts/tutorial_guidance_helpers/tutorial_guidance_helpers.gml`
-- `scripts/quest_helpers/quest_helpers.gml`
+- `scripts/quest_definition_helpers/quest_definition_helpers.gml`
+- `scripts/quest_read_model_helpers/quest_read_model_helpers.gml`
+- `scripts/quest_command_helpers/quest_command_helpers.gml`
 - `scripts/dialogue_helpers/dialogue_helpers.gml`
 - `scripts/notification_show_dialogue/notification_show_dialogue.gml`
 - `scripts/notification_show_hint/notification_show_hint.gml`
@@ -480,8 +490,10 @@ Current order:
 
 Only one board task may be active. Every task must be accepted before its
 mechanics unlock. Gameplay events complete tasks, and board claims expose the
-next task. `progression_helpers` is the only runtime write API for task, quest,
-tutorial-stage, and story-unlock state.
+next task. `progression_state_helpers` owns validated durable transitions.
+Compatibility commands apply explicitly named world effects and enqueue plain
+announcement descriptors. The presentation consumer waits for menus/dialogue
+to clear before creating notices and follow-up hints.
 
 ### Guidance is read-only
 
@@ -527,6 +539,10 @@ Primary files:
 
 - `scripts/save_migration_helpers/save_migration_helpers.gml`
 - `scripts/save_system/save_system.gml`
+- `scripts/save_data_helpers/save_data_helpers.gml`
+- `scripts/gameplay_session_helpers/gameplay_session_helpers.gml`
+- `scripts/settings_helpers/settings_helpers.gml`
+- `scripts/world_removal_helpers/world_removal_helpers.gml`
 - `scripts/room_reconciliation_helpers/room_reconciliation_helpers.gml`
 
 [[DIAGRAM:save_flow]]
@@ -540,7 +556,8 @@ The single JSON snapshot contains three top-level parts:
 - `scene` for current room and live actor/vehicle/dialogue placement;
 - `settings` for volume and fullscreen.
 
-The current format number is 2. Version-one data migrates before hydration.
+The current format number is 3. Older data migrates in version order before
+hydration.
 
 ### Snapshot creation
 
@@ -654,6 +671,8 @@ Primary files:
 - `scripts/fence_topology_helpers/fence_topology_helpers.gml`
 - `scripts/fence_placement_helpers/fence_placement_helpers.gml`
 - `scripts/fence_presentation_helpers/fence_presentation_helpers.gml`
+- `scripts/fence_planning_policy_helpers/fence_planning_policy_helpers.gml`
+- `scripts/fence_planning_controller_helpers/fence_planning_controller_helpers.gml`
 - `scripts/fence_tests/fence_tests.gml`
 - `scripts/calendar_helpers/calendar_helpers.gml`
 - `objects/obj_cabin_placement_controller/`
@@ -766,16 +785,36 @@ ownership at the seams that were beginning to accumulate.
 
 1. `game_state_helpers` owns defaults and structural normalization.
 2. `save_migration_helpers` owns pure v1-to-v2 conversion.
-3. `save_system` owns snapshots, file I/O, hydration, and scene restoration.
-4. `progression_helpers` owns runtime tutorial/task/quest/story transitions.
-5. Guidance returns read-only target descriptors; its object owns rendering.
-6. Room reconciliation owns durable instance reconstruction.
-7. Fieldstone and Fieldrock lifecycle code lives in separate modules.
-8. Task Board scrolling prevents additional tasks from overflowing the panel.
+3. `save_system` owns snapshot/file/load coordination; focused session,
+   settings, removal, and data helpers own their smaller runtime concerns.
+4. Progression state owns durable writes, effects own world reconciliation,
+   announcements are plain descriptors, and presentation consumes them.
+5. Task and quest definitions, read models, compatibility state, commands,
+   rewards, and tests have focused owners.
+6. The Farmer's Wife selects a plain response, applies an explicit effect when
+   requested, and presents the resulting descriptor.
+7. Guidance returns read-only target descriptors; its object owns rendering.
+8. Room reconciliation owns durable instance reconstruction, including fences.
+9. Fence records, topology, placement, policy, controller orchestration,
+   presentation, and tests are separated.
+10. Fieldstone and Fieldrock lifecycle code lives in separate modules.
 
 The remaining large Draw events can be split only when a second consumer makes
 the shared panel/list behavior concrete. Avoid adding a generic framework in
 advance of that need.
+
+### Dependency and extension direction
+
+New saved behavior should follow one direction:
+
+```text
+definition -> durable state -> explicit progression command/effect
+-> read model or guidance descriptor -> object/UI presentation -> save
+```
+
+Read models do not advance progress. State and persistence helpers do not
+create presentation instances. Presentation consumers may read descriptors but
+must call explicit commands for any durable change.
 
 [[PAGEBREAK]]
 
@@ -1300,23 +1339,30 @@ This is what "full implementation" means in this project: data definition, live 
 - `player_interaction_helpers`: input, target selection, prompts, and player collision.
 - `skidsteer_helpers`: vehicle controls, movement, contact, enter/exit.
 - `winch_helpers`: hitch, cable, attachment, towing, detach, drawing.
-- `progression_helpers`: runtime task, quest, stage, and story-unlock writes.
+- progression state helpers: validated task, quest, stage, and story writes.
+- progression command/effect helpers: compatibility orchestration and explicit
+  live-world effects.
+- progression announcement/presentation helpers: plain queued descriptors and
+  their sole GUI/hint consumer.
 - `tutorial_progression_helpers`: validates world events against the active task.
 - `tutorial_guidance_helpers`: read-only arrow targeting.
-- `task_helpers` and `quest_helpers`: definitions and read-only status/objectives.
+- task definition/read/state/reward/test helpers: focused task ownership.
+- quest definition/read/command helpers: focused quest ownership.
 - `save_migration_helpers`: pure version conversion and legacy aliases.
 - `save_system`: snapshot, file I/O, hydration, and scene restoration.
+- gameplay session, settings, world-removal, and save-data helpers: focused
+  runtime and copying concerns outside the save coordinator.
 - `room_reconciliation_helpers`: idempotent current-room object restoration.
 - resource-specific regeneration helpers: persistent resource lifecycle.
 - `tree_persistence_helpers`: multi-piece tree lifecycle.
 - `cabin_placement_helpers`: site validation, placement, restoration.
 - `calendar_helpers`: day/time, sleep, and day transition.
 - `dialogue_helpers` and notification objects: presentation and completion actions.
-- `farmers_wife_helpers`: Farmer's Wife story-state selection, dialogue, and
-  Home Delivery interaction transactions.
-- fence record, topology, placement, presentation, and test helpers: durable
-  fence data and restoration, pure validation, edit transactions, world
-  rendering, and deterministic regression coverage respectively.
+- `farmers_wife_helpers`: pure response selection, explicit Home Delivery
+  effect execution, and response presentation.
+- fence record, topology, placement, policy, controller, presentation, and test
+  helpers: durable data, validation, edit transactions, unlock/read policy,
+  input orchestration, world rendering, and regression coverage respectively.
 - controllers: room-wide orchestration, not feature-specific business rules.
 
 ## Closing perspective

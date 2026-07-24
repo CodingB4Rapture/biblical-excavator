@@ -49,10 +49,16 @@ completes the quest and allows the first rest.
 
 ## Ownership
 
-Definitions, summaries, objective read models, and reward payloads live in
-`scripts/task_helpers/task_helpers.gml`. Runtime writes to task, quest,
-tutorial-stage, and story-unlock state go through
-`scripts/progression_helpers/progression_helpers.gml`.
+Task definitions and reward descriptors live in `task_definition_helpers`.
+Task status/objective models, structural compatibility, and atomic reward
+application live in `task_read_model_helpers`, `task_state_helpers`, and
+`task_reward_helpers` respectively. Quest definitions and journal models live
+in `quest_definition_helpers` and `quest_read_model_helpers`.
+
+Runtime writes go through `progression_state_helpers`. Compatibility commands
+coordinate those transactions with `progression_effect_helpers` and enqueue
+plain announcement descriptors. `progression_presentation_helpers` is the only
+progression module that creates notice or hint presentation instances.
 
 Small Equipment XP or Homebase-resource rewards can be attached to tasks.
 Claiming first validates the complete reward array and applies nothing if any

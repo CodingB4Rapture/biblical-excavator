@@ -1,12 +1,11 @@
 /// obj_dialogue_bubble - Draw GUI Event
-/// Asset-free portrait placeholder: replace this drawing with character art later.
 
 var page_text = pages[page_index];
 var layout = dialogue_get_layout(page_text);
 var palette = dialogue_get_palette(speaker_name);
 
 dialogue_draw_panel(layout, palette);
-dialogue_draw_portrait_placeholder(layout, palette);
+dialogue_draw_portrait(layout, palette, speaker_name);
 
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
