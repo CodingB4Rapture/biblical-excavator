@@ -650,7 +650,11 @@ Clearance checks prevent resources from appearing inside the player, vehicle, NP
 Primary files:
 
 - `scripts/cabin_placement_helpers/cabin_placement_helpers.gml`
-- `scripts/fence_planning_helpers/fence_planning_helpers.gml`
+- `scripts/fence_record_helpers/fence_record_helpers.gml`
+- `scripts/fence_topology_helpers/fence_topology_helpers.gml`
+- `scripts/fence_placement_helpers/fence_placement_helpers.gml`
+- `scripts/fence_presentation_helpers/fence_presentation_helpers.gml`
+- `scripts/fence_tests/fence_tests.gml`
 - `scripts/calendar_helpers/calendar_helpers.gml`
 - `objects/obj_cabin_placement_controller/`
 - `objects/obj_cabin_site/`
@@ -1308,6 +1312,11 @@ This is what "full implementation" means in this project: data definition, live 
 - `cabin_placement_helpers`: site validation, placement, restoration.
 - `calendar_helpers`: day/time, sleep, and day transition.
 - `dialogue_helpers` and notification objects: presentation and completion actions.
+- `farmers_wife_helpers`: Farmer's Wife story-state selection, dialogue, and
+  Home Delivery interaction transactions.
+- fence record, topology, placement, presentation, and test helpers: durable
+  fence data and restoration, pure validation, edit transactions, world
+  rendering, and deterministic regression coverage respectively.
 - controllers: room-wide orchestration, not feature-specific business rules.
 
 ## Closing perspective
