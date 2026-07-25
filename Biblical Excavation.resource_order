@@ -133,6 +133,7 @@
     {"name":"spr_empty_bucket","order":18,"path":"sprites/spr_empty_bucket/spr_empty_bucket.yy",},
     {"name":"spr_fancy_dirt","order":19,"path":"sprites/spr_fancy_dirt/spr_fancy_dirt.yy",},
     {"name":"spr_farmer","order":19,"path":"sprites/spr_farmer/spr_farmer.yy",},
+    {"name":"spr_farmers_wife","order":20,"path":"sprites/spr_farmers_wife/spr_farmers_wife.yy",},
     {"name":"spr_fence_gate","order":9,"path":"sprites/spr_fence_gate/spr_fence_gate.yy",},
     {"name":"spr_fieldrock","order":1,"path":"sprites/spr_fieldrock/spr_fieldrock.yy",},
     {"name":"spr_fieldstone","order":5,"path":"sprites/spr_fieldstone/spr_fieldstone.yy",},

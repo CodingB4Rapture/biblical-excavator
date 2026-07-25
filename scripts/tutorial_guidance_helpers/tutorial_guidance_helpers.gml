@@ -75,9 +75,21 @@ function tutorial_guidance_from_instance(_target, _label)
     var target_world_id = variable_instance_exists(_target, "world_id")
         ? _target.world_id
         : "";
+    var target_x = _target.x;
+    var target_y = _target.y;
+
+    if (variable_instance_exists(_target, "interaction_x"))
+        target_x = _target.interaction_x;
+    if (variable_instance_exists(_target, "interaction_y"))
+        target_y = _target.interaction_y;
+    if (variable_instance_exists(_target, "guidance_x"))
+        target_x = _target.guidance_x;
+    if (variable_instance_exists(_target, "guidance_y"))
+        target_y = _target.guidance_y;
+
     return tutorial_guidance_at(
-        _target.x,
-        _target.y,
+        target_x,
+        target_y,
         _label,
         room_get_name(room),
         object_get_name(_target.object_index),

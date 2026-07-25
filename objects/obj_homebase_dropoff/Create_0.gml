@@ -16,6 +16,11 @@ chest_draw_y = chest_center_y - chest_height * 0.5;
 // checks, while on-foot interaction follows the chest at the circle's top.
 interaction_x = chest_center_x;
 interaction_y = chest_center_y;
+guidance_x = chest_center_x;
+guidance_y = chest_draw_y;
+
+vehicle_inside_dropoff = false;
+unload_hint_context_key = "home_delivery.unload_cargo";
 
 chest_blocker = instance_create_depth(
     chest_draw_x,
@@ -100,7 +105,7 @@ interaction_run = function(_actor)
     }
 
     notification_show_hint(
-        "Park the vehicle inside this circle, exit it, then unload its cargo here.",
+        "Park the vehicle inside this circle, hop off, then unload supplies at the chest.",
         game_get_speed(gamespeed_fps) * 3,
         false
     );
