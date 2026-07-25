@@ -2,17 +2,20 @@
 
 draw_set_font(-1);
 
-draw_set_alpha(0.16);
-draw_set_color(make_color_rgb(92, 126, 70));
+var circle_fill = vehicle_inside_dropoff
+    ? make_color_rgb(93, 134, 83)
+    : make_color_rgb(92, 126, 70);
+var circle_edge = vehicle_inside_dropoff
+    ? make_color_rgb(235, 197, 88)
+    : make_color_rgb(205, 158, 70);
+
+draw_set_alpha(vehicle_inside_dropoff ? 0.24 : 0.16);
+draw_set_color(circle_fill);
 draw_circle(x, y, dropoff_radius, false);
 
-draw_set_alpha(0.72);
-draw_set_color(make_color_rgb(205, 158, 70));
+draw_set_alpha(vehicle_inside_dropoff ? 0.9 : 0.72);
+draw_set_color(circle_edge);
 draw_circle(x, y, dropoff_radius, true);
-draw_set_color(make_color_rgb(115, 151, 83));
-draw_circle(x, y, dropoff_radius - 3, true);
-
-world_draw_location_marker(x, y, "HOME DELIVERY", make_color_rgb(226, 178, 73), 9);
 
 // Keep the parking circle beneath the physical delivery point. The second
 // chest frame remains open until the interacting player leaves the zone.

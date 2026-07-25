@@ -85,6 +85,18 @@ function dialogue_get_portrait_descriptor(_speaker_name)
                 source_height: 16
             };
         }
+
+        case "FARMER'S WIFE":
+        {
+            return {
+                sprite: spr_farmers_wife,
+                frame: 0,
+                source_x: 6,
+                source_y: 2,
+                source_width: 20,
+                source_height: 18
+            };
+        }
     }
 
     return {

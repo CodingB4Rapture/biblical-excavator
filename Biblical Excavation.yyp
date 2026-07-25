@@ -155,6 +155,7 @@
     {"id":{"name":"spr_empty_bucket","path":"sprites/spr_empty_bucket/spr_empty_bucket.yy",},},
     {"id":{"name":"spr_fancy_dirt","path":"sprites/spr_fancy_dirt/spr_fancy_dirt.yy",},},
     {"id":{"name":"spr_farmer","path":"sprites/spr_farmer/spr_farmer.yy",},},
+    {"id":{"name":"spr_farmers_wife","path":"sprites/spr_farmers_wife/spr_farmers_wife.yy",},},
     {"id":{"name":"spr_fence_gate","path":"sprites/spr_fence_gate/spr_fence_gate.yy",},},
     {"id":{"name":"spr_fieldrock","path":"sprites/spr_fieldrock/spr_fieldrock.yy",},},
     {"id":{"name":"spr_fieldstone","path":"sprites/spr_fieldstone/spr_fieldstone.yy",},},
