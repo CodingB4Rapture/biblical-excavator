@@ -14,7 +14,9 @@ interaction_get_prompt = function(_actor)
     if (task_is_active(TaskId.MARK_CABIN_SITE, game_state)
     && !game_state.cabin_fence_marked)
     {
-        return "Plan the cabin boundary";
+        return cabin_site_flag_count_taken(game_state) > 0
+            ? "Use cleared flag to fence"
+            : "Take a site flag first";
     }
 
     if (task_get_status(TaskId.MARK_CABIN_SITE) == TaskStatus.COMPLETE)
@@ -58,15 +60,21 @@ interaction_run = function(_actor)
     if (task_is_active(TaskId.MARK_CABIN_SITE, game_state)
     && !game_state.cabin_fence_marked)
     {
-        if (!instance_exists(obj_fence_planning_controller))
+        if (cabin_site_flag_count_taken(game_state) == 0)
         {
-            instance_create_depth(
-                0,
-                0,
-                -800,
-                obj_fence_planning_controller
+            notification_show_hint(
+                "Take one of this site's four flags before placing the fence.",
+                game_get_speed(gamespeed_fps) * 4,
+                false
             );
+            return;
         }
+
+        notification_show_hint(
+            "Return to a cleared corner marker and choose Place Fence.",
+            game_get_speed(gamespeed_fps) * 4,
+            false
+        );
         return;
     }
 

@@ -5,6 +5,24 @@ function dialogue_is_active()
     return instance_exists(obj_dialogue_bubble);
 }
 
+function dialogue_get_active_layout()
+{
+    var bubble = instance_find(obj_dialogue_bubble, 0);
+    if (!instance_exists(bubble)
+    || !is_array(bubble.pages)
+    || array_length(bubble.pages) <= 0)
+    {
+        return undefined;
+    }
+
+    var active_page = clamp(
+        round(bubble.page_index),
+        0,
+        array_length(bubble.pages) - 1
+    );
+    return dialogue_get_layout(bubble.pages[active_page]);
+}
+
 function dialogue_advance_pressed()
 {
     // Mouse and keyboard are equal ways to advance a conversation.

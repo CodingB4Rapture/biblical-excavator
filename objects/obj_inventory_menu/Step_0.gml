@@ -1,13 +1,5 @@
 /// obj_inventory_menu - Step Event
 
-if (keyboard_check_pressed(ord("I"))
-|| keyboard_check_pressed(vk_tab)
-|| keyboard_check_pressed(vk_escape))
-{
-    inventory_menu_close();
-    exit;
-}
-
 var category_count = array_length(inventory_categories);
 var category_move = keyboard_check_pressed(vk_right)
     - keyboard_check_pressed(vk_left);
@@ -18,7 +10,7 @@ if (category_move != 0)
         mod category_count;
 }
 
-var layout = inventory_menu_get_layout();
+var layout = player_menu_get_inventory_layout();
 var mouse_gui_x = device_mouse_x_to_gui(0);
 var mouse_gui_y = device_mouse_y_to_gui(0);
 

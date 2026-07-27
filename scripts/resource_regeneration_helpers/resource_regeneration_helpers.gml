@@ -59,5 +59,29 @@ function resource_regeneration_spawn_is_clear(_x, _y, _radius)
         }
     }
 
+    var cabin_sites = cabin_site_definitions();
+    var current_room_name = room_get_name(room);
+
+    for (var site_index = 0;
+        site_index < array_length(cabin_sites);
+        site_index++)
+    {
+        var site = cabin_sites[site_index];
+        if (site.room_name != current_room_name) continue;
+
+        var bounds = cabin_fence_plot_bounds_at(site.x, site.y);
+        if (point_in_rectangle(
+            _x,
+            _y,
+            bounds.min_x - _radius,
+            bounds.min_y - _radius,
+            bounds.max_x + _radius,
+            bounds.max_y + _radius
+        ))
+        {
+            return false;
+        }
+    }
+
     return true;
 }

@@ -93,6 +93,8 @@ function game_state_create_default()
         cabin_site_room: "Room1",
         cabin_site_x: 0,
         cabin_site_y: 0,
+        cabin_selected_site_id: CABIN_SITE_NONE,
+        cabin_site_flags_taken: 0,
         cabin_fence_marked: false,
         cabin_built: false,
         homestead_stage: HomesteadStage.TUTORIAL,
@@ -317,6 +319,29 @@ function game_state_normalize(_game_state)
         _game_state.cabin_site_x = 0;
     if (!variable_struct_exists(_game_state, "cabin_site_y"))
         _game_state.cabin_site_y = 0;
+    if (!variable_struct_exists(_game_state, "cabin_selected_site_id")
+    || (_game_state.cabin_site_placed
+        && _game_state.cabin_selected_site_id == CABIN_SITE_NONE))
+    {
+        _game_state.cabin_selected_site_id = _game_state.cabin_site_placed
+            ? cabin_site_id_at_position(
+                _game_state.cabin_site_room,
+                _game_state.cabin_site_x,
+                _game_state.cabin_site_y
+            )
+            : CABIN_SITE_NONE;
+    }
+    if (!_game_state.cabin_site_placed)
+        _game_state.cabin_selected_site_id = CABIN_SITE_NONE;
+    if (!variable_struct_exists(_game_state, "cabin_site_flags_taken"))
+        _game_state.cabin_site_flags_taken = 0;
+    if (!is_real(_game_state.cabin_site_flags_taken))
+        _game_state.cabin_site_flags_taken = 0;
+    _game_state.cabin_site_flags_taken = clamp(
+        round(_game_state.cabin_site_flags_taken),
+        0,
+        15
+    );
     if (!variable_struct_exists(_game_state, "skidsteer_parked"))
         _game_state.skidsteer_parked = false;
     if (!variable_struct_exists(_game_state, "cabin_fence_marked"))
@@ -353,6 +378,57 @@ function game_state_normalize(_game_state)
         || !is_array(_game_state[$ field_name]))
         {
             _game_state[$ field_name] = [];
+        }
+    }
+
+    // A predefined site ID owns its authored footprint. If a definition moves
+    // during development, move its saved cabin-purpose fence records with it
+    // instead of leaving the cabin and boundary at different coordinates.
+    if (_game_state.cabin_site_placed)
+    {
+        var selected_site_definition = cabin_site_definition(
+            _game_state.cabin_selected_site_id
+        );
+
+        if (!is_undefined(selected_site_definition))
+        {
+            var previous_site_room = _game_state.cabin_site_room;
+            var site_shift_x =
+                selected_site_definition.x - _game_state.cabin_site_x;
+            var site_shift_y =
+                selected_site_definition.y - _game_state.cabin_site_y;
+
+            if (site_shift_x != 0
+            || site_shift_y != 0
+            || previous_site_room != selected_site_definition.room_name)
+            {
+                for (var fence_index = 0;
+                    fence_index < array_length(_game_state.fence_records);
+                    fence_index++)
+                {
+                    var fence_record =
+                        _game_state.fence_records[fence_index];
+                    if (is_struct(fence_record)
+                    && fence_record_purpose(fence_record)
+                        == FENCE_PURPOSE_CABIN_SITE
+                    && variable_struct_exists(
+                        fence_record,
+                        "room_name"
+                    )
+                    && fence_record.room_name == previous_site_room)
+                    {
+                        fence_record.room_name =
+                            selected_site_definition.room_name;
+                        fence_record.x += site_shift_x;
+                        fence_record.y += site_shift_y;
+                    }
+                }
+
+                _game_state.cabin_site_room =
+                    selected_site_definition.room_name;
+                _game_state.cabin_site_x = selected_site_definition.x;
+                _game_state.cabin_site_y = selected_site_definition.y;
+            }
         }
     }
 

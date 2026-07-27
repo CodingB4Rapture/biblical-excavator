@@ -12,8 +12,24 @@ var hint_alpha = min(fade_in, fade_out) * 0.92;
 var margin = 22;
 var panel_right = gui_w - margin;
 var panel_bottom = gui_h - margin;
+var text_line_sep = 12;
+var text_width = panel_width - 28;
+var text_height = string_height_ext(
+    message_text,
+    text_line_sep,
+    text_width
+);
+var resolved_panel_height = max(panel_height, text_height + 24);
+var dialogue_layout = dialogue_get_active_layout();
+
+if (!is_undefined(dialogue_layout))
+{
+    panel_right = dialogue_layout.panel_right;
+    panel_bottom = dialogue_layout.panel_top - 12;
+}
+
 var panel_left = panel_right - panel_width;
-var panel_top = panel_bottom - panel_height;
+var panel_top = panel_bottom - resolved_panel_height;
 
 var panel_color = make_color_rgb(27, 31, 30);
 var panel_edge = make_color_rgb(103, 82, 42);
@@ -40,8 +56,8 @@ draw_text_ext(
     panel_left + 14,
     panel_top + 12,
     message_text,
-    12,
-    panel_width - 28
+    text_line_sep,
+    text_width
 );
 
 draw_set_alpha(1);

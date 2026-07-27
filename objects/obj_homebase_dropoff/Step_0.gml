@@ -5,13 +5,7 @@
 if (gameplay_is_paused()) exit;
 
 var vehicle = instance_find(obj_skidsteer, 0);
-vehicle_inside_dropoff = false;
-
-if (instance_exists(vehicle))
-{
-    vehicle_inside_dropoff =
-        point_distance(vehicle.x, vehicle.y, x, y) <= dropoff_radius;
-}
+vehicle_inside_dropoff = progress_vehicle_is_in_home_delivery(id, vehicle);
 
 var has_vehicle_cargo = false;
 
@@ -21,27 +15,53 @@ if (vehicle_inside_dropoff
     has_vehicle_cargo = inventory_get_total(vehicle.cargo_inventory) > 0;
 }
 
-var should_prompt_unload = false;
+var has_pending_delivery = has_vehicle_cargo;
+var nearby_log = instance_nearest(x, y, obj_log);
+var nearby_stump = instance_nearest(x, y, obj_stump);
 
-if (vehicle_inside_dropoff && has_vehicle_cargo)
+if (instance_exists(nearby_log)
+&& nearby_log.pullable_state != PullableState.DELIVERED
+&& point_distance(nearby_log.x, nearby_log.y, x, y) <= dropoff_radius)
 {
-    should_prompt_unload = vehicle.has_driver;
+    has_pending_delivery = true;
 }
+
+if (instance_exists(nearby_stump)
+&& nearby_stump.pullable_state != PullableState.DELIVERED
+&& point_distance(nearby_stump.x, nearby_stump.y, x, y) <= dropoff_radius)
+{
+    has_pending_delivery = true;
+}
+
+var delivery_hint_text = "";
+if (vehicle_inside_dropoff && has_pending_delivery)
+{
+    delivery_hint_text = vehicle.has_driver
+        ? "Skidsteer parked. Press E to get out, then walk to the chest."
+        : "Walk to the chest and press E to unload supplies.";
+}
+
 var current_hint = instance_find(obj_gui_hint, 0);
 var owns_unload_hint = instance_exists(current_hint)
     && variable_instance_exists(current_hint, "context_key")
     && current_hint.context_key == unload_hint_context_key;
 
-if (should_prompt_unload)
+if (delivery_hint_text != "")
 {
     if (!owns_unload_hint && !instance_exists(current_hint))
     {
         var unload_hint = notification_show_hint(
-            "Hop off the skidsteer to deliver your goods.",
+            delivery_hint_text,
             game_get_speed(gamespeed_fps) * 8,
             true
         );
         unload_hint.context_key = unload_hint_context_key;
+    }
+    else if (owns_unload_hint
+    && current_hint.message_text != delivery_hint_text)
+    {
+        current_hint.message_text = delivery_hint_text;
+        current_hint.age = 0;
     }
 }
 else if (owns_unload_hint)

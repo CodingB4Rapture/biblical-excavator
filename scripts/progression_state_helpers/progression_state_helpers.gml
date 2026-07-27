@@ -219,7 +219,8 @@ function progression_record_cabin_site_state(
     _room_name,
     _x,
     _y,
-    _relocating = false
+    _relocating = false,
+    _site_id = CABIN_SITE_LEGACY
 )
 {
     var can_relocate = _relocating
@@ -239,10 +240,37 @@ function progression_record_cabin_site_state(
     _game_state.cabin_site_room = _room_name;
     _game_state.cabin_site_x = _x;
     _game_state.cabin_site_y = _y;
+    _game_state.cabin_selected_site_id = _site_id;
+    _game_state.cabin_site_flags_taken = 0;
     _game_state.cabin_fence_marked = false;
     _game_state.cabin_built = false;
     _game_state.homestead_stage = HomesteadStage.TUTORIAL;
 
+    return true;
+}
+
+function progression_take_cabin_site_flag_state(
+    _game_state,
+    _site_id,
+    _corner_index
+)
+{
+    if (!is_real(_corner_index)) return false;
+
+    var corner_index = round(_corner_index);
+    if (corner_index < 0
+    || corner_index > 3
+    || !task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
+    || !_game_state.cabin_site_placed
+    || _game_state.cabin_fence_marked
+    || _game_state.cabin_selected_site_id != _site_id)
+    {
+        return false;
+    }
+
+    _game_state.cabin_site_flags_taken =
+        _game_state.cabin_site_flags_taken
+        | cabin_site_flag_bit(corner_index);
     return true;
 }
 

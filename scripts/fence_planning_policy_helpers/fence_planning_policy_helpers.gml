@@ -16,13 +16,15 @@ function fence_planning_is_unlocked(_game_state = undefined)
     }
 
     return mark_status == TaskStatus.ACTIVE
-        && game_state.cabin_site_placed;
+        && game_state.cabin_site_placed
+        && cabin_site_flag_count_taken(game_state) > 0;
 }
 
 function fence_planning_is_tutorial_mode(_game_state)
 {
     return task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
         && _game_state.cabin_site_placed
+        && cabin_site_flag_count_taken(_game_state) > 0
         && !_game_state.cabin_fence_marked;
 }
 

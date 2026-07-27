@@ -2,7 +2,7 @@
 
 draw_set_font(-1);
 
-var layout = inventory_menu_get_layout();
+var layout = player_menu_get_inventory_layout();
 var game_state = game_state_ensure();
 var category_count = array_length(inventory_categories);
 var panel_left = layout.panel_left;
@@ -300,7 +300,7 @@ draw_set_halign(fa_center);
 draw_set_valign(fa_bottom);
 draw_set_color(make_color_rgb(232, 209, 158));
 draw_text(
-    layout.gui_w * 0.5,
+    (panel_left + panel_right) * 0.5,
     panel_bottom - 8,
     "Click a category or use Left/Right    I, Tab, or Escape to close"
 );

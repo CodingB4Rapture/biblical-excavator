@@ -2,7 +2,7 @@
 
 draw_set_font(-1);
 
-var layout = quest_menu_get_layout();
+var layout = player_menu_get_quest_layout();
 var gui_w = layout.gui_w;
 var gui_h = layout.gui_h;
 var panel_left = layout.panel_left;
@@ -156,7 +156,11 @@ for (var reward_index = 0; reward_index < array_length(quest.rewards); reward_in
 draw_set_halign(fa_center);
 draw_set_valign(fa_bottom);
 draw_set_color(make_color_rgb(232, 209, 158));
-draw_text(gui_w * 0.5, panel_bottom - 8, "Click a quest or use Up/Down    Q or Escape to close");
+draw_text(
+    (panel_left + panel_right) * 0.5,
+    panel_bottom - 8,
+    "Click a quest or use Up/Down    Q or Escape to close"
+);
 
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);

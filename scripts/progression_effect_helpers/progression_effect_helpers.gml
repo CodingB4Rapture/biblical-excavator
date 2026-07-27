@@ -43,8 +43,8 @@ function progression_task_start_followup(_task_id, _game_state)
 
         case TaskId.MARK_CABIN_SITE:
             return _game_state.cabin_site_placed
-                ? "Go to the cabin stakes and press E to plan the boundary."
-                : "Press B to choose the cabin site, then mark its boundary.";
+                ? "Return to a taken flag and choose Place Fence."
+                : "Choose either Site I in Eireneikos Meadows or Site II in Farmer's Workfield. Taking a flag commits the choice.";
     }
 
     return "";

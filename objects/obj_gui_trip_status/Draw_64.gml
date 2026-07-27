@@ -79,97 +79,11 @@ if (instance_exists(home_dropoff))
     }
 }
 
-var tutorial_text = "Talk to the Farmer";
-var trip_label = "Before Trip 1";
-var trip_heading = "";
-
-switch (game_state.tutorial_stage)
-{
-    case TutorialStage.TALK_TO_FARMERS_WIFE: tutorial_text = "Talk to Farmer's Wife"; break;
-    case TutorialStage.TRIP_ONE_HAND_FIELDSTONE:
-        trip_label = "Trip 1 of 3";
-        tutorial_text = "Collect 6 Fieldstones by hand ("
-            + string(game_state.tutorial_fieldstones_collected) + "/6)";
-        break;
-    case TutorialStage.CHOP_TREE:
-        trip_label = "Axe Work";
-        tutorial_text = "Use the gifted axe on a standing tree";
-        break;
-    case TutorialStage.INSPECT_FALLEN_TREE:
-        trip_label = "Axe Work";
-        tutorial_text = "Inspect the fallen tree and stump";
-        break;
-    case TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE:
-        trip_label = "Trip 2 of 3";
-        tutorial_text = "Crush 10 Fieldrocks, then deliver all 16 Fieldstones";
-        break;
-    case TutorialStage.WINCH_PACKAGE_READY:
-        trip_label = "Trip 3 of 3";
-        tutorial_text = "Collect the winch package";
-        break;
-    case TutorialStage.WINCH_INSTALL_REQUIRED:
-        trip_label = "Trip 3 of 3";
-        tutorial_text = "Install the winch on the skidsteer";
-        break;
-    case TutorialStage.INSPECT_FIRST_LOG:
-        trip_label = "Trip 3 of 3";
-        tutorial_text = "Inspect the large log";
-        break;
-    case TutorialStage.TAKE_WINCH_CABLE:
-        trip_label = "Trip 3 of 3";
-        tutorial_text = "Take the cable from the rear hitch";
-        break;
-    case TutorialStage.ATTACH_CABLE_TO_LOG:
-        trip_label = "Trip 3 of 3";
-        tutorial_text = "Attach the cable to the log";
-        break;
-    case TutorialStage.HAUL_FIRST_LOG:
-        trip_label = "Trip 3 of 3";
-        tutorial_text = "Winch the log to Home Delivery";
-        break;
-    case TutorialStage.PULL_STUMP:
-        trip_label = "Trip 3 of 3";
-        tutorial_text = "Winch the stump to Home Delivery for Small Lumber";
-        break;
-    case TutorialStage.COMPLETE: trip_label = "Complete"; tutorial_text = "Cabin materials delivered"; break;
-}
-
-if (task_is_active(TaskId.PARK_SKIDSTEER, game_state))
-{
-    trip_label = "Cabin Work";
-    tutorial_text = instance_exists(vehicle) && vehicle.has_driver
-        ? "Park fully inside the marked pad, stop, detach any tow, and exit"
-        : "Get in the skidsteer and drive it to the marked parking pad";
-}
-else if (task_is_active(TaskId.MARK_CABIN_SITE, game_state))
-{
-    trip_label = "Cabin Site";
-    tutorial_text = game_state.cabin_site_placed
-        ? "Go to the cabin stakes and press E to mark the boundary"
-        : "Press B to choose a fixed cabin-and-yard area";
-}
-else if (task_is_active(TaskId.PLACE_CABIN, game_state))
-{
-    trip_label = "Cabin Build";
-    tutorial_text = pocket_planks < CABIN_TIMBER_PLANK_COST
-        ? "Retrieve 4 Timber Planks from the Finished Crafts chest ("
-            + string(pocket_planks) + "/"
-            + string(CABIN_TIMBER_PLANK_COST) + ")"
-        : "Take the 4 Timber Planks to the marked cabin site and press E";
-}
-else if (game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
-{
-    trip_label = "Cabin Site";
-    tutorial_text = "Rest at the cabin site to begin morning";
-}
-else if (game_state.homestead_stage == HomesteadStage.HUB_OPEN
-&& game_state.tutorial_stage == TutorialStage.COMPLETE)
-{
-    trip_label = "Homestead Day " + string(game_state.day_number);
-    tutorial_text = "Homestead work can begin";
-}
-
-trip_heading = "Current Trip - " + trip_label;
+var trip_model = trip_status_get_read_model(
+    game_state,
+    vehicle,
+    pocket_planks
+);
 
 var screen_margin = 22;
 var trip_left = screen_margin;
@@ -256,51 +170,46 @@ draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 
 draw_set_color(accent_color);
-draw_text(trip_left + 12, trip_top + 10, trip_heading);
+draw_text(trip_left + 12, trip_top + 10, trip_model.heading);
 
 draw_set_color(text_color);
+var objective_line_sep = 16;
+var objective_width = trip_panel_width - 24;
 draw_text_ext(
     trip_left + 12,
     trip_top + 32,
-    tutorial_text,
-    16,
-    trip_panel_width - 24
+    trip_model.objective,
+    objective_line_sep,
+    objective_width
 );
+
+var objective_height = string_height_ext(
+    trip_model.objective,
+    objective_line_sep,
+    objective_width
+);
+var resource_top = max(70, 32 + objective_height + 6);
 
 draw_text(
     trip_left + 12,
-    trip_top + 70,
+    trip_top + resource_top,
     "Backpack stone: " + string(pocket_fieldstones)
     + " / " + string(player_fieldstone_capacity)
 );
 
 draw_text(
     trip_left + 12,
-    trip_top + 88,
+    trip_top + resource_top + 18,
     "Vehicle stone: " + string(vehicle_fieldstones)
     + " / " + string(vehicle_capacity)
 );
 
 draw_text(
     trip_left + 12,
-    trip_top + 106,
+    trip_top + resource_top + 36,
     "Gathered: " + string(game_state.trip_rocks_gathered)
     + "    Trip XP: " + string(game_state.trip_xp_gained)
 );
-
-draw_set_color(accent_color);
-draw_set_halign(fa_left);
-draw_text(trip_left + 12, trip_top + 126, "[I/Tab] Inventory");
-
-var journal_prompt = "[Q] Quest Journal";
-
-if (task_is_active(TaskId.MARK_CABIN_SITE, game_state)
-&& !game_state.cabin_site_placed)
-{
-    journal_prompt += "    [B] Cabin Site";
-}
-
-draw_text(trip_left + 12, trip_top + 144, journal_prompt);
 
 if (show_homebase && !dialogue_is_active())
 {

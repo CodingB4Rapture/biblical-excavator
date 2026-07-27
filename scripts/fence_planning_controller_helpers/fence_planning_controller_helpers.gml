@@ -219,6 +219,10 @@ function fence_planning_controller_commit(_controller)
     if (_controller.cabin_tutorial_mode)
     {
         progression_complete_cabin_fence_state(game_state_ensure());
+        with (obj_cabin_site_flag)
+        {
+            instance_destroy();
+        }
     }
 
     save_write();

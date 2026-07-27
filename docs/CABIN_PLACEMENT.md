@@ -10,14 +10,18 @@ from a marked construction site to the finished cabin.
    the Farmer.
 3. Park fully inside the pad, stop, detach any tow target, and exit.
 4. Claim the task and accept `Mark the Cabin Site`.
-5. Press `B` to choose a clear site on the 32 x 32 grid.
-6. Go to `spr_cabin_before` and press `E` to enter the bounded fence lesson.
-7. Click one highlighted corner and its opposite to create the exact boundary.
-8. Press `G` and install one gate on the front/south side.
-9. Press `F` to validate and finish, then claim the task.
-10. Accept `Build the Cabin`, return to the site, and press `E` to replace
+5. Compare the two predefined sites: gold Site I in Eireneikos Meadows and
+   blue Site II in Farmer's Workfield.
+6. Use `Take Flag` at either site's corner to commit that site. The other
+   site's flags are removed and cannot be selected afterward.
+7. Use `Place Fence` at the cleared corner. The bounded fence lesson begins
+   with that exact corner selected.
+8. Click the opposite highlighted corner to create the exact boundary.
+9. Press `G` and install one gate on the front/south side.
+10. Press `F` to validate and finish, then claim the task.
+11. Accept `Build the Cabin`, return to the site, and press `E` to replace
     `spr_cabin_before` with `spr_cabin_after`.
-11. Claim the build task and rest at the cabin to begin the first homestead
+12. Claim the build task and rest at the cabin to begin the first homestead
     morning.
 
 The site preview reserves a fixed four-by-five-grid-interval enclosure. The
@@ -25,10 +29,15 @@ The site preview reserves a fixed four-by-five-grid-interval enclosure. The
 yard. The fixed dimensions prevent the tutorial fence from being used to claim
 an arbitrarily large area.
 
-Placement rejects room edges and nearby gameplay objects, including the
-player, vehicle, NPCs, resources, Home Delivery, and another cabin site.
-Decorative asset-layer art still has no collision data, so it remains a visual
-check.
+The authored site records own their room, center, fixed footprint, color, and
+site ID. The four `spr_marker` flag instances derive their corners from that
+record; removing flags never changes the permitted footprint. Renewable
+resource spawning reserves both footprints so either remains usable until the
+player commits.
+
+Site I occupies the open northwest corner of Eireneikos Meadows. Site II is in
+the southern grass of Farmer's Workfield, immediately east of the lower-center
+tree and west of the Fieldrock Minefield.
 
 ## Progression state
 
@@ -43,10 +52,9 @@ TUTORIAL
 -> HUB_OPEN
 ```
 
-Durable state records parking, the chosen room/position, the marked boundary,
-the built cabin, and purpose-tagged fence records. A site may be relocated only
-while `Mark the Cabin Site` is active and before its fence is completed.
-Relocation removes the old tutorial boundary.
+Durable state records parking, the selected site ID and room/position, taken
+flag mask, marked boundary, built cabin, and purpose-tagged fence records.
+Selection is one-way: committing either predefined site disables the other.
 
 This pass does not spend resources or introduce construction recipes, damage,
 livestock, NPC automation, or other crafting behavior.

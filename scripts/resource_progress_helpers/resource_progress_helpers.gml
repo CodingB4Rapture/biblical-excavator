@@ -192,6 +192,25 @@ function progress_collect_resource_by_hand(_resource_instance)
     return true;
 }
 
+function progress_vehicle_is_in_home_delivery(_dropoff, _vehicle = noone)
+{
+    if (!instance_exists(_dropoff)) return false;
+
+    var vehicle = _vehicle;
+    if (!instance_exists(vehicle))
+    {
+        vehicle = progress_get_vehicle();
+    }
+
+    return instance_exists(vehicle)
+        && point_distance(
+            vehicle.x,
+            vehicle.y,
+            _dropoff.x,
+            _dropoff.y
+        ) <= _dropoff.dropoff_radius;
+}
+
 function progress_deliver_homebase(_dropoff)
 {
     var game_state = game_state_ensure();
@@ -222,12 +241,10 @@ function progress_deliver_homebase(_dropoff)
 
     if (instance_exists(vehicle) && instance_exists(_dropoff))
     {
-        delivery.vehicle_was_in_zone = point_distance(
-            vehicle.x,
-            vehicle.y,
-            _dropoff.x,
-            _dropoff.y
-        ) <= _dropoff.dropoff_radius;
+        delivery.vehicle_was_in_zone = progress_vehicle_is_in_home_delivery(
+            _dropoff,
+            vehicle
+        );
 
         if (delivery.vehicle_was_in_zone)
         {

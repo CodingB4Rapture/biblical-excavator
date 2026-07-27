@@ -216,11 +216,11 @@ function task_get_objectives(_task_id, _game_state = undefined)
         case TaskId.MARK_CABIN_SITE:
             return [
                 {
-                    text: "Choose a clear location for the cabin stakes",
+                    text: "Choose one of the two predefined cabin sites",
                     complete: task_finished || game_state.cabin_site_placed
                 },
                 {
-                    text: "Build the bounded fence with one front gate",
+                    text: "Take a flag, then build the bounded fence and front gate",
                     complete: task_finished || game_state.cabin_fence_marked
                 }
             ];

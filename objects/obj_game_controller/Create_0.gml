@@ -39,6 +39,8 @@ if (!instance_exists(obj_camera_controller))
     instance_create_depth(0, 0, -100000, obj_camera_controller);
 }
 
+player_menu_rail_ensure();
+
 // First playable beat: free movement, with a gentle direction toward the Farmer.
 if (!game_state.tutorial_intro_seen)
 {

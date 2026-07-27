@@ -1,5 +1,7 @@
 /// obj_game_controller - Step Event
 
+player_menu_rail_ensure();
+
 if (day_transition_active)
 {
     day_transition_timer += 1;
@@ -93,7 +95,23 @@ if (keyboard_check_pressed(ord("F"))
 {
     if (fence_planning_is_unlocked())
     {
-        instance_create_depth(0, 0, -800, obj_fence_planning_controller);
+        if (fence_planning_is_tutorial_mode(game_state_ensure()))
+        {
+            notification_show_hint(
+                "Return to a taken site flag and choose Place Fence.",
+                game_get_speed(gamespeed_fps) * 3,
+                false
+            );
+        }
+        else
+        {
+            instance_create_depth(
+                0,
+                0,
+                -800,
+                obj_fence_planning_controller
+            );
+        }
     }
     else
     {
@@ -103,24 +121,6 @@ if (keyboard_check_pressed(ord("F"))
             false
         );
     }
-    exit;
-}
-
-if (keyboard_check_pressed(ord("Q"))
-&& !instance_exists(obj_quest_menu)
-&& !instance_exists(obj_inventory_menu)
-&& !instance_exists(obj_cabin_placement_controller))
-{
-    instance_create_depth(0, 0, -5000, obj_quest_menu);
-    exit;
-}
-
-if ((keyboard_check_pressed(ord("I")) || keyboard_check_pressed(vk_tab))
-&& !instance_exists(obj_inventory_menu)
-&& !instance_exists(obj_quest_menu)
-&& !instance_exists(obj_cabin_placement_controller))
-{
-    instance_create_depth(0, 0, -5000, obj_inventory_menu);
     exit;
 }
 

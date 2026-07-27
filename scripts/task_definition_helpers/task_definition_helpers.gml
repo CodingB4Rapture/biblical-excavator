@@ -78,7 +78,7 @@ function task_get_definition(_task_id)
             return {
                 quest_id: QuestId.PLACE_OF_YOUR_OWN,
                 title: "Mark the Cabin Site",
-                summary: "Choose the cabin stakes, then enclose the assigned plot with one front gate.",
+                summary: "Choose one of two marked sites, take a corner flag, then enclose its fixed plot with one front gate.",
                 completion_summary: "A bounded cabin plot and front yard were enclosed with one gate.",
                 reward_labels: ["Cabin Construction"],
                 rewards: []

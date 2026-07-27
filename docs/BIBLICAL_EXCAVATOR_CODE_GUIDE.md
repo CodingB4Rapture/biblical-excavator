@@ -816,6 +816,21 @@ Read models do not advance progress. State and persistence helpers do not
 create presentation instances. Presentation consumers may read descriptors but
 must call explicit commands for any durable change.
 
+Purely derived runtime behavior follows the same dependency direction without
+inventing save state:
+
+```text
+definition -> derived runtime state -> explicit transition event
+-> read model -> object/UI presentation
+```
+
+For example, the current world area is recalculated from the controlled
+actor's saved room position. `world_area_definition_helpers` owns authored
+regions, `world_area_transition_helpers` owns the explicit entry event,
+`world_area_read_model_helpers` exposes current area/music identity, and
+`world_area_presentation_helpers` draws the location banner. The controller
+object delegates to those modules and the derived area itself is not saved.
+
 [[PAGEBREAK]]
 
 # 17. Full implementation example: renewable Clay

@@ -97,6 +97,50 @@ function tutorial_guidance_from_instance(_target, _label)
     );
 }
 
+function tutorial_guidance_home_delivery(_dropoff, _requires_vehicle)
+{
+    if (!instance_exists(_dropoff)) return tutorial_guidance_invalid();
+
+    var vehicle = progress_get_vehicle();
+    var vehicle_parked = progress_vehicle_is_in_home_delivery(
+        _dropoff,
+        vehicle
+    );
+
+    if (_requires_vehicle && instance_exists(vehicle))
+    {
+        if (!vehicle_parked)
+        {
+            if (vehicle.has_driver)
+            {
+                return tutorial_guidance_at(
+                    _dropoff.x,
+                    _dropoff.y,
+                    "PARK SKIDSTEER"
+                );
+            }
+
+            return tutorial_guidance_from_instance(
+                vehicle,
+                "ENTER SKIDSTEER"
+            );
+        }
+
+        if (vehicle.has_driver)
+        {
+            return tutorial_guidance_from_instance(
+                _dropoff,
+                "EXIT, THEN USE CHEST"
+            );
+        }
+    }
+
+    return tutorial_guidance_from_instance(
+        _dropoff,
+        "UNLOAD AT CHEST"
+    );
+}
+
 function tutorial_guidance_gui_edge(
     _target_gui_x,
     _target_gui_y,
@@ -200,6 +244,22 @@ function tutorial_guidance_target()
 
     if (task_is_active(TaskId.MARK_CABIN_SITE, game_state))
     {
+        var site_flag = cabin_find_guidance_flag(guidance_actor);
+        if (instance_exists(site_flag))
+        {
+            var flag_taken = cabin_site_flag_is_taken(
+                site_flag.site_id,
+                site_flag.corner_index,
+                game_state
+            );
+            return tutorial_guidance_from_instance(
+                site_flag,
+                game_state.cabin_selected_site_id == CABIN_SITE_NONE
+                    ? "CHOOSE ONE CABIN SITE"
+                    : (flag_taken ? "PLACE FENCE" : "TAKE FLAG")
+            );
+        }
+
         var marked_site = instance_find(obj_cabin_site, 0);
 
         if (instance_exists(marked_site))
@@ -508,6 +568,16 @@ function tutorial_guidance_target()
             label = "STUMP";
             break;
         }
+    }
+
+    if (instance_exists(target)
+    && target.object_index == obj_homebase_dropoff)
+    {
+        return tutorial_guidance_home_delivery(
+            target,
+            game_state.tutorial_stage
+                != TutorialStage.TRIP_ONE_HAND_FIELDSTONE
+        );
     }
 
     return tutorial_guidance_from_instance(target, label);

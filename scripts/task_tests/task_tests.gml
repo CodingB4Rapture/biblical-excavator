@@ -463,6 +463,160 @@ function task_run_tests()
         "task claims bridge parking, marking, and construction"
     ) && passed;
 
+    var cabin_sites = cabin_site_definitions();
+    var northwest_site = cabin_sites[0];
+    var workfield_site = cabin_sites[1];
+    var northwest_bounds = cabin_fence_plot_bounds_at(
+        northwest_site.x,
+        northwest_site.y
+    );
+    var workfield_bounds = cabin_fence_plot_bounds_at(
+        workfield_site.x,
+        workfield_site.y
+    );
+    var site_state = game_state_create_default();
+    site_state.cabin_site_placed = true;
+    site_state.cabin_site_room = northwest_site.room_name;
+    site_state.cabin_site_x = northwest_site.x;
+    site_state.cabin_site_y = northwest_site.y;
+    site_state.cabin_selected_site_id = northwest_site.id;
+    site_state.task_statuses[TaskId.MARK_CABIN_SITE] =
+        TaskStatus.ACTIVE;
+    var took_first_site_flag = progression_take_cabin_site_flag_state(
+        site_state,
+        northwest_site.id,
+        0
+    );
+    var took_second_site_flag = progression_take_cabin_site_flag_state(
+        site_state,
+        northwest_site.id,
+        2
+    );
+    var rejected_other_site_flag = !progression_take_cabin_site_flag_state(
+        site_state,
+        workfield_site.id,
+        0
+    );
+    site_state.cabin_fence_marked = true;
+    var hydrated_site_state = save_hydrate_game_state(
+        json_parse(json_stringify(site_state))
+    );
+    passed = task_test_expect(
+        array_length(cabin_sites) == 2
+        && northwest_site.id != workfield_site.id
+        && northwest_site.room_name == "Room1"
+        && workfield_site.room_name == "Room1",
+        "predefined cabin sites keep distinct authored IDs"
+    ) && passed;
+    passed = task_test_expect(
+        northwest_bounds.min_x == 48
+        && northwest_bounds.max_x == 176
+        && northwest_bounds.min_y == 80
+        && northwest_bounds.max_y == 240
+        && workfield_bounds.min_x == 656
+        && workfield_bounds.max_x == 784
+        && workfield_bounds.min_y == 528
+        && workfield_bounds.max_y == 688,
+        "predefined cabin sites keep their fixed footprints"
+    ) && passed;
+    passed = task_test_expect(
+        took_first_site_flag
+        && took_second_site_flag
+        && rejected_other_site_flag
+        && cabin_site_flag_is_taken(
+            northwest_site.id,
+            0,
+            site_state
+        )
+        && cabin_site_flag_is_taken(
+            northwest_site.id,
+            2,
+            site_state
+        )
+        && !cabin_site_flag_is_taken(
+            workfield_site.id,
+            0,
+            site_state
+        )
+        && cabin_site_flag_count_taken(site_state) == 2,
+        "predefined cabin-site flag progress belongs to the selected site"
+    ) && passed;
+
+    var selected_flag_instance = instance_create_depth(
+        0,
+        0,
+        0,
+        obj_cabin_site_flag
+    );
+    selected_flag_instance.site_id = northwest_site.id;
+    var unselected_flag_instance = instance_create_depth(
+        0,
+        0,
+        0,
+        obj_cabin_site_flag
+    );
+    unselected_flag_instance.site_id = workfield_site.id;
+    var removed_unselected_flags =
+        cabin_remove_unselected_site_flags(northwest_site.id);
+    passed = task_test_expect(
+        instance_exists(selected_flag_instance)
+        && !instance_exists(unselected_flag_instance)
+        && removed_unselected_flags == 1,
+        "site commitment preserves the interacted site's flags"
+    ) && passed;
+    if (instance_exists(selected_flag_instance))
+        instance_destroy(selected_flag_instance);
+
+    passed = task_test_expect(
+        hydrated_site_state.cabin_selected_site_id == northwest_site.id
+        && hydrated_site_state.cabin_site_room == northwest_site.room_name
+        && hydrated_site_state.cabin_site_x == northwest_site.x
+        && hydrated_site_state.cabin_site_y == northwest_site.y
+        && hydrated_site_state.cabin_site_flags_taken
+            == site_state.cabin_site_flags_taken
+        && hydrated_site_state.cabin_fence_marked,
+        "selected cabin site and construction progress survive JSON hydration"
+    ) && passed;
+    passed = task_test_expect(
+        world_area_id_at_position("Room1", 112, 144)
+            == WORLD_AREA_EIRENEIKOS
+        && world_area_id_at_position("Room1", 96, 640)
+            == WORLD_AREA_POND_FOREST
+        && world_area_id_at_position("Room1", 576, 320)
+            == WORLD_AREA_WORKFIELD
+        && world_area_id_at_position("Room1", 576, 80)
+            == WORLD_AREA_FARMYARD
+        && world_area_id_at_position("Room1", 1088, 640)
+            == WORLD_AREA_MINEFIELD
+        && world_area_id_at_position("Room1", 1184, 240)
+            == WORLD_AREA_HOMESTEAD,
+        "Room1 landmarks resolve to stable area IDs"
+    ) && passed;
+
+    var relocated_site_state = game_state_create_default();
+    relocated_site_state.cabin_site_placed = true;
+    relocated_site_state.cabin_site_room = workfield_site.room_name;
+    relocated_site_state.cabin_site_x = 400;
+    relocated_site_state.cabin_site_y = 464;
+    relocated_site_state.cabin_selected_site_id = workfield_site.id;
+    relocated_site_state.fence_records = [
+        fence_record_create(
+            workfield_site.room_name,
+            336,
+            400,
+            FenceGatePart.NONE,
+            FENCE_PURPOSE_CABIN_SITE
+        )
+    ];
+    game_state_normalize(relocated_site_state);
+    passed = task_test_expect(
+        relocated_site_state.cabin_site_x == workfield_site.x
+        && relocated_site_state.cabin_site_y == workfield_site.y
+        && relocated_site_state.fence_records[0].x == 656
+        && relocated_site_state.fence_records[0].y == 528,
+        "authored site movement keeps saved cabin fencing aligned"
+    ) && passed;
+
     var v2_state = game_state_create_default();
     v2_state.tutorial_stage = TutorialStage.COMPLETE;
     v2_state.task_board_unlocked = true;

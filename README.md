@@ -13,6 +13,8 @@ commercialized, or incorporated into another project without permission.
 - `WASD` or arrow keys: walk or drive.
 - `E` while driving: exit the vehicle.
 - `E` on foot: use the currently displayed contextual action.
+- `M` or the left-side Map button: open the live whole-area overview. The
+  player or driven skidsteer is marked, and `M`/Escape closes the map.
 - `E` at the Task Board: open the board after the Farmer's Wife posts the
   first assignment. Accept each assignment there, then return to claim
   completed work before the next one unlocks. Use Up/Down or click to select,

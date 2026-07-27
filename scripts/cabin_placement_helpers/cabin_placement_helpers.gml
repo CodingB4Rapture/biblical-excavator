@@ -133,6 +133,247 @@ function cabin_restore_site()
     );
 }
 
+function cabin_restore_predefined_flags()
+{
+    if (room_get_name(room) != "Room1") return 0;
+
+    var game_state = game_state_ensure();
+    if (game_state.cabin_fence_marked) return 0;
+
+    var definitions = cabin_site_definitions();
+    var restored = 0;
+
+    for (var definition_index = 0;
+        definition_index < array_length(definitions);
+        definition_index++)
+    {
+        var definition = definitions[definition_index];
+        if (game_state.cabin_selected_site_id != CABIN_SITE_NONE
+        && game_state.cabin_selected_site_id != definition.id)
+        {
+            continue;
+        }
+
+        var corners = cabin_site_corner_positions(definition);
+        for (var corner_index = 0;
+            corner_index < array_length(corners);
+            corner_index++)
+        {
+            var already_exists = false;
+
+            for (var flag_index = 0;
+                flag_index < instance_number(obj_cabin_site_flag);
+                flag_index++)
+            {
+                var existing_flag = instance_find(
+                    obj_cabin_site_flag,
+                    flag_index
+                );
+                if (existing_flag.site_id == definition.id
+                && existing_flag.corner_index == corner_index)
+                {
+                    already_exists = true;
+                    break;
+                }
+            }
+
+            if (already_exists) continue;
+
+            var corner = corners[corner_index];
+            var flag = instance_create_depth(
+                corner.x,
+                corner.y,
+                10,
+                obj_cabin_site_flag
+            );
+            flag.site_id = definition.id;
+            flag.site_number = definition.number;
+            flag.site_symbol = definition.symbol;
+            flag.site_name = definition.name;
+            flag.site_area_name = definition.area_name;
+            flag.site_colour = definition.colour;
+            flag.corner_index = corner_index;
+            flag.image_index = corner_index
+                mod max(1, sprite_get_number(spr_marker));
+            restored += 1;
+        }
+    }
+
+    return restored;
+}
+
+function cabin_find_guidance_flag(_actor = noone)
+{
+    var game_state = game_state_ensure();
+    var best_flag = noone;
+    var best_priority = -1;
+    var best_distance = 1000000;
+
+    for (var i = 0; i < instance_number(obj_cabin_site_flag); i++)
+    {
+        var flag = instance_find(obj_cabin_site_flag, i);
+        if (!instance_exists(flag)
+        || (game_state.cabin_selected_site_id != CABIN_SITE_NONE
+            && flag.site_id != game_state.cabin_selected_site_id))
+        {
+            continue;
+        }
+
+        var taken = cabin_site_flag_is_taken(
+            flag.site_id,
+            flag.corner_index,
+            game_state
+        );
+        var priority = taken ? 2 : 1;
+        var distance = instance_exists(_actor)
+            ? point_distance(_actor.x, _actor.y, flag.x, flag.y)
+            : i;
+
+        if (priority > best_priority
+        || (priority == best_priority && distance < best_distance))
+        {
+            best_flag = flag;
+            best_priority = priority;
+            best_distance = distance;
+        }
+    }
+
+    return best_flag;
+}
+
+function cabin_remove_unselected_site_flags(_selected_site_id)
+{
+    var removed_count = 0;
+
+    for (var flag_index = instance_number(obj_cabin_site_flag) - 1;
+        flag_index >= 0;
+        flag_index--)
+    {
+        var candidate_flag = instance_find(
+            obj_cabin_site_flag,
+            flag_index
+        );
+        if (instance_exists(candidate_flag)
+        && candidate_flag.site_id != _selected_site_id)
+        {
+            instance_destroy(candidate_flag);
+            removed_count += 1;
+        }
+    }
+
+    return removed_count;
+}
+
+function cabin_take_predefined_flag(_flag)
+{
+    if (!instance_exists(_flag)) return false;
+
+    var game_state = game_state_ensure();
+    var selected_flag_site_id = _flag.site_id;
+    var selected_flag_corner_index = _flag.corner_index;
+    var definition = cabin_site_definition(selected_flag_site_id);
+    if (is_undefined(definition)
+    || !is_real(selected_flag_corner_index)
+    || selected_flag_corner_index < 0
+    || selected_flag_corner_index > 3
+    || !task_is_active(TaskId.MARK_CABIN_SITE, game_state)
+    || game_state.cabin_fence_marked
+    || (game_state.cabin_selected_site_id != CABIN_SITE_NONE
+        && game_state.cabin_selected_site_id != definition.id))
+    {
+        return false;
+    }
+
+    var selected_now = game_state.cabin_selected_site_id
+        == CABIN_SITE_NONE;
+    if (selected_now)
+    {
+        if (!progression_record_cabin_site_state(
+            game_state,
+            definition.room_name,
+            definition.x,
+            definition.y,
+            false,
+            definition.id
+        ))
+        {
+            return false;
+        }
+    }
+
+    if (!progression_take_cabin_site_flag_state(
+        game_state,
+        selected_flag_site_id,
+        selected_flag_corner_index
+    ))
+    {
+        return false;
+    }
+
+    if (selected_now)
+    {
+        if (!instance_exists(obj_cabin_site))
+        {
+            instance_create_depth(
+                definition.x,
+                definition.y,
+                0,
+                obj_cabin_site
+            );
+        }
+
+        cabin_remove_unselected_site_flags(selected_flag_site_id);
+    }
+
+    notification_show_hint(
+        selected_now
+            ? "Site "
+                + definition.symbol
+                + " selected in "
+                + definition.area_name
+                + ". The other site is no longer available. Press E here again to place the fence."
+            : "Flag taken. Press E here again to place the fence from this corner.",
+        game_get_speed(gamespeed_fps) * 6,
+        true
+    );
+    save_write();
+    return true;
+}
+
+function cabin_begin_fence_from_flag(_flag)
+{
+    if (!instance_exists(_flag)) return false;
+
+    var game_state = game_state_ensure();
+    if (!task_is_active(TaskId.MARK_CABIN_SITE, game_state)
+    || game_state.cabin_selected_site_id != _flag.site_id
+    || !cabin_site_flag_is_taken(
+        _flag.site_id,
+        _flag.corner_index,
+        game_state
+    ))
+    {
+        return false;
+    }
+
+    if (instance_exists(obj_fence_planning_controller)) return true;
+
+    var controller = instance_create_depth(
+        0,
+        0,
+        -800,
+        obj_fence_planning_controller
+    );
+    controller.anchor_set = true;
+    controller.anchor_x = _flag.x;
+    controller.anchor_y = _flag.y;
+    controller.preview_x = _flag.x;
+    controller.preview_y = _flag.y;
+    controller.status_message =
+        "Flag cleared. Click the opposite highlighted corner.";
+    return true;
+}
+
 function cabin_get_exit_position()
 {
     var game_state = game_state_ensure();
@@ -159,12 +400,18 @@ function cabin_place_actor_at_exit(_actor)
 function cabin_place_site(_x, _y, _relocating = false)
 {
     var game_state = game_state_ensure();
+    var predefined_site_id = cabin_site_id_at_position(
+        room_get_name(room),
+        _x,
+        _y
+    );
     var can_relocate = _relocating
         && game_state.cabin_site_placed
         && task_is_active(TaskId.MARK_CABIN_SITE, game_state)
         && !game_state.cabin_fence_marked;
 
     if (!game_state.cabin_placement_unlocked
+    || predefined_site_id == CABIN_SITE_LEGACY
     || (!can_relocate
         && !task_is_active(TaskId.MARK_CABIN_SITE, game_state))
     || (game_state.cabin_site_placed && !can_relocate)
@@ -188,7 +435,8 @@ function cabin_place_site(_x, _y, _relocating = false)
         room_get_name(room),
         _x,
         _y,
-        can_relocate
+        can_relocate,
+        predefined_site_id
     ))
     {
         return false;
@@ -209,19 +457,13 @@ function cabin_place_site(_x, _y, _relocating = false)
 function cabin_begin_placement(_allow_relocate = false)
 {
     var game_state = game_state_ensure();
-    var can_relocate = _allow_relocate
-        && game_state.cabin_site_placed
-        && task_is_active(TaskId.MARK_CABIN_SITE, game_state)
-        && !game_state.cabin_fence_marked;
-
     if (!game_state.cabin_placement_unlocked)
     {
         notification_show_hint("Complete A Firm Foundation to unlock a cabin site.", game_get_speed(gamespeed_fps) * 3, false);
         return false;
     }
 
-    if (!can_relocate
-    && !task_is_active(TaskId.MARK_CABIN_SITE, game_state))
+    if (!task_is_active(TaskId.MARK_CABIN_SITE, game_state))
     {
         notification_show_hint(
             "Accept Mark the Cabin Site at the Task Board first.",
@@ -231,18 +473,22 @@ function cabin_begin_placement(_allow_relocate = false)
         return false;
     }
 
-    if (game_state.cabin_site_placed && !can_relocate)
+    if (game_state.cabin_site_placed)
     {
-        notification_show_hint("Your cabin site is already marked.", game_get_speed(gamespeed_fps) * 3, false);
+        notification_show_hint(
+            "Your cabin location is committed. The other site is no longer available.",
+            game_get_speed(gamespeed_fps) * 4,
+            false
+        );
         return false;
     }
 
-    if (!instance_exists(obj_cabin_placement_controller))
-    {
-        var placement = instance_create_depth(0, 0, -800, obj_cabin_placement_controller);
-        placement.placement_relocating = can_relocate;
-    }
-
+    cabin_restore_predefined_flags();
+    notification_show_hint(
+        "Choose one marked site: gold Site I in Eireneikos Meadows or blue Site II in Farmer's Workfield. Take any flag to commit.",
+        game_get_speed(gamespeed_fps) * 7,
+        true
+    );
     return true;
 }
 

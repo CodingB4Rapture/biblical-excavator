@@ -105,6 +105,13 @@ function room_reconcile_farmyard_perimeter()
 function room_reconcile_current()
 {
     cabin_restore_site();
+    cabin_restore_predefined_flags();
+
+    if (room == Room1 && !instance_exists(obj_world_area_controller))
+    {
+        instance_create_depth(0, 0, -1400, obj_world_area_controller);
+    }
+
     fence_restore_room();
     room_reconcile_farmyard_perimeter();
     room_reconcile_winch_package();

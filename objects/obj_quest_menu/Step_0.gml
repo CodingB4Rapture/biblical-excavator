@@ -1,13 +1,6 @@
 /// obj_quest_menu - Step Event
 
-if (keyboard_check_pressed(ord("Q")) || keyboard_check_pressed(vk_escape))
-{
-    gameplay_set_paused(false);
-    instance_destroy();
-    exit;
-}
-
-var layout = quest_menu_get_layout();
+var layout = player_menu_get_quest_layout();
 var visible_rows = max(1, floor((layout.content_bottom - layout.content_top) / quest_row_height));
 var max_scroll = max(0, QuestId.COUNT - visible_rows);
 var mouse_gui_x = device_mouse_x_to_gui(0);
