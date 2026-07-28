@@ -11,10 +11,12 @@ function production_recipe_definition(_recipe_id)
                 name: "Saw Timber Planks",
                 input_id: ResourceId.TIMBER_LOG,
                 input_amount: 1,
+                input_source: ProductionInputSource.HOME,
                 output_id: ResourceId.TIMBER_PLANK,
                 output_amount: 4,
                 duration_seconds: 12,
-                output_destination: ProductionOutputDestination.HOME
+                output_destination:
+                    ProductionOutputDestination.FINISHED_CRAFTS
             };
 
         case ProductionRecipeId.CUT_STRAIGHT_FENCE:
@@ -24,6 +26,7 @@ function production_recipe_definition(_recipe_id)
                 name: "Cut Straight Fence",
                 input_id: ResourceId.TIMBER_PLANK,
                 input_amount: 1,
+                input_source: ProductionInputSource.CARRIED,
                 output_id: ResourceId.FENCE_STRAIGHT,
                 output_amount: 5,
                 duration_seconds: 8,
@@ -38,6 +41,7 @@ function production_recipe_definition(_recipe_id)
                 name: "Cut Fence Corners",
                 input_id: ResourceId.TIMBER_PLANK,
                 input_amount: 1,
+                input_source: ProductionInputSource.CARRIED,
                 output_id: ResourceId.FENCE_CORNER,
                 output_amount: 4,
                 duration_seconds: 8,
@@ -52,6 +56,7 @@ function production_recipe_definition(_recipe_id)
                 name: "Cut Fence Gate",
                 input_id: ResourceId.TIMBER_PLANK,
                 input_amount: 1,
+                input_source: ProductionInputSource.CARRIED,
                 output_id: ResourceId.FENCE_GATE,
                 output_amount: 1,
                 duration_seconds: 10,
@@ -66,6 +71,7 @@ function production_recipe_definition(_recipe_id)
                 name: "Turn Empty Bucket",
                 input_id: ResourceId.SMALL_LUMBER,
                 input_amount: 1,
+                input_source: ProductionInputSource.HOME,
                 output_id: ResourceId.EMPTY_BUCKET,
                 output_amount: 1,
                 duration_seconds: 12,

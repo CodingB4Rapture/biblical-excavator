@@ -1,5 +1,12 @@
 /// Thin world-object configuration and presentation for production machines.
 
+function production_input_source_label(_definition)
+{
+    return _definition.input_source == ProductionInputSource.CARRIED
+        ? "Carried"
+        : "Homebase";
+}
+
 function production_machine_configure(
     _machine,
     _machine_id,
@@ -181,14 +188,25 @@ function production_menu_start_selected(_menu)
     ))
     {
         var definition = production_recipe_definition(recipe_id);
+        var input_inventory = production_input_inventory(
+            game_state_read(),
+            definition
+        );
         var available = inventory_get_amount(
-            game_state_read().home_inventory,
+            input_inventory,
             definition.input_id
         );
         _menu.message = available < definition.input_amount
-            ? "Homebase needs "
-                + resource_get_name(definition.input_id)
-                + " before this can start."
+            ? (
+                definition.input_source
+                    == ProductionInputSource.CARRIED
+                    ? "Pick up "
+                        + resource_get_name(definition.input_id)
+                        + " from the middle chest first."
+                    : "Homebase needs "
+                        + resource_get_name(definition.input_id)
+                        + " before this can start."
+            )
             : "The tutorial only permits the exact amount still needed.";
         return false;
     }
@@ -383,7 +401,7 @@ function production_menu_draw(_menu)
     draw_text(
         layout.left + 24,
         layout.top + 44,
-        "Inputs are reserved from Homebase. Completed crafts deliver automatically."
+        "Raw stock uses Homebase. Finished inputs must be carried from the middle chest."
     );
 
     if (model.running)
@@ -499,9 +517,13 @@ function production_menu_draw(_menu)
             draw_text(
                 layout.list_right - 16,
                 top + (is_tutorial_target ? 34 : 22),
-                "Stock "
+                production_input_source_label(definition)
+                    + " "
                     + string(inventory_get_amount(
-                        game_state.home_inventory,
+                        production_input_inventory(
+                            game_state,
+                            definition
+                        ),
                         definition.input_id
                     ))
             );

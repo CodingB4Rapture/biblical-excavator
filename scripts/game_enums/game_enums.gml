@@ -229,6 +229,12 @@ enum ProductionOutputDestination
     FINISHED_CRAFTS = 1
 }
 
+enum ProductionInputSource
+{
+    HOME = 0,
+    CARRIED = 1
+}
+
 #macro FENCE_PURPOSE_CABIN_SITE "cabin_site"
 #macro FENCE_PURPOSE_FREE_BUILD "free_build"
 

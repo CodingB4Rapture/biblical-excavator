@@ -1,5 +1,12 @@
 /// Durable production-job schema and normalization.
 
+function production_input_inventory(_game_state, _definition)
+{
+    return _definition.input_source == ProductionInputSource.CARRIED
+        ? _game_state.player_inventory
+        : _game_state.home_inventory;
+}
+
 function production_job_create(_machine_id, _machine_type)
 {
     return {

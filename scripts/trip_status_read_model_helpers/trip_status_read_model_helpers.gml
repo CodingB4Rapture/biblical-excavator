@@ -169,8 +169,18 @@ function trip_status_get_read_model(_game_state, _vehicle, _pocket_planks)
                 objective = "Pick up the finished pieces from the middle Finished Crafts chest";
                 break;
 
+            case "collect_input":
+                objective = "Pick up "
+                    + string(build_step.amount)
+                    + " "
+                    + resource_get_name(
+                        build_step.target.definition.input_id
+                    )
+                    + " from the middle Finished Crafts chest, then return to the sawmill";
+                break;
+
             case "wait":
-                objective = "The sawmill is working; its completed output will be delivered automatically";
+                objective = "The sawmill is working; completed output will go to the middle Finished Crafts chest";
                 break;
 
             case "recover_log":

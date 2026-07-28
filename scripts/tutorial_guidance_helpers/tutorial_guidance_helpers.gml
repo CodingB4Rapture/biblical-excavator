@@ -395,6 +395,17 @@ function tutorial_guidance_target()
                     "MIDDLE FINISHED CRAFTS CHEST"
                 );
 
+            case "collect_input":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_finished_crafts_chest, 0),
+                    "PICK UP "
+                        + string(build_step.amount)
+                        + " "
+                        + string_upper(resource_get_name(
+                            build_step.target.definition.input_id
+                        ))
+                );
+
             case "wait":
                 return tutorial_guidance_from_instance(
                     instance_find(obj_sawmill, 0),

@@ -49,14 +49,18 @@ camera_zoom = lerp(camera_zoom, camera_target_zoom, camera_zoom_smoothing);
 
 var view_width = camera_base_width / camera_zoom;
 var view_height = camera_base_height / camera_zoom;
-var desired_x = clamp(camera_focus_x - (view_width * 0.5), 0, max(0, room_width - view_width));
-var desired_y = clamp(camera_focus_y - (view_height * 0.5), 0, max(0, room_height - view_height));
+var desired_origin = camera_centered_view_origin(
+    camera_focus_x,
+    camera_focus_y,
+    view_width,
+    view_height
+);
 var current_x = camera_get_view_x(view_camera[0]);
 var current_y = camera_get_view_y(view_camera[0]);
 
 camera_set_view_size(view_camera[0], view_width, view_height);
 camera_set_view_pos(
     view_camera[0],
-    lerp(current_x, desired_x, camera_follow_smoothing),
-    lerp(current_y, desired_y, camera_follow_smoothing)
+    lerp(current_x, desired_origin.x, camera_follow_smoothing),
+    lerp(current_y, desired_origin.y, camera_follow_smoothing)
 );

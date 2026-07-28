@@ -1,6 +1,6 @@
 /// Pure save-data migrations. These functions only transform plain structs.
 
-#macro SAVE_FORMAT_CURRENT 4
+#macro SAVE_FORMAT_CURRENT 5
 #macro SAVE_V2_TASK_COUNT 6
 
 function save_migrate_v1_to_v2(_data)
@@ -368,6 +368,55 @@ function save_migrate_v3_to_v4(_data)
     return _data;
 }
 
+/// Version four delivered milled planks into invisible Homebase stock even
+/// though the middle chest presented all other completed workshop output.
+/// Move that stranded stock into the chest once; later fence recipes consume
+/// only planks the player explicitly retrieves and carries to the sawmill.
+function save_migrate_v4_to_v5(_data)
+{
+    if (!is_struct(_data)
+    || !variable_struct_exists(_data, "game_state")
+    || !is_struct(_data.game_state))
+    {
+        return undefined;
+    }
+
+    var saved_state = _data.game_state;
+    if (!variable_struct_exists(saved_state, "home_inventory")
+    || !is_array(saved_state.home_inventory))
+    {
+        saved_state.home_inventory =
+            array_create(ResourceId.COUNT, 0);
+    }
+    if (!variable_struct_exists(
+        saved_state,
+        "finished_crafts_inventory"
+    ) || !is_array(saved_state.finished_crafts_inventory))
+    {
+        saved_state.finished_crafts_inventory =
+            array_create(ResourceId.COUNT, 0);
+    }
+    while (array_length(saved_state.home_inventory) < ResourceId.COUNT)
+        array_push(saved_state.home_inventory, 0);
+    while (array_length(saved_state.finished_crafts_inventory)
+        < ResourceId.COUNT)
+    {
+        array_push(saved_state.finished_crafts_inventory, 0);
+    }
+
+    var stranded_planks = max(
+        0,
+        saved_state.home_inventory[ResourceId.TIMBER_PLANK]
+    );
+    saved_state.home_inventory[ResourceId.TIMBER_PLANK] = 0;
+    saved_state.finished_crafts_inventory[
+        ResourceId.TIMBER_PLANK
+    ] += stranded_planks;
+
+    _data.format_version = 5;
+    return _data;
+}
+
 function save_migrate_to_current(_data)
 {
     if (!is_struct(_data)
@@ -392,6 +441,10 @@ function save_migrate_to_current(_data)
 
             case 3:
                 _data = save_migrate_v3_to_v4(_data);
+                break;
+
+            case 4:
+                _data = save_migrate_v4_to_v5(_data);
                 break;
 
             default:

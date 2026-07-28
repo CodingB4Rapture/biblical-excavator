@@ -6,6 +6,21 @@ function camera_get_controller()
     return instance_find(obj_camera_controller, 0);
 }
 
+/// A gameplay camera may look beyond the authored room so its subject remains
+/// centered at a world edge. The room still owns physical movement bounds.
+function camera_centered_view_origin(
+    _focus_x,
+    _focus_y,
+    _view_width,
+    _view_height
+)
+{
+    return {
+        x: _focus_x - max(1, _view_width) * 0.5,
+        y: _focus_y - max(1, _view_height) * 0.5
+    };
+}
+
 function camera_follow_gameplay()
 {
     var controller = camera_get_controller();

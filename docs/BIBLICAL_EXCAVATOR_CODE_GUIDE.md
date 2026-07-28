@@ -567,7 +567,7 @@ The single JSON snapshot contains three top-level parts:
 - `scene` for current room and live actor/vehicle/dialogue placement;
 - `settings` for volume and fullscreen.
 
-The current format number is 4. Older data migrates in version order before
+The current format number is 5. Older data migrates in version order before
 hydration.
 
 ### Snapshot creation
@@ -638,6 +638,10 @@ and the free-building unlock. Older completed cabins receive the completed
 boundary task. Older unfinished cabin saves return to the explicit boundary
 task and discard only the tutorial planks that the former shortcut seeded
 without production.
+
+`save_migrate_v4_to_v5` repairs the former workshop ownership ambiguity by
+moving any Timber Planks held in hidden Homebase stock into the visible
+Finished Crafts chest. The migration is additive and runs once.
 
 ## 13. Resource regeneration
 
@@ -751,11 +755,12 @@ rectangle.
 ### Workshop production
 
 `obj_sawmill` and `obj_lathe` are thin interaction/presentation objects. Recipe
-definitions own inputs, outputs, duration, machine type, and output
-destination. Production state owns one durable job per machine. Commands
-reserve all selected inputs when a job starts, complete batches in sequence,
-route output to Home inventory or Finished Crafts, and refund only unprocessed
-inputs on cancellation. Read models supply menu and progress-bar data.
+definitions own inputs, input source, outputs, duration, machine type, and
+output destination. Production state owns one durable job per machine.
+Commands reserve all selected inputs when a job starts, complete batches in
+sequence, route completed output to Finished Crafts, and refund only
+unprocessed inputs to their original source on cancellation. Read models supply
+menu and progress-bar data.
 
 Current recipes are:
 
@@ -767,8 +772,11 @@ Current recipes are:
 
 The tutorial therefore turns one delivered tree into the exact ten straights,
 four corners, and one gate required by its boundary. Tutorial batch caps prevent
-accidental overproduction from consuming a required plank. Finished pieces are
-retrieved from the existing Finished Crafts chest.
+accidental overproduction from consuming a required plank. Raw Timber Logs and
+Small Lumber remain Homebase machine inputs. Milled Timber Planks and all other
+finished output enter the existing Finished Crafts chest. Fence recipes accept
+only Timber Planks the player has explicitly collected and carried back to the
+sawmill.
 
 Machines animate and show a progress bar only while a job is active. Jobs
 continue while the player works or uses ordinary overlays, stop under the pause

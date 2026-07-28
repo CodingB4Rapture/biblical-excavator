@@ -92,6 +92,31 @@ function player_menu_run_tests()
         "the overview preserves room aspect and projects both world corners"
     ) && passed;
 
+    var edge_camera = camera_centered_view_origin(0, 0, 480, 240);
+    passed = player_menu_test_expect(
+        edge_camera.x == -240
+        && edge_camera.y == -120,
+        "gameplay camera centers its subject beyond the authored room edge"
+    ) && passed;
+
+    var vehicle_boundary = skidsteer_room_boundary_status(
+        -20,
+        740,
+        12,
+        11,
+        10,
+        9,
+        1280,
+        720
+    );
+    passed = player_menu_test_expect(
+        vehicle_boundary.x == 12
+        && vehicle_boundary.y == 710
+        && vehicle_boundary.clipped_x
+        && vehicle_boundary.clipped_y,
+        "the skidsteer collision mask remains fully inside the room"
+    ) && passed;
+
     var stage_state = {tutorial_stage: TutorialStage.WINCH_PACKAGE_READY};
     var winch_model = trip_status_get_tutorial_read_model(stage_state);
     stage_state.tutorial_stage = TutorialStage.INSPECT_FIRST_LOG;

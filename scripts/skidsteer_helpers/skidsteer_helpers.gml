@@ -417,6 +417,76 @@ function skidsteer_log_blocks_escape(_log, _next_x, _next_y)
     return point_distance(_next_x, _next_y, _log.x, _log.y) <= current_distance;
 }
 
+/// Pure room-boundary read model. Extents are positive distances from the
+/// vehicle origin to the transformed collision-mask edges.
+function skidsteer_room_boundary_status(
+    _next_x,
+    _next_y,
+    _left_extent,
+    _right_extent,
+    _top_extent,
+    _bottom_extent,
+    _room_width = room_width,
+    _room_height = room_height
+)
+{
+    var min_x = max(0, _left_extent);
+    var max_x = max(min_x, _room_width - 1 - max(0, _right_extent));
+    var min_y = max(0, _top_extent);
+    var max_y = max(min_y, _room_height - 1 - max(0, _bottom_extent));
+    var bounded_x = clamp(_next_x, min_x, max_x);
+    var bounded_y = clamp(_next_y, min_y, max_y);
+
+    return {
+        x: bounded_x,
+        y: bounded_y,
+        clipped_x: bounded_x != _next_x,
+        clipped_y: bounded_y != _next_y,
+        clipped: bounded_x != _next_x || bounded_y != _next_y
+    };
+}
+
+function skidsteer_room_boundary_for_instance(
+    _vehicle,
+    _next_x,
+    _next_y
+)
+{
+    if (!instance_exists(_vehicle))
+    {
+        return {
+            x: _next_x,
+            y: _next_y,
+            clipped_x: false,
+            clipped_y: false,
+            clipped: false
+        };
+    }
+
+    return skidsteer_room_boundary_status(
+        _next_x,
+        _next_y,
+        _vehicle.x - _vehicle.bbox_left,
+        _vehicle.bbox_right - _vehicle.x,
+        _vehicle.y - _vehicle.bbox_top,
+        _vehicle.bbox_bottom - _vehicle.y
+    );
+}
+
+function skidsteer_constrain_to_room(_vehicle)
+{
+    if (!instance_exists(_vehicle)) return false;
+
+    var boundary = skidsteer_room_boundary_for_instance(
+        _vehicle,
+        _vehicle.x,
+        _vehicle.y
+    );
+    _vehicle.x = boundary.x;
+    _vehicle.y = boundary.y;
+    return boundary.clipped;
+}
+
 function skidsteer_try_move()
 {
     image_angle += turn_speed;
@@ -427,6 +497,24 @@ function skidsteer_try_move()
     var move_y = lengthdir_y(drive_speed, movement_direction);
     var next_x = x + move_x;
     var next_y = y + move_y;
+    var room_boundary = skidsteer_room_boundary_for_instance(
+        id,
+        next_x,
+        next_y
+    );
+    next_x = room_boundary.x;
+    next_y = room_boundary.y;
+
+    // A diagonal approach may continue sliding along the edge. A direct push
+    // into the void stops cleanly and still permits reversing immediately.
+    if (room_boundary.clipped
+    && abs(next_x - x) < 0.001
+    && abs(next_y - y) < 0.001)
+    {
+        drive_speed = 0;
+        skidsteer_start_contact_visual(SkidsteerState.CONTACT_BLOCKED);
+        return;
+    }
 
     var hit_log = skidsteer_find_log_contact(next_x, next_y);
     if (hit_log != noone && skidsteer_log_blocks_escape(hit_log, next_x, next_y))

@@ -253,6 +253,19 @@ function task_get_objectives(_task_id, _game_state = undefined)
                         ) <= 0
                 },
                 {
+                    text: "Collect the milled Timber Planks from the middle Finished Crafts chest",
+                    complete: task_finished
+                        || (
+                            game_state.production_completed_batches[
+                                ProductionRecipeId.SAW_TIMBER_PLANKS
+                            ] > 0
+                            && inventory_get_amount(
+                                game_state.finished_crafts_inventory,
+                                ResourceId.TIMBER_PLANK
+                            ) <= 0
+                        )
+                },
+                {
                     text: "Cut the remaining Straight Fence pieces ("
                         + string(max(0, 10 - missing_straight))
                         + "/10 covered)",

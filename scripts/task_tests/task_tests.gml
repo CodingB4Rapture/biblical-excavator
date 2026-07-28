@@ -117,6 +117,15 @@ function task_run_tests()
     );
     production_finish_all_jobs();
     production_state = game_state_ensure();
+    var plank_chest_delivery = inventory_get_amount(
+        production_state.finished_crafts_inventory,
+        ResourceId.TIMBER_PLANK
+    );
+    var planks_taken_for_sawmill = finished_crafts_take(
+        production_state,
+        ResourceId.TIMBER_PLANK,
+        4
+    );
     var straight_started = production_start_job(
         PRODUCTION_MACHINE_SAWMILL,
         ProductionRecipeId.CUT_STRAIGHT_FENCE,
@@ -132,10 +141,20 @@ function task_run_tests()
     production_state = game_state_ensure();
     passed = task_test_expect(
         planks_started
+        && plank_chest_delivery == 4
+        && planks_taken_for_sawmill == 4
         && straight_started
         && corner_started_then_cancelled
         && inventory_get_amount(
             production_state.home_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == 0
+        && inventory_get_amount(
+            production_state.finished_crafts_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == 0
+        && inventory_get_amount(
+            production_state.player_inventory,
             ResourceId.TIMBER_PLANK
         ) == 2
         && inventory_get_amount(
@@ -148,7 +167,37 @@ function task_run_tests()
         && production_state.production_completed_batches[
             ProductionRecipeId.CUT_STRAIGHT_FENCE
         ] == 2,
-        "machine jobs reserve inputs, finish batches, deliver output, and refund cancelled work"
+        "milled planks enter the chest and explicitly carried inputs reserve and refund correctly"
+    ) && passed;
+
+    var plank_handoff_state = game_state_create_default();
+    plank_handoff_state.cabin_site_placed = true;
+    plank_handoff_state.task_statuses[TaskId.BUILD_CABIN_FENCE] =
+        TaskStatus.ACTIVE;
+    inventory_add(
+        plank_handoff_state.finished_crafts_inventory,
+        ResourceId.TIMBER_PLANK,
+        4
+    );
+    var collect_planks_step =
+        production_tutorial_next_step(plank_handoff_state);
+    var handoff_planks_taken = finished_crafts_take(
+        plank_handoff_state,
+        ResourceId.TIMBER_PLANK,
+        4
+    );
+    var cut_after_pickup_step =
+        production_tutorial_next_step(plank_handoff_state);
+    passed = task_test_expect(
+        collect_planks_step.kind == "collect_input"
+        && collect_planks_step.target.recipe_id
+            == ProductionRecipeId.CUT_STRAIGHT_FENCE
+        && collect_planks_step.amount == 4
+        && handoff_planks_taken == 4
+        && cut_after_pickup_step.kind == "craft"
+        && cut_after_pickup_step.target.recipe_id
+            == ProductionRecipeId.CUT_STRAIGHT_FENCE,
+        "tutorial requires chest pickup before carried planks become sawmill stock"
     ) && passed;
 
     var recovery_state = game_state_create_default();
@@ -386,6 +435,30 @@ function task_run_tests()
         ] == 0
         && array_length(migrated_v3.game_state.production_jobs) == 2,
         "v3 cabin progress migrates to the workshop boundary without seeded planks"
+    ) && passed;
+
+    var v4_home_inventory = array_create(ResourceId.COUNT, 0);
+    var v4_finished_inventory = array_create(ResourceId.COUNT, 0);
+    v4_home_inventory[ResourceId.TIMBER_PLANK] = 4;
+    v4_finished_inventory[ResourceId.TIMBER_PLANK] = 1;
+    var migrated_v4 = save_migrate_to_current({
+        format_version: 4,
+        game_state: {
+            home_inventory: v4_home_inventory,
+            finished_crafts_inventory: v4_finished_inventory
+        },
+        scene: {},
+        settings: {}
+    });
+    passed = task_test_expect(
+        migrated_v4.format_version == SAVE_FORMAT_CURRENT
+        && migrated_v4.game_state.home_inventory[
+            ResourceId.TIMBER_PLANK
+        ] == 0
+        && migrated_v4.game_state.finished_crafts_inventory[
+            ResourceId.TIMBER_PLANK
+        ] == 5,
+        "v4 hidden Homebase planks migrate once into visible chest stock"
     ) && passed;
 
     global.game_state = game_state_create_default();

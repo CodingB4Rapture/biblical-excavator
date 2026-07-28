@@ -30,8 +30,12 @@ function production_start_job(_machine_id, _recipe_id, _batches)
     }
 
     var input_total = definition.input_amount * batches;
+    var input_inventory = production_input_inventory(
+        game_state,
+        definition
+    );
     if (inventory_get_amount(
-        game_state.home_inventory,
+        input_inventory,
         definition.input_id
     ) < input_total)
     {
@@ -39,7 +43,7 @@ function production_start_job(_machine_id, _recipe_id, _batches)
     }
 
     inventory_remove(
-        game_state.home_inventory,
+        input_inventory,
         definition.input_id,
         input_total
     );
@@ -94,10 +98,7 @@ function production_complete_one_batch(_game_state, _job)
                     + resource_get_name(definition.output_id)
                     + " produced"
             ],
-            definition.output_destination
-                == ProductionOutputDestination.FINISHED_CRAFTS
-                    ? "Pick up the finished pieces from the middle Finished Crafts chest."
-                    : "The Timber Planks are in Homebase stock. Reopen the sawmill for the flashing next recipe."
+            "Pick up the completed materials from the middle Finished Crafts chest."
         );
         _job.recipe_id = -1;
         _job.batch_total = 0;
@@ -161,7 +162,7 @@ function production_cancel_job(_machine_id)
     var definition = production_recipe_definition(job.recipe_id);
     var unfinished_batches = job.batch_total - job.batch_completed;
     inventory_add(
-        game_state.home_inventory,
+        production_input_inventory(game_state, definition),
         definition.input_id,
         definition.input_amount * unfinished_batches
     );

@@ -407,9 +407,10 @@ function save_restore_room_state()
     {
         var restore_driver = scene.vehicle_has_driver && !scene.player_active;
 
+        vehicle.image_angle = scene.vehicle_angle;
         vehicle.x = scene.vehicle_x;
         vehicle.y = scene.vehicle_y;
-        vehicle.image_angle = scene.vehicle_angle;
+        skidsteer_constrain_to_room(vehicle);
         save_apply_amounts(vehicle.cargo_inventory, scene.vehicle_cargo);
 
         vehicle.has_driver = restore_driver;

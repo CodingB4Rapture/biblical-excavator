@@ -75,7 +75,7 @@ function production_recipe_max_batches(_recipe_id, _game_state = undefined)
     if (is_undefined(definition)) return 0;
     var stock_max = floor(
         inventory_get_amount(
-            game_state.home_inventory,
+            production_input_inventory(game_state, definition),
             definition.input_id
         ) / max(1, definition.input_amount)
     );
@@ -146,26 +146,39 @@ function production_tutorial_piece_recipe_batches(
     );
 }
 
-function production_tutorial_planks_needed(_game_state)
+function production_tutorial_planks_required(_game_state)
 {
     var required = 0;
-    required += production_tutorial_piece_recipe_batches(
+    var recipe_ids = [
         ProductionRecipeId.CUT_STRAIGHT_FENCE,
-        _game_state
-    );
-    required += production_tutorial_piece_recipe_batches(
         ProductionRecipeId.CUT_FENCE_CORNERS,
-        _game_state
-    );
-    required += production_tutorial_piece_recipe_batches(
-        ProductionRecipeId.CUT_FENCE_GATE,
-        _game_state
-    );
+        ProductionRecipeId.CUT_FENCE_GATE
+    ];
+    for (var index = 0; index < array_length(recipe_ids); index++)
+    {
+        var recipe_id = recipe_ids[index];
+        var definition = production_recipe_definition(recipe_id);
+        required += production_tutorial_piece_recipe_batches(
+            recipe_id,
+            _game_state
+        ) * definition.input_amount;
+    }
+    return required;
+}
+
+function production_tutorial_planks_needed(_game_state)
+{
     return max(
         0,
-        required - inventory_get_amount(
-            _game_state.home_inventory,
-            ResourceId.TIMBER_PLANK
+        production_tutorial_planks_required(_game_state) - (
+            inventory_get_amount(
+                _game_state.player_inventory,
+                ResourceId.TIMBER_PLANK
+            )
+            + inventory_get_amount(
+                _game_state.finished_crafts_inventory,
+                ResourceId.TIMBER_PLANK
+            )
         )
     );
 }
@@ -327,12 +340,47 @@ function production_tutorial_next_step(_game_state = undefined)
         };
     }
 
+    var input_inventory = production_input_inventory(
+        game_state,
+        target.definition
+    );
     var input_available = inventory_get_amount(
-        game_state.home_inventory,
+        input_inventory,
         target.definition.input_id
     );
+    var input_required =
+        target.definition.input_amount * target.batches;
+
+    if (target.definition.input_source
+        == ProductionInputSource.CARRIED
+    && input_available < input_required)
+    {
+        var chest_input = inventory_get_amount(
+            game_state.finished_crafts_inventory,
+            target.definition.input_id
+        );
+        if (chest_input > 0)
+        {
+            var collect_amount = input_required - input_available;
+            if (target.definition.input_id == ResourceId.TIMBER_PLANK)
+            {
+                collect_amount = max(
+                    0,
+                    production_tutorial_planks_required(game_state)
+                    - input_available
+                );
+            }
+            return {
+                kind: "collect_input",
+                blueprint: blueprint,
+                target: target,
+                amount: min(chest_input, collect_amount)
+            };
+        }
+    }
+
     if (target.recipe_id == ProductionRecipeId.SAW_TIMBER_PLANKS
-    && input_available < target.definition.input_amount)
+        && input_available < target.definition.input_amount)
     {
         return {
             kind: "recover_log",
