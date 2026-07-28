@@ -255,8 +255,9 @@ function tutorial_guidance_target()
             return tutorial_guidance_from_instance(
                 site_flag,
                 game_state.cabin_selected_site_id == CABIN_SITE_NONE
+                || game_state.cabin_selected_site_id == CABIN_SITE_LEGACY
                     ? "CHOOSE ONE CABIN SITE"
-                    : (flag_taken ? "PLACE FENCE" : "TAKE FLAG")
+                    : (flag_taken ? "CONFIRM CABIN SITE" : "TAKE FLAG")
             );
         }
 

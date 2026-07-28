@@ -45,6 +45,7 @@ function player_menu_get_rail_layout(_gui_w = -1, _gui_h = -1)
         map_bottom: map_top + map_height,
         map_center_x: map_left + map_width * 0.5,
         map_center_y: map_top + map_height * 0.5,
+        rail_right: rail_right,
         panel_left: rail_right + panel_gap,
         panel_margin: margin
     };

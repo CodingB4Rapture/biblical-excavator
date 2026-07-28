@@ -122,7 +122,6 @@ function progression_accept_task_state(_task_id, _game_state)
         case TaskId.PLACE_CABIN:
             if (!_game_state.cabin_placement_unlocked
             || !_game_state.cabin_site_placed
-            || !_game_state.cabin_fence_marked
             || _game_state.cabin_built)
                 return false;
             break;
@@ -296,6 +295,54 @@ function progression_complete_cabin_fence_state(_game_state)
     }
 
     _game_state.cabin_fence_marked = true;
+    return progression_complete_task_state(
+        TaskId.MARK_CABIN_SITE,
+        _game_state
+    );
+}
+
+function progression_complete_cabin_site_selection_state(_game_state)
+{
+    if (!task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
+    || !_game_state.cabin_site_placed
+    || _game_state.cabin_built)
+    {
+        return false;
+    }
+
+    return progression_complete_task_state(
+        TaskId.MARK_CABIN_SITE,
+        _game_state
+    );
+}
+
+function progression_choose_cabin_site_state(
+    _game_state,
+    _definition,
+    _corner_index
+)
+{
+    if (!task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
+    || is_undefined(_definition))
+    {
+        return false;
+    }
+
+    _game_state.cabin_site_placed = true;
+    _game_state.cabin_site_room = _definition.room_name;
+    _game_state.cabin_site_x = _definition.x;
+    _game_state.cabin_site_y = _definition.y;
+    _game_state.cabin_selected_site_id = _definition.id;
+    _game_state.cabin_site_flags_taken =
+        cabin_site_flag_bit(_corner_index);
+    _game_state.cabin_fence_marked = false;
+    _game_state.cabin_built = false;
+    _game_state.homestead_stage = HomesteadStage.TUTORIAL;
+    _game_state.fence_records = fence_records_without_purpose(
+        _game_state.fence_records,
+        FENCE_PURPOSE_CABIN_SITE
+    );
+
     return progression_complete_task_state(
         TaskId.MARK_CABIN_SITE,
         _game_state

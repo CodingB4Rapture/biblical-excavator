@@ -98,7 +98,7 @@ if (keyboard_check_pressed(ord("F"))
         if (fence_planning_is_tutorial_mode(game_state_ensure()))
         {
             notification_show_hint(
-                "Return to a taken site flag and choose Place Fence.",
+                "The fence is built with the cabin. Confirm the site flag first.",
                 game_get_speed(gamespeed_fps) * 3,
                 false
             );

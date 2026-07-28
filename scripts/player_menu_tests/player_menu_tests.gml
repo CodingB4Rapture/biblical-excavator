@@ -38,6 +38,14 @@ function player_menu_run_tests()
         "Quest and Inventory reserve the same left rail inset"
     ) && passed;
 
+    var calendar_layout = calendar_get_status_layout(1280, 720);
+    passed = player_menu_test_expect(
+        calendar_layout.right == 1266
+        && calendar_layout.top == 14
+        && calendar_layout.left > rail.rail_right,
+        "the calendar card stays top-right and clear of the menu rail"
+    ) && passed;
+
     var closed_model = player_menu_build_read_model(false, false, false);
     var quest_model = player_menu_build_read_model(true, false, false);
     var inventory_model = player_menu_build_read_model(false, true, false);

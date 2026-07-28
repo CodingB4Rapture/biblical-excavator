@@ -3,6 +3,7 @@
 var game_state = game_state_ensure();
 var hidden = game_state.cabin_fence_marked
     || (game_state.cabin_selected_site_id != CABIN_SITE_NONE
+        && game_state.cabin_selected_site_id != CABIN_SITE_LEGACY
         && game_state.cabin_selected_site_id != site_id);
 
 if (hidden) exit;
@@ -49,7 +50,8 @@ draw_text_transformed(x, y - 8, site_symbol, 0.45, 0.45, 0);
 if (corner_index == 0)
 {
     var choice_text = "SITE " + site_symbol + " - " + site_area_name;
-    if (game_state.cabin_selected_site_id == CABIN_SITE_NONE)
+    if (game_state.cabin_selected_site_id == CABIN_SITE_NONE
+    || game_state.cabin_selected_site_id == CABIN_SITE_LEGACY)
     {
         choice_text += " (CHOOSE ONE)";
     }

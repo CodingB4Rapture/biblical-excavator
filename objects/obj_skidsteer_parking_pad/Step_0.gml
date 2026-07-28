@@ -55,10 +55,13 @@ stable_frames += 1;
 if (stable_frames >= required_stable_frames
 && progression_complete_skidsteer_parking_state(game_state))
 {
-    notification_show_hint(
-        "Objective complete — return to the Task Board.",
-        game_get_speed(gamespeed_fps) * 5,
-        true
+    with (obj_gui_hint) instance_destroy();
+    notification_show_dialogue(
+        "Hey, I appreciate you putting that vehicle back. Use it whenever you need it.",
+        instance_find(obj_farmer, 0),
+        0,
+        NotificationStyle.PROMPT,
+        "FARMER"
     );
     save_write();
 }

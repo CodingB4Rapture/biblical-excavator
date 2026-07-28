@@ -41,7 +41,7 @@ function task_run_tests()
     );
     passed = task_test_expect(
         is_array(wife_handoff_response.pages)
-        && array_length(wife_handoff_response.pages) == 3
+        && array_length(wife_handoff_response.pages) == 4
         && wife_handoff_response.completion_action
             == DIALOGUE_ACTION_POST_FIRST_TASK,
         "wife handoff response preserves its stable completion action"
@@ -415,7 +415,8 @@ function task_run_tests()
         300
     );
     var marking_completed =
-        progression_complete_cabin_fence_state(story_state);
+        progression_complete_cabin_site_selection_state(story_state);
+    var fence_waited_for_planks = !story_state.cabin_fence_marked;
     var marking_claimed = progression_claim_task_state(
         TaskId.MARK_CABIN_SITE,
         story_state
@@ -433,6 +434,7 @@ function task_run_tests()
         ResourceId.TIMBER_PLANK,
         CABIN_TIMBER_PLANK_COST
     );
+    story_state.cabin_fence_marked = true;
     var cabin_completed = progression_build_cabin_state(story_state);
     var cabin_claimed = progression_claim_task_state(
         TaskId.PLACE_CABIN,
@@ -446,6 +448,7 @@ function task_run_tests()
         && marking_accepted
         && site_recorded
         && marking_completed
+        && fence_waited_for_planks
         && marking_claimed
         && cabin_accepted
         && chest_available_for_cabin_task
@@ -466,6 +469,30 @@ function task_run_tests()
     var cabin_sites = cabin_site_definitions();
     var northwest_site = cabin_sites[0];
     var workfield_site = cabin_sites[1];
+    var recorded_save_state = game_state_create_default();
+    recorded_save_state.cabin_placement_unlocked = true;
+    recorded_save_state.skidsteer_parked = true;
+    recorded_save_state.task_statuses[TaskId.MARK_CABIN_SITE] =
+        TaskStatus.ACTIVE;
+    var recorded_save_site_chosen = progression_choose_cabin_site_state(
+        recorded_save_state,
+        northwest_site,
+        2
+    );
+    passed = task_test_expect(
+        recorded_save_site_chosen
+        && recorded_save_state.task_statuses[TaskId.MARK_CABIN_SITE]
+            == TaskStatus.COMPLETE
+        && recorded_save_state.cabin_site_placed
+        && recorded_save_state.cabin_selected_site_id
+            == northwest_site.id
+        && recorded_save_state.cabin_site_x == northwest_site.x
+        && recorded_save_state.cabin_site_y == northwest_site.y
+        && cabin_site_flag_count_taken(recorded_save_state) == 1
+        && !recorded_save_state.cabin_fence_marked
+        && !recorded_save_state.cabin_built,
+        "the recorded active-task save chooses Site I atomically"
+    ) && passed;
     var northwest_bounds = cabin_fence_plot_bounds_at(
         northwest_site.x,
         northwest_site.y

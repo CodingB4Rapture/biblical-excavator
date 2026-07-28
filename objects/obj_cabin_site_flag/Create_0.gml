@@ -19,23 +19,18 @@ interaction_get_prompt = function(_actor)
     if (!task_is_active(TaskId.MARK_CABIN_SITE, game_state)
     || game_state.cabin_fence_marked
     || (game_state.cabin_selected_site_id != CABIN_SITE_NONE
+        && game_state.cabin_selected_site_id != CABIN_SITE_LEGACY
         && game_state.cabin_selected_site_id != site_id))
     {
         return "";
     }
 
     return cabin_site_flag_is_taken(site_id, corner_index, game_state)
-        ? "Place Fence"
-        : "Take Flag";
+        ? "Confirm Cabin Site"
+        : "Choose Cabin Site";
 };
 
 interaction_run = function(_actor)
 {
-    if (cabin_site_flag_is_taken(site_id, corner_index))
-    {
-        cabin_begin_fence_from_flag(id);
-        return;
-    }
-
-    cabin_take_predefined_flag(id);
+    cabin_choose_predefined_site(id, _actor);
 };

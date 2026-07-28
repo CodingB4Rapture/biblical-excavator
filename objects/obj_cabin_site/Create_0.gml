@@ -15,7 +15,7 @@ interaction_get_prompt = function(_actor)
     && !game_state.cabin_fence_marked)
     {
         return cabin_site_flag_count_taken(game_state) > 0
-            ? "Use cleared flag to fence"
+            ? "Confirm site at cleared flag"
             : "Take a site flag first";
     }
 
@@ -35,7 +35,7 @@ interaction_get_prompt = function(_actor)
             return "Need 4 Timber Planks";
         }
 
-        return "Build the cabin";
+        return "Add 4 Planks";
     }
 
     if (task_get_status(TaskId.PLACE_CABIN) == TaskStatus.COMPLETE)
@@ -63,7 +63,7 @@ interaction_run = function(_actor)
         if (cabin_site_flag_count_taken(game_state) == 0)
         {
             notification_show_hint(
-                "Take one of this site's four flags before placing the fence.",
+                "Take one of this site's flags to select the location.",
                 game_get_speed(gamespeed_fps) * 4,
                 false
             );
@@ -71,7 +71,7 @@ interaction_run = function(_actor)
         }
 
         notification_show_hint(
-            "Return to a cleared corner marker and choose Place Fence.",
+            "Return to the cleared flag and press E to confirm the site.",
             game_get_speed(gamespeed_fps) * 4,
             false
         );
@@ -91,7 +91,7 @@ interaction_run = function(_actor)
     if (task_is_active(TaskId.PLACE_CABIN, game_state)
     && !game_state.cabin_built)
     {
-        cabin_build_at_site(id);
+        cabin_build_at_site(id, _actor);
         return;
     }
 

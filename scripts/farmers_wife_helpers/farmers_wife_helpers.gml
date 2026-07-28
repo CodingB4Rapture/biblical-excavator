@@ -75,9 +75,10 @@ function farmers_wife_get_response(_wife, _actor, _game_state)
 
         return farmers_wife_response_create(
             [
-                "We're glad to have another pair of hands. For your cabin foundation, we'll need 16 Fieldstones and one good log. Begin with 6 loose Fieldstones gathered by hand.",
-                "I've posted your first assignment on the Task Board beside us. Walk over, press E, and accept Fieldstone by Hand before you begin.",
-                "Once you accept it, your work marker will point you toward the loose stones. Return to the board whenever you need the details."
+                "We're glad to have another pair of hands.",
+                "For your cabin foundation, we'll need 16 Fieldstones and one good log.",
+                "Begin with 6 loose Fieldstones gathered by hand. I've posted the assignment on the Task Board beside us.",
+                "Press E at the board and accept Fieldstone by Hand. Your work marker will guide you from there."
             ],
             0,
             DIALOGUE_ACTION_POST_FIRST_TASK
@@ -114,8 +115,14 @@ function farmers_wife_get_response(_wife, _actor, _game_state)
     {
         return farmers_wife_response_create(
             _game_state.cabin_site_placed
-                ? "Go to the cabin stakes and press E. Fence the highlighted boundary, then add one gate on the front side."
-                : "Press B to choose a clear cabin-and-yard area. The boundary size is fixed, so choose the whole space carefully."
+                ? [
+                    "Return to the cleared flag at your chosen cabin site.",
+                    "Press E there to confirm the location. Then claim the task and retrieve the planks."
+                ]
+                : [
+                    "Choose Site I in Eireneikos Meadows or Site II in Farmer's Workfield.",
+                    "Press E at any flag to choose that site. The overview map will help you find them."
+                ]
         );
     }
 
@@ -193,7 +200,10 @@ function farmers_wife_delivery_response(_delivery, _game_state)
     if (_delivery.mail_became_ready)
     {
         return farmers_wife_response_create(
-            "Good news--a winch attachment came in the mail. I left the package beside Home Delivery for you.",
+            [
+                "Good news--a winch attachment came in the mail.",
+                "I left the package beside Home Delivery for you."
+            ],
             0,
             "",
             "Find the marked package and press E to collect it.",

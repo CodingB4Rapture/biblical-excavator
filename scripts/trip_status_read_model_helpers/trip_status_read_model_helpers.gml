@@ -140,9 +140,9 @@ function trip_status_get_read_model(_game_state, _vehicle, _pocket_planks)
             "Cabin Site",
             _game_state.cabin_site_placed
                 ? (cabin_site_flag_count_taken(_game_state) > 0
-                    ? "Return to the cleared flag and press E to Place Fence"
+                    ? "Return to the cleared flag and press E to confirm the site"
                     : "Take one of the selected site's corner flags")
-                : "Press B to choose one marked site; taking a flag commits the location"
+                : "Choose a marked site and press E at one of its flags"
         );
     }
     else if (task_is_active(TaskId.PLACE_CABIN, _game_state))

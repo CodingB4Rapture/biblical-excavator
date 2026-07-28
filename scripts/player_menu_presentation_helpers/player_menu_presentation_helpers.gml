@@ -126,6 +126,10 @@ function player_menu_rail_step(_rail)
 
 function player_menu_rail_draw(_rail)
 {
+    // The calendar belongs above both gameplay and full-screen player menus.
+    // Draw it from this topmost persistent UI layer, not the covered HUD.
+    calendar_draw_status();
+
     if (!player_menu_rail_is_visible()) return false;
 
     var layout = player_menu_get_rail_layout();

@@ -196,7 +196,7 @@ function task_get_objectives(_task_id, _game_state = undefined)
                         || carried_planks >= CABIN_TIMBER_PLANK_COST
                 },
                 {
-                    text: "Build the cabin on the prepared site",
+                    text: "Add the planks; raise the fence, gate, and cabin",
                     complete: task_finished || game_state.cabin_built
                 }
             ];
@@ -216,12 +216,8 @@ function task_get_objectives(_task_id, _game_state = undefined)
         case TaskId.MARK_CABIN_SITE:
             return [
                 {
-                    text: "Choose one of the two predefined cabin sites",
+                    text: "Choose one predefined site and take one of its flags",
                     complete: task_finished || game_state.cabin_site_placed
-                },
-                {
-                    text: "Take a flag, then build the bounded fence and front gate",
-                    complete: task_finished || game_state.cabin_fence_marked
                 }
             ];
     }

@@ -183,9 +183,32 @@ function dialogue_get_layout(_body_text)
     var body_line_sep = font_get_size(dialogue_font) + 10;
 
     draw_set_font(dialogue_font);
-    var body_height = string_height_ext(_body_text, body_line_sep, body_width);
     var body_space = max(0, body_bottom - body_top);
-    var body_y = body_top + max(0, (body_space - body_height) * 0.5);
+    var body_scale = 1;
+    var body_wrap_width = body_width;
+    var body_height = string_height_ext(
+        _body_text,
+        body_line_sep,
+        body_wrap_width
+    );
+
+    // Long pages must never run through the Continue prompt. Prefer the
+    // authored page breaks, then gently scale unusually long text as a
+    // resolution-safe fallback.
+    while (body_scale > 0.7 && body_height * body_scale > body_space)
+    {
+        body_scale -= 0.05;
+        body_wrap_width = body_width / body_scale;
+        body_height = string_height_ext(
+            _body_text,
+            body_line_sep,
+            body_wrap_width
+        );
+    }
+
+    body_scale = max(0.7, body_scale);
+    var body_y = body_top
+        + max(0, (body_space - body_height * body_scale) * 0.5);
 
     return {
         gui_w: gui_w,
@@ -204,6 +227,8 @@ function dialogue_get_layout(_body_text)
         speaker_height: speaker_height,
         body_y: body_y,
         body_width: body_width,
+        body_wrap_width: body_wrap_width,
+        body_scale: body_scale,
         body_line_sep: body_line_sep,
         prompt_y: panel_bottom - inner_padding
     };

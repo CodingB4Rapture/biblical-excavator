@@ -28,12 +28,15 @@ draw_set_alpha(1);
 
 draw_set_font(dialogue_font);
 draw_set_color(palette.text_color);
-draw_text_ext(
+draw_text_ext_transformed(
     layout.text_left,
     layout.body_y,
     page_text,
     layout.body_line_sep,
-    layout.body_width
+    layout.body_wrap_width,
+    layout.body_scale,
+    layout.body_scale,
+    0
 );
 
 draw_set_halign(fa_right);

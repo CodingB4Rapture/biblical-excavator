@@ -11,6 +11,13 @@ function progression_apply_task_start_effects(_task_id)
         case TaskId.FIT_THE_WINCH:
             room_reconcile_winch_package();
             return true;
+
+        case TaskId.MARK_CABIN_SITE:
+            // The fixed-site flow begins at the authored flags. Create them
+            // when the task is accepted so the objective is immediately
+            // actionable; B remains a recovery shortcut if they are missing.
+            cabin_restore_predefined_flags();
+            return true;
     }
 
     return false;
@@ -43,8 +50,8 @@ function progression_task_start_followup(_task_id, _game_state)
 
         case TaskId.MARK_CABIN_SITE:
             return _game_state.cabin_site_placed
-                ? "Return to a taken flag and choose Place Fence."
-                : "Choose either Site I in Eireneikos Meadows or Site II in Farmer's Workfield. Taking a flag commits the choice.";
+                ? "Return to the cleared flag and press E to confirm the cabin site."
+                : "Choose Site I or Site II. Press E at any flag to select the site.";
     }
 
     return "";

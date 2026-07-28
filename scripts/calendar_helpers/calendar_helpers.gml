@@ -98,6 +98,84 @@ function calendar_get_time_text()
     return string(hour_12) + ":" + minute_text + " " + suffix;
 }
 
+function calendar_get_status_layout(_gui_w = -1, _gui_h = -1)
+{
+    if (_gui_w < 0) _gui_w = display_get_gui_width();
+    if (_gui_h < 0) _gui_h = display_get_gui_height();
+
+    var margin = 14;
+    var panel_width = min(150, max(100, _gui_w - margin * 2));
+    var panel_height = 52;
+    var panel_right = _gui_w - margin;
+    var panel_top = margin;
+
+    return {
+        left: panel_right - panel_width,
+        top: panel_top,
+        right: panel_right,
+        bottom: panel_top + panel_height
+    };
+}
+
+function calendar_draw_status()
+{
+    if (!calendar_should_run()) return false;
+
+    var game_state = game_state_ensure();
+    var layout = calendar_get_status_layout();
+    var panel_color = make_color_rgb(21, 25, 24);
+    var panel_edge = make_color_rgb(74, 57, 30);
+    var panel_gold = make_color_rgb(196, 145, 49);
+    var text_color = make_color_rgb(235, 224, 198);
+    var accent_color = make_color_rgb(255, 220, 92);
+
+    draw_set_font(-1);
+    draw_set_alpha(0.92);
+    draw_set_color(panel_edge);
+    draw_roundrect(
+        layout.left,
+        layout.top,
+        layout.right,
+        layout.bottom,
+        false
+    );
+    draw_set_color(panel_gold);
+    draw_roundrect(
+        layout.left + 2,
+        layout.top + 2,
+        layout.right - 2,
+        layout.bottom - 2,
+        true
+    );
+    draw_set_alpha(0.88);
+    draw_set_color(panel_color);
+    draw_roundrect(
+        layout.left + 4,
+        layout.top + 4,
+        layout.right - 4,
+        layout.bottom - 4,
+        false
+    );
+
+    draw_set_alpha(1);
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+    draw_set_color(accent_color);
+    draw_text(
+        layout.left + 12,
+        layout.top + 8,
+        "Day " + string(game_state.day_number)
+    );
+    draw_set_color(text_color);
+    draw_text(
+        layout.left + 12,
+        layout.top + 27,
+        calendar_get_time_text()
+    );
+    draw_set_color(c_white);
+    return true;
+}
+
 function cabin_sleep_until_morning(_actor = noone)
 {
     var game_state = game_state_ensure();
