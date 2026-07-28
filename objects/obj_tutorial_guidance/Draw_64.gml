@@ -2,6 +2,7 @@
 
 var game_controller = instance_find(obj_game_controller, 0);
 var guidance_hidden = gameplay_is_paused()
+    || cutscene_is_active()
     || dialogue_is_active()
     || instance_exists(obj_task_board_menu)
     || instance_exists(obj_quest_menu)

@@ -9,12 +9,14 @@ function production_input_source_label(_definition)
 
 function production_machine_configure(
     _machine,
-    _machine_id,
-    _machine_type
+    _machine_id
 )
 {
+    var definition = production_machine_definition(_machine_id);
+    if (is_undefined(definition)) return false;
+
     _machine.machine_id = _machine_id;
-    _machine.machine_type = _machine_type;
+    _machine.machine_type = definition.machine_type;
     _machine.image_speed = 0;
     _machine.image_index = 0;
     _machine.interaction_enabled = true;
@@ -112,7 +114,10 @@ function production_machine_open_menu(_machine_id, _machine_type)
     var menu = instance_create_depth(0, 0, -5000, obj_production_menu);
     menu.machine_id = _machine_id;
     menu.machine_type = _machine_type;
-    menu.recipe_ids = production_machine_available_recipes(_machine_type);
+    var definition = production_machine_definition(_machine_id);
+    menu.recipe_ids = is_undefined(definition)
+        ? production_machine_available_recipes(_machine_type)
+        : production_machine_available_recipes(definition.machine_type);
     menu.selected_row = -1;
     menu.hovered_row = -1;
     menu.selected_batches = 1;

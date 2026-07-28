@@ -19,6 +19,24 @@ function production_job_create(_machine_id, _machine_type)
     };
 }
 
+function production_state_create_default_jobs()
+{
+    var jobs = [];
+    var definitions = production_machine_definitions();
+    for (var index = 0; index < array_length(definitions); index++)
+    {
+        var definition = definitions[index];
+        array_push(
+            jobs,
+            production_job_create(
+                definition.id,
+                definition.machine_type
+            )
+        );
+    }
+    return jobs;
+}
+
 function production_job_is_active(_job)
 {
     return is_struct(_job)
@@ -143,16 +161,8 @@ function production_state_ensure(_game_state)
     if (!variable_struct_exists(_game_state, "production_jobs")
     || !is_array(_game_state.production_jobs))
     {
-        _game_state.production_jobs = [
-            production_job_create(
-                PRODUCTION_MACHINE_SAWMILL,
-                ProductionMachineType.SAWMILL
-            ),
-            production_job_create(
-                PRODUCTION_MACHINE_LATHE,
-                ProductionMachineType.LATHE
-            )
-        ];
+        _game_state.production_jobs =
+            production_state_create_default_jobs();
     }
 
     if (!variable_struct_exists(
@@ -180,16 +190,18 @@ function production_state_ensure(_game_state)
             is_numeric(completed) ? max(0, floor(completed)) : 0;
     }
 
-    production_state_ensure_job(
-        _game_state,
-        PRODUCTION_MACHINE_SAWMILL,
-        ProductionMachineType.SAWMILL
-    );
-    production_state_ensure_job(
-        _game_state,
-        PRODUCTION_MACHINE_LATHE,
-        ProductionMachineType.LATHE
-    );
+    var definitions = production_machine_definitions();
+    for (var definition_index = 0;
+        definition_index < array_length(definitions);
+        definition_index++)
+    {
+        var definition = definitions[definition_index];
+        production_state_ensure_job(
+            _game_state,
+            definition.id,
+            definition.machine_type
+        );
+    }
     return _game_state;
 }
 

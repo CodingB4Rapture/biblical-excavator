@@ -54,6 +54,12 @@ interaction_get_prompt = function(_actor)
         return "Rest and begin tomorrow";
     }
 
+    if (homestead_stage_get()
+        == HomesteadStage.WATER_SUPPLY_REQUIRED)
+    {
+        return "Finish the Water Supply";
+    }
+
     return calendar_is_nighttime()
         ? "Sleep until morning"
         : "Rest at cabin";
@@ -128,6 +134,17 @@ interaction_run = function(_actor)
     {
         notification_show_hint(
             "Return to the Task Board and claim the completed cabin task.",
+            game_get_speed(gamespeed_fps) * 4,
+            false
+        );
+        return;
+    }
+
+    if (game_state.homestead_stage
+        == HomesteadStage.WATER_SUPPLY_REQUIRED)
+    {
+        notification_show_hint(
+            "You are too thirsty to rest. Finish the Farmer's water-tank lesson first.",
             game_get_speed(gamespeed_fps) * 4,
             false
         );

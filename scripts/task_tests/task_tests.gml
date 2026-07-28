@@ -99,6 +99,300 @@ function task_run_tests()
         "player and vehicle enforce independent resource capacities"
     ) && passed;
 
+    var unfinished_vehicle_cargo = save_copy_vehicle_cargo(id);
+    passed = task_test_expect(
+        array_length(unfinished_vehicle_cargo) == ResourceId.COUNT
+        && unfinished_vehicle_cargo[ResourceId.FIELDSTONE] == 0,
+        "startup snapshots tolerate a vehicle before its Create Event"
+    ) && passed;
+
+    var skill_curve_state = game_state_create_default();
+    var heavy_result = skill_award_xp_state(
+        skill_curve_state,
+        SkillId.HEAVY_EQUIPMENT,
+        100
+    );
+    var winch_unlock = skill_unlock_definition(
+        SkillId.HEAVY_EQUIPMENT,
+        SKILL_UNLOCK_UTILITY_VEHICLE_WINCH
+    );
+    var heavy_level_two_pages = skill_levelup_pages(
+        SkillId.HEAVY_EQUIPMENT,
+        2
+    );
+    var toolmanship_level_two_pages = skill_levelup_pages(
+        SkillId.TOOLMANSHIP,
+        2
+    );
+    var axe_choice_page = toolmanship_level_two_pages[1];
+    var axe_choices = dialogue_page_choices(axe_choice_page);
+    passed = task_test_expect(
+        skill_xp_for_level(1) == 0
+        && skill_xp_for_level(2) == 100
+        && skill_xp_for_level(3) == 300
+        && skill_xp_for_level(10) == 4500
+        && skill_xp_for_level(50) == 122500
+        && skill_level_from_xp(SkillId.TOOLMANSHIP, 99) == 1
+        && skill_level_from_xp(SkillId.TOOLMANSHIP, 100) == 2
+        && skill_level_from_xp(
+            SkillId.TOOLMANSHIP,
+            999999
+        ) == SKILL_MASTERY_LEVEL_CAP
+        && skill_definition(SkillId.TOOLMANSHIP).display_name
+            == "Toolmanship"
+        && skill_definition(SkillId.WOODWORK).display_name
+            == "Woodwork"
+        && resource_get_definition(ResourceId.FIELDSTONE).hand_skill_id
+            == SkillId.TOOLMANSHIP
+        && resource_get_definition(ResourceId.FIELDSTONE).hand_skill_xp
+            == 15
+        && 6 * resource_get_definition(
+            ResourceId.FIELDSTONE
+        ).hand_skill_xp + 25 >= skill_xp_for_level(2)
+        && !is_undefined(winch_unlock)
+        && winch_unlock.level == 2
+        && winch_unlock.stable_key
+            == SKILL_UNLOCK_UTILITY_VEHICLE_WINCH
+        && array_length(heavy_level_two_pages) == 2
+        && string_pos(
+            "Utility Vehicle Winches",
+            heavy_level_two_pages[1]
+        ) > 0
+        && array_length(toolmanship_level_two_pages) == 2
+        && string_pos(
+            "notch your axe",
+            dialogue_page_text(axe_choice_page)
+        ) > 0
+        && array_length(axe_choices) == 2
+        && axe_choices[0].action
+            == DIALOGUE_ACTION_ENABLE_AXE_NOTCHING
+        && axe_choices[1].action
+            == DIALOGUE_ACTION_DISABLE_AXE_NOTCHING
+        && heavy_result.changed
+        && heavy_result.old_level == 1
+        && heavy_result.new_level == 2
+        && skill_curve_state.equipment_xp == 100
+        && skill_get_xp(
+            SkillId.HEAVY_EQUIPMENT,
+            skill_curve_state
+        ) == 100,
+        "the mastery curve owns levels while preserving the equipment XP mirror"
+    ) && passed;
+
+    var notching_state = game_state_create_default();
+    skill_award_xp_state(
+        notching_state,
+        SkillId.TOOLMANSHIP,
+        skill_xp_for_level(2)
+    );
+    var notching_prompt_became_pending =
+        notching_state.tools.axe_notching_prompt_pending;
+    var notching_enabled = skill_set_axe_notching_preference_state(
+        notching_state,
+        AxeNotchingPreference.ENABLED
+    );
+    var first_notch = skill_record_axe_notch_state(notching_state);
+    var second_notch = skill_record_axe_notch_state(notching_state);
+    passed = task_test_expect(
+        notching_prompt_became_pending
+        && notching_enabled
+        && !notching_state.tools.axe_notching_prompt_pending
+        && notching_state.tools.axe_notching_preference
+            == AxeNotchingPreference.ENABLED
+        && first_notch
+        && second_notch
+        && notching_state.tools.axe_notch_count == 2,
+        "Toolmanship level 2 offers and persists optional future axe notches"
+    ) && passed;
+
+    skill_levelup_queue_reset();
+    var levelup_queued = skill_queue_levelup_result(
+        SkillId.TOOLMANSHIP,
+        {
+            changed: true,
+            old_level: 1,
+            new_level: 2
+        }
+    );
+    var queued_levelups = skill_levelup_queue_ensure();
+    passed = task_test_expect(
+        levelup_queued
+        && array_length(queued_levelups) == 1
+        && queued_levelups[0].skill_id == SkillId.TOOLMANSHIP
+        && queued_levelups[0].level == 2,
+        "skill gains queue one reusable level-up dialogue per earned level"
+    ) && passed;
+    skill_levelup_queue_reset();
+
+    var winch_gate_state = game_state_create_default();
+    winch_gate_state.task_statuses[TaskId.FIT_THE_WINCH] =
+        TaskStatus.ACTIVE;
+    winch_gate_state.winch_attachment_state =
+        AttachmentState.STORED_AT_HOME;
+    var winch_blocked_below_level_two =
+        !progression_install_winch_state(winch_gate_state);
+    skill_award_xp_state(
+        winch_gate_state,
+        SkillId.HEAVY_EQUIPMENT,
+        skill_xp_for_level(2)
+    );
+    var winch_installed_at_level_two =
+        progression_install_winch_state(winch_gate_state);
+    passed = task_test_expect(
+        winch_blocked_below_level_two
+        && winch_installed_at_level_two
+        && winch_gate_state.winch_attachment_state
+            == AttachmentState.INSTALLED
+        && winch_gate_state.task_statuses[TaskId.FIT_THE_WINCH]
+            == TaskStatus.COMPLETE,
+        "Heavy Equipment level 2 gates utility-vehicle winch installation"
+    ) && passed;
+
+    var intro_definition = cutscene_definition(
+        CUTSCENE_INTRO_RESCUE
+    );
+    var axe_definition = cutscene_definition(
+        CUTSCENE_AXE_HANDOFF
+    );
+    passed = task_test_expect(
+        !is_undefined(intro_definition)
+        && !is_undefined(axe_definition)
+        && array_length(intro_definition.steps) >= 18
+        && array_length(axe_definition.steps) >= 6
+        && intro_definition.steps[
+            array_length(intro_definition.steps) - 1
+        ].type == CutsceneStepType.COMPLETE
+        && axe_definition.steps[
+            array_length(axe_definition.steps) - 1
+        ].type == CutsceneStepType.COMPLETE,
+        "the rescue and axe scenes share reusable authored cutscene steps"
+    ) && passed;
+
+    passed = task_test_expect(
+        intro_definition.initial_fade_alpha == 1
+        && intro_definition.steps[1].type
+            == CutsceneStepType.REPOSITION_ACTOR
+        && intro_definition.steps[1].actor_id
+            == CUTSCENE_ACTOR_PLAYER
+        && intro_definition.steps[2].type
+            == CutsceneStepType.REPOSITION_ACTOR
+        && intro_definition.steps[2].y == 430
+        && intro_definition.steps[3].type
+            == CutsceneStepType.CAMERA_FOCUS
+        && intro_definition.steps[3].first_actor_id
+            == CUTSCENE_ACTOR_PLAYER
+        && intro_definition.steps[3].second_actor_id
+            == CUTSCENE_ACTOR_PLAYER
+        && intro_definition.steps[5].type
+            == CutsceneStepType.FADE
+        && intro_definition.steps[5].alpha == 0
+        && intro_definition.steps[7].type
+            == CutsceneStepType.MOVE_ACTOR
+        && intro_definition.steps[7].y == 490
+        && intro_definition.steps[9].type
+            == CutsceneStepType.FADE
+        && intro_definition.steps[9].alpha == 1
+        && intro_definition.steps[11].type
+            == CutsceneStepType.FADE
+        && intro_definition.steps[11].alpha == 0
+        && intro_definition.steps[12].type
+            == CutsceneStepType.DIALOGUE
+        && intro_definition.steps[12].actor_id
+            == CUTSCENE_ACTOR_PLAYER
+        && intro_definition.steps[12].pages[0] == "...help"
+        && intro_definition.steps[13].type
+            == CutsceneStepType.MOVE_ACTOR
+        && intro_definition.steps[13].y == 524
+        && intro_definition.steps[15].type
+            == CutsceneStepType.FADE
+        && intro_definition.steps[15].alpha == 1
+        && intro_definition.steps[17].type
+            == CutsceneStepType.FADE
+        && intro_definition.steps[17].alpha == 0
+        && intro_definition.steps[19].type
+            == CutsceneStepType.DIALOGUE
+        && intro_definition.steps[19].actor_id
+            == CUTSCENE_ACTOR_FARMER
+        && array_length(intro_definition.steps[19].pages) == 1
+        && intro_definition.steps[19].pages[0] == "....."
+        && intro_definition.steps[20].type
+            == CutsceneStepType.FADE
+        && intro_definition.steps[20].alpha == 1
+        && cutscene_definition_resume_step(intro_definition, 1) == 22
+        && intro_definition.steps[22].x == 1168
+        && intro_definition.steps[22].y == 224
+        && intro_definition.steps[24].first_actor_id
+            == CUTSCENE_ACTOR_PLAYER
+        && intro_definition.steps[24].second_actor_id
+            == CUTSCENE_ACTOR_PLAYER
+        && intro_definition.steps[26].speed == 0.012,
+        "the intro stages two approaches and wakes west of the cabin door"
+    ) && passed;
+
+    passed = task_test_expect(
+        cutscene_approach_value(0, 1, 0.25) == 0.25
+        && cutscene_approach_value(1, 0, 0.25) == 0.75
+        && cutscene_approach_value(0.9, 1, 0.25) == 1,
+        "cutscene fades approach either target without a runtime builtin"
+    ) && passed;
+
+    var axe_scene_state = game_state_create_default();
+    axe_scene_state.tutorial_stage =
+        TutorialStage.TRIP_ONE_HAND_FIELDSTONE;
+    axe_scene_state.task_statuses[TaskId.FIELDSTONE_BY_HAND] =
+        TaskStatus.ACTIVE;
+    axe_scene_state.tutorial_fieldstones_collected = 6;
+    var gathering_completed =
+        progression_complete_hand_gathering_state(axe_scene_state);
+    var axe_scene_record = cutscene_state_get_record(
+        axe_scene_state,
+        CUTSCENE_AXE_HANDOFF
+    );
+    var first_axe_command = cutscene_execute_command_state(
+        axe_scene_state,
+        CUTSCENE_COMMAND_GIVE_FARMERS_AXE
+    );
+    var second_axe_command = cutscene_execute_command_state(
+        axe_scene_state,
+        CUTSCENE_COMMAND_GIVE_FARMERS_AXE
+    );
+    passed = task_test_expect(
+        gathering_completed
+        && axe_scene_record.status == CutsceneStatus.ACTIVE
+        && first_axe_command
+        && second_axe_command
+        && axe_scene_state.tools.axe_owned,
+        "six stones queue one idempotent Farmer axe handoff"
+    ) && passed;
+
+    var machine_definitions = production_machine_definitions();
+    var sawmill_definition = production_machine_definition(
+        PRODUCTION_MACHINE_SAWMILL
+    );
+    var lathe_definition = production_machine_definition(
+        PRODUCTION_MACHINE_LATHE
+    );
+    var default_jobs = production_state_create_default_jobs();
+    passed = task_test_expect(
+        array_length(machine_definitions) == 2
+        && !is_undefined(sawmill_definition)
+        && !is_undefined(lathe_definition)
+        && sawmill_definition.machine_type
+            == ProductionMachineType.SAWMILL
+        && lathe_definition.machine_type
+            == ProductionMachineType.LATHE
+        && sawmill_definition.room_name == "Room1"
+        && sawmill_definition.x == 496
+        && sawmill_definition.y == 32
+        && lathe_definition.room_name == "Room1"
+        && lathe_definition.x == 400
+        && lathe_definition.y == 32
+        && array_length(default_jobs) == 2
+        && default_jobs[0].machine_id == sawmill_definition.id
+        && default_jobs[1].machine_id == lathe_definition.id,
+        "the machine registry owns authored metadata and default durable jobs"
+    ) && passed;
+
     var production_state = game_state_create_default();
     production_state.task_board_unlocked = true;
     production_state.cabin_site_placed = true;
@@ -249,13 +543,139 @@ function task_run_tests()
     );
     production_finish_all_jobs();
     production_state = game_state_ensure();
+    var water_collect_step =
+        water_tutorial_next_step(production_state);
+    var empty_bucket_taken = finished_crafts_take(
+        production_state,
+        ResourceId.EMPTY_BUCKET,
+        1
+    );
+    var water_fill_step =
+        water_tutorial_next_step(production_state);
+    var bucket_filled =
+        water_fill_bucket_state(production_state);
+    var water_deposit_step =
+        water_tutorial_next_step(production_state);
+    var bucket_deposited =
+        water_deposit_bucket_state(production_state);
+    global.game_state = production_state;
+    var water_snapshot = save_build_snapshot();
+    var reloaded_water_state = save_hydrate_game_state(
+        json_parse(json_stringify(water_snapshot.game_state))
+    );
     passed = task_test_expect(
         bucket_started
+        && water_collect_step.kind == "collect"
+        && empty_bucket_taken == 1
+        && water_fill_step.kind == "fill"
+        && bucket_filled
+        && water_deposit_step.kind == "deposit"
+        && bucket_deposited
         && inventory_get_amount(
             production_state.finished_crafts_inventory,
             ResourceId.EMPTY_BUCKET
+        ) == 0
+        && inventory_get_amount(
+            production_state.player_inventory,
+            ResourceId.EMPTY_BUCKET
+        ) == 1
+        && inventory_get_amount(
+            production_state.player_inventory,
+            ResourceId.WATER_BUCKET
+        ) == 0
+        && production_state.water_tank_amount == 11
+        && production_state.water_tutorial_stage
+            == WaterTutorialStage.COMPLETE
+        && production_state.homestead_stage
+            == HomesteadStage.FIRST_REST_REQUIRED
+        && reloaded_water_state.water_tank_amount == 11
+        && reloaded_water_state.water_tutorial_stage
+            == WaterTutorialStage.COMPLETE,
+        "the post-cabin bucket loop derives each step and advances the tank from 10/40 to 11/40"
+    ) && passed;
+
+    var full_tank_state = game_state_create_default();
+    full_tank_state.cabin_built = true;
+    full_tank_state.water_tutorial_stage =
+        WaterTutorialStage.COMPLETE;
+    full_tank_state.homestead_stage =
+        HomesteadStage.FIRST_REST_REQUIRED;
+    full_tank_state.water_tank_amount = WATER_TANK_CAPACITY;
+    inventory_add(
+        full_tank_state.player_inventory,
+        ResourceId.WATER_BUCKET,
+        1
+    );
+    var overfill_rejected =
+        !water_deposit_bucket_state(full_tank_state);
+    passed = task_test_expect(
+        overfill_rejected
+        && full_tank_state.water_tank_amount == 40
+        && inventory_get_amount(
+            full_tank_state.player_inventory,
+            ResourceId.WATER_BUCKET
         ) == 1,
-        "the late-tutorial lathe hook turns Small Lumber into an Empty Bucket"
+        "the water tank stops atomically at its 40-bucket capacity"
+    ) && passed;
+
+    var water_build_state = game_state_create_default();
+    water_build_state.cabin_site_placed = true;
+    water_build_state.cabin_fence_marked = true;
+    water_build_state.task_statuses[TaskId.PLACE_CABIN] =
+        TaskStatus.ACTIVE;
+    var water_build_completed =
+        progression_build_cabin_state(water_build_state);
+    var water_scene_record = cutscene_state_get_record(
+        water_build_state,
+        CUTSCENE_WATER_SUPPLY
+    );
+    passed = task_test_expect(
+        water_build_completed
+        && water_build_state.water_tank_amount == 10
+        && water_build_state.water_tutorial_stage
+            == WaterTutorialStage.ACTIVE
+        && water_build_state.homestead_stage
+            == HomesteadStage.WATER_SUPPLY_REQUIRED
+        && water_scene_record.status == CutsceneStatus.ACTIVE,
+        "raising the cabin atomically starts the Farmer water visit and blocks first rest"
+    ) && passed;
+
+    var v8_water_save = {
+        format_version: 8,
+        game_state: {
+            cabin_built: true,
+            day_number: 1,
+            homestead_stage: HomesteadStage.FIRST_REST_REQUIRED,
+            player_inventory: array_create(9, 0),
+            home_inventory: array_create(9, 0),
+            finished_crafts_inventory: array_create(9, 0),
+            cutscene_records: []
+        },
+        scene: {},
+        settings: {}
+    };
+    var migrated_v8_water = save_migrate_to_current(
+        json_parse(json_stringify(v8_water_save))
+    );
+    var migrated_v8_water_state = save_hydrate_game_state(
+        migrated_v8_water.game_state
+    );
+    var migrated_water_record = cutscene_state_get_record(
+        migrated_v8_water_state,
+        CUTSCENE_WATER_SUPPLY
+    );
+    passed = task_test_expect(
+        migrated_v8_water.format_version == SAVE_FORMAT_CURRENT
+        && migrated_v8_water_state.water_tank_amount == 10
+        && migrated_v8_water_state.water_tutorial_stage
+            == WaterTutorialStage.ACTIVE
+        && migrated_v8_water_state.homestead_stage
+            == HomesteadStage.WATER_SUPPLY_REQUIRED
+        && migrated_water_record.status == CutsceneStatus.ACTIVE
+        && array_length(
+            migrated_v8_water_state.player_inventory.amounts
+        ) == ResourceId.COUNT,
+        "format-v8 cabins awaiting first rest migrate into the water lesson without replaying earlier work"
     ) && passed;
 
     var saved_machine_state = game_state_create_default();
@@ -459,6 +879,66 @@ function task_run_tests()
             ResourceId.TIMBER_PLANK
         ] == 5,
         "v4 hidden Homebase planks migrate once into visible chest stock"
+    ) && passed;
+
+    var migrated_v5 = save_migrate_to_current({
+        format_version: 5,
+        game_state: {
+            equipment_xp: 42,
+            tutorial_intro_seen: true,
+            tutorial_stage: TutorialStage.CHOP_TREE,
+            tools: {axe_owned: true}
+        },
+        scene: {},
+        settings: {}
+    });
+    var migrated_v5_intro = cutscene_state_get_record(
+        migrated_v5.game_state,
+        CUTSCENE_INTRO_RESCUE
+    );
+    var migrated_v5_axe = cutscene_state_get_record(
+        migrated_v5.game_state,
+        CUTSCENE_AXE_HANDOFF
+    );
+    passed = task_test_expect(
+        migrated_v5.format_version == SAVE_FORMAT_CURRENT
+        && migrated_v5.game_state.skill_xp[
+            SkillId.HEAVY_EQUIPMENT
+        ] == 42
+        && migrated_v5_intro.status == CutsceneStatus.COMPLETE
+        && migrated_v5_axe.status == CutsceneStatus.COMPLETE,
+        "v5 equipment XP and completed story moments migrate to current"
+    ) && passed;
+
+    var v6_skill_xp = skill_state_create_default_xp();
+    v6_skill_xp[SkillId.TOOLMANSHIP] = 25;
+    var migrated_v6 = save_migrate_to_current({
+        format_version: 6,
+        game_state: {
+            skill_xp: v6_skill_xp,
+            tutorial_fieldstones_collected: 6,
+            tutorial_fieldrocks_crushed: 10,
+            tutorial_stage: TutorialStage.WINCH_INSTALL_REQUIRED,
+            tools: {axe_owned: true}
+        },
+        scene: {},
+        settings: {}
+    });
+    passed = task_test_expect(
+        migrated_v6.format_version == SAVE_FORMAT_CURRENT
+        && migrated_v6.game_state.skill_xp[
+            SkillId.TOOLMANSHIP
+        ] == 115
+        && migrated_v6.game_state.skill_xp[
+            SkillId.HEAVY_EQUIPMENT
+        ] == 100
+        && skill_unlock_is_available_state(
+            migrated_v6.game_state,
+            SkillId.HEAVY_EQUIPMENT,
+            SKILL_UNLOCK_UTILITY_VEHICLE_WINCH
+        )
+        && migrated_v6.game_state.tools.axe_notching_prompt_pending,
+        "v6 tutorial work migrates into both corrected level-2 outcomes"
     ) && passed;
 
     global.game_state = game_state_create_default();

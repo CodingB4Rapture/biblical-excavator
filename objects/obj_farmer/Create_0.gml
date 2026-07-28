@@ -18,22 +18,10 @@ interaction_run = function(_actor)
 
     if (game_state.tutorial_stage == TutorialStage.TALK_TO_FARMER)
     {
-        notification_show_dialogue(
-            [
-                "Well, it might not look like much yet, but my wife and I bought this old homestead some years back.",
-                "The folks before us had left the place to ruin, and it had been sitting that way for a long while.",
-                "We always believed our lives were meant for restoration. When we first walked onto this property, we knew there was good work waiting here.",
-                "Work that didn't have to be done in vain.",
-                "A good book says, 'The righteous shall inherit the land, and dwell in it forever.'",
-                "My wife makes sure I stay busy enough to dwell on it forever, that's for certain.",
-                "Still, I'm not as young as I used to be. That's why we put out the notice, and why you're standing here now. I'm truly glad you came.",
-                "We're grateful for the help. Go introduce yourself to my wife; she'll get you settled with your first task."
-            ],
-            id,
-            0,
-            NotificationStyle.PROMPT,
-            "FARMER",
-            DIALOGUE_ACTION_FINISH_FARMER_INTRO
+        notification_show_hint(
+            "The opening greeting is still in progress.",
+            game_get_speed(gamespeed_fps) * 2,
+            false
         );
         return;
     }
@@ -42,6 +30,35 @@ interaction_run = function(_actor)
     {
         notification_show_dialogue(
             "You did good work today. Rest at your new cabin, and we'll all start fresh in the morning.",
+            id,
+            0,
+            NotificationStyle.PROMPT,
+            "FARMER"
+        );
+        return;
+    }
+
+    if (homestead_stage == HomesteadStage.WATER_SUPPLY_REQUIRED)
+    {
+        var water_step = water_tutorial_next_step(game_state);
+        var reminder = "Make an Empty Bucket at the lathe.";
+        switch (water_step.kind)
+        {
+            case "wait":
+                reminder = "Let the lathe finish turning your bucket.";
+                break;
+            case "collect":
+                reminder = "Your bucket is waiting in the middle Finished Crafts chest.";
+                break;
+            case "fill":
+                reminder = "Take that Empty Bucket down to the pond and fill it.";
+                break;
+            case "deposit":
+                reminder = "Pour that Water Bucket into the farmyard tank. It should read 11/40.";
+                break;
+        }
+        notification_show_dialogue(
+            "One last thing before you rest. " + reminder,
             id,
             0,
             NotificationStyle.PROMPT,

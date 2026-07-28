@@ -1,7 +1,7 @@
 # Save System
 
 The game uses one versioned JSON slot named `save_slot_1.json` in GameMaker's
-local save area. New saves use `format_version: 3`.
+local save area. New saves use `format_version: 9`.
 
 ## Pipeline
 
@@ -31,14 +31,18 @@ Saved data includes:
 
 - tutorial stage, dedicated tutorial counters, task-board handoff, quests, and
   task statuses;
-- backpack, vehicle, and Homebase inventories;
+- backpack, vehicle, Homebase, and Finished Crafts inventories;
 - player/vehicle position, driver state, and current gameplay room;
-- axe and winch state;
+- axe ownership, the axe-notching preference/count, and winch state;
 - Fieldstone, Fieldrock, tree, log, and stump records and regeneration dates;
 - removed world IDs and fence records;
 - cabin unlock, skidsteer parking, cabin-site room/position, marked-fence and
   built-cabin state, homestead stage, day, and time;
-- unfinished Farmer or Farmer's Wife dialogue;
+- production jobs, completed-batch counters, crafted-item capacities, and
+  cabin/fence blueprint metadata;
+- append-only skill XP and safe authored-cutscene status/checkpoints;
+- the water tutorial state and durable `0/40` tank amount;
+- unfinished story or skill dialogue, including its selected choice;
 - fullscreen and master-volume settings.
 
 Short-lived hints, reward popups, animation frames, and an active winch cable
@@ -66,6 +70,42 @@ continuously re-derived from tutorial progress after hydration.
 renumbering the six persisted v2 tasks. A v2 save with a placed cabin is treated
 as already built and the inserted tasks are claimed. A pre-cabin v2 save is
 routed to `Park the Skidsteer`.
+
+`save_migrate_v3_to_v4` appends the boundary task and production state. It
+routes pre-cabin saves through the workshop boundary without inventing planks,
+while preserving already completed cabins.
+
+`save_migrate_v4_to_v5` moves legacy hidden Homebase Timber Planks into visible
+Finished Crafts exactly once, normalizes crafted capacities, preserves active
+machine jobs, and repairs selected-site/blueprint state.
+
+`save_migrate_v5_to_v6` moves legacy Equipment XP into the Heavy Equipment
+skill and creates durable records for the rescue and axe cutscenes. Existing
+story outcomes are inferred from tutorial progress and axe ownership so old
+saves do not replay completed scenes. A scene saves only a stable checkpoint,
+not an actor's in-between animation frame.
+
+`save_migrate_v6_to_v7` credits the new Toolmanship XP values for hand-gathered
+Fieldstones and the required tutorial tree without granting credit for work it
+did not complete.
+
+`save_migrate_v7_to_v8` moves Utility Vehicle Winches to Heavy Equipment Level
+2, credits the new minimum XP for already-crushed tutorial Fieldrocks, and
+creates the durable Toolmanship Level 2 axe-notching decision. It also repairs
+the temporary development version of an active level-up dialogue if that old
+winch page happened to be saved.
+
+`save_migrate_v8_to_v9` appends the filled Water Bucket resource, the Farmer's
+post-cabin water cutscene, and the durable tank/tutorial fields. Cabins still
+waiting on their first rest resume at the water lesson with `10/40`.
+Established Day 2 homesteads remain open and receive a completed lesson with
+`11/40`, so an update never rolls them backward.
+
+Hydration also has additive repair paths for missing production arrays,
+partial cabin-site selection, authored site movement, old fence socket
+metadata, and missing room instances. The exact active `Mark Cabin Site` save
+with no selected site, zero flags, no fence, and no cabin remains actionable;
+it does not auto-award a site or edit the player's live save during tests.
 
 Older optional resource records remain supported. Legacy removed Fieldrocks
 receive their one-day renewal schedule, and a fully delivered felled tree

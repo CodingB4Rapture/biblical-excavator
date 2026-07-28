@@ -781,8 +781,13 @@ sawmill.
 Machines animate and show a progress bar only while a job is active. Jobs
 continue while the player works or uses ordinary overlays, stop under the pause
 menu, save mid-batch, and finish all queued work when a day transition occurs.
-The empty bucket is an extension hook for the future water barrel; water
-collection and drinking are not implemented by this production slice.
+The post-cabin water lesson uses that Empty Bucket as a finished craft. The
+pond atomically converts it into a carried Water Bucket; the authored tank
+converts it back to Empty Bucket while incrementing durable storage from
+`10/40` to `11/40`. `water_supply_helpers` persists only the broad
+locked/active/complete story state and derives the current instruction from
+the lathe job and real inventories. That keeps future recipes and capacity
+changes from desynchronizing a chain of tutorial flags.
 
 ### Calendar
 
@@ -792,6 +797,7 @@ complete, the cabin is built, and the hub is open.
 
 Sleeping at the cabin:
 
+- requires the first water delivery to be complete;
 - finishes all current workshop jobs;
 - advances the day;
 - sets time to 6:00 AM;
@@ -1233,8 +1239,9 @@ For multiple deposits, avoid `instance_nearest` as the final identity test if an
 
 ## Step 8: save version 4
 
-The current project uses format version 3. A new durable Clay record should
-advance it to version 4 and normalize before hydration.
+This historical Clay example was written against format version 3. The current
+project uses format version 9; any implemented Clay record must advance from
+the then-current version and normalize before hydration.
 
 Snapshot addition:
 

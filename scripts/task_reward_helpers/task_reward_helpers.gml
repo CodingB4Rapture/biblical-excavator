@@ -20,6 +20,11 @@ function task_reward_is_valid(_reward)
             return variable_struct_exists(_reward, "resource_id")
                 && _reward.resource_id >= 0
                 && _reward.resource_id < ResourceId.COUNT;
+
+        case TaskRewardType.SKILL_XP:
+            return variable_struct_exists(_reward, "skill_id")
+                && _reward.skill_id >= 0
+                && _reward.skill_id < SkillId.COUNT;
     }
 
     return false;
@@ -32,8 +37,11 @@ function task_apply_reward(_reward, _game_state)
     switch (_reward.type)
     {
         case TaskRewardType.EQUIPMENT_XP:
-            _game_state.equipment_xp += _reward.amount;
-            return true;
+            return skill_award_xp_state(
+                _game_state,
+                SkillId.HEAVY_EQUIPMENT,
+                _reward.amount
+            ).changed || _reward.amount == 0;
 
         case TaskRewardType.HOME_RESOURCE:
             inventory_add(
@@ -42,6 +50,13 @@ function task_apply_reward(_reward, _game_state)
                 _reward.amount
             );
             return true;
+
+        case TaskRewardType.SKILL_XP:
+            return skill_award_xp_state(
+                _game_state,
+                _reward.skill_id,
+                _reward.amount
+            ).changed || _reward.amount == 0;
     }
 
     return false;

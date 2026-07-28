@@ -1,5 +1,7 @@
 /// obj_gui_trip_status - Draw GUI Event
 
+if (cutscene_is_active()) exit;
+
 draw_set_font(-1);
 
 var gui_w = display_get_gui_width();

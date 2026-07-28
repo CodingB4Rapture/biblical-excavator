@@ -60,9 +60,9 @@ fieldrock_tick_timer = fieldrock_tick_time;
 fieldrock_break_timer = 16;
 fieldrock_reward_source = noone;
 
-// Stage 1 can break fast for +5, stage 2 for +10, stage 3 always breaks for +25.
+// Ten tutorial rocks guarantee Level 2 while later struggle stages pay more.
 fieldrock_stage_chance = [0.34, 0.55, 1];
-fieldrock_stage_xp = [5, 10, 25];
+fieldrock_stage_xp = [10, 15, 25];
 fieldrock_stage_frame = [1, 3, 5];
 
 // Begin as an unmoving Fieldrock.

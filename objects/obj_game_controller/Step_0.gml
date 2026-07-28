@@ -18,7 +18,7 @@ if (day_transition_active)
     exit;
 }
 
-// Q/I/M/build/machine menus pause player movement, not workshop time. The
+// Q/I/S/M/build/machine menus pause player movement, not workshop time. The
 // actual pause overlay is the one state that freezes production.
 if (!instance_exists(obj_pause_menu))
 {
@@ -69,6 +69,7 @@ if (room_reconcile_pending)
     room_reconcile_pending = false;
 }
 
+skill_levelup_update();
 progression_update_announcements();
 calendar_update();
 
@@ -91,8 +92,10 @@ if (instance_exists(obj_fence_planning_controller)
 }
 
 if (keyboard_check_pressed(vk_escape)
+&& !cutscene_is_active()
 && !instance_exists(obj_pause_menu)
 && !instance_exists(obj_inventory_menu)
+&& !instance_exists(obj_skills_menu)
 && !instance_exists(obj_quest_menu)
 && !instance_exists(obj_cabin_placement_controller))
 {

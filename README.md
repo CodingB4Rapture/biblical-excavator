@@ -15,25 +15,39 @@ commercialized, or incorporated into another project without permission.
 - `E` on foot: use the currently displayed contextual action.
 - `M` or the left-side Map button: open the live whole-area overview. The
   player or driven skidsteer is marked, and `M`/Escape closes the map.
+- `Q` or the Quest button: open the quest journal.
+- `I` or the Inventory button: open the backpack.
+- `Shift+S` or the Skills button: open Heavy Equipment, Toolmanship, and
+  Woodwork levels, XP, and upcoming ability unlocks. Reaching a new level
+  opens a click-through level-up dialogue.
+- The Build button opens free-build options after that feature unlocks.
 - `E` at the Task Board: open the board after the Farmer's Wife posts the
   first assignment. Accept each assignment there, then return to claim
   completed work before the next one unlocks. Use Up/Down or click to select,
   Enter/Space to act, the mouse wheel to scroll, and `E`/Escape to close.
 - The yellow world marker points at an on-camera objective. When that objective
   is outside the camera, a labeled yellow arrow appears at the screen edge.
-- `B` during `Mark the Cabin Site`: choose the fixed cabin-and-yard area.
-- `F`: enter fence planning after choosing that site; click two highlighted
-  opposite corners, add the required front gate, then press `F` to finish.
-  Fence planning remains available after the lesson.
-- Right click: cancel the current corner or remove the gate/enclosure under
-  the cursor.
-- `G`: toggle gate placement, then click a straight horizontal fence side.
-  The first version supports one gate.
+- `E` at a Site I or Site II flag: claim that authored cabin site.
+- `E` at the selected site's blueprint sockets: place the displayed crafted
+  fence piece, gate, or completed cabin. Fence pieces are produced at the
+  sawmill and collected from Finished Crafts.
+- Production menus use click/Up/Down to select a recipe, Left/Right or `-`/`+`
+  for quantity, Enter/`E` to start, and `C` to cancel unfinished batches.
+- `E` at the pond with an Empty Bucket: fill it with water.
+- `E` at the water tank with a Water Bucket: add one unit and recover the
+  Empty Bucket. The tutorial tank begins at `10/40`.
+- `E` at the finished cabin: sleep when the cabin task and first water delivery
+  allow it.
 
-The current loop supports backpack collection, vehicle rock hauling,
-wife-managed Homebase deliveries, and a placeholder winch attachment unlocked
-through early deliveries. See `docs/CORE_LOOP_TRACKER.md` for the playable flow
-and current art/tuning checkpoints.
+New games begin with an authored rescue/wake-up cutscene: the Farmer finds the
+player unconscious, brings them to the homestead, and gives the first greeting.
+The current Day 1 loop then includes backpack collection, vehicle rock hauling,
+winching, Home Delivery, two authored cabin sites, durable fence/cabin
+blueprints, sawmill and lathe jobs, Finished Crafts pickup, the Farmer's
+post-cabin water lesson, a durable `10/40` tank, sleep, and the transition to
+Day 2. See `docs/TUTORIAL_FLOW.md` for the
+implemented sequence and `docs/EXTENSION_READINESS.md` for architecture and
+deferred-system boundaries.
 
 **Before beginning work**:
 

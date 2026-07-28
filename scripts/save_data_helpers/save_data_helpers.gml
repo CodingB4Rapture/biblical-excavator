@@ -17,6 +17,27 @@ function save_copy_amounts(_inventory)
     return save_clone_array(_inventory.amounts);
 }
 
+/// Room instances exist before every placed instance has necessarily finished
+/// its Create Event. A startup save must never read unfinished vehicle state.
+function save_copy_vehicle_cargo(_vehicle)
+{
+    if (!instance_exists(_vehicle)
+    || !variable_instance_exists(_vehicle, "cargo_inventory"))
+    {
+        return array_create(ResourceId.COUNT, 0);
+    }
+
+    var cargo = _vehicle.cargo_inventory;
+    if (!is_struct(cargo)
+    || !variable_struct_exists(cargo, "amounts")
+    || !is_array(cargo.amounts))
+    {
+        return array_create(ResourceId.COUNT, 0);
+    }
+
+    return save_copy_amounts(cargo);
+}
+
 function save_copy_resource_capacities(_inventory)
 {
     inventory_ensure_size(_inventory);

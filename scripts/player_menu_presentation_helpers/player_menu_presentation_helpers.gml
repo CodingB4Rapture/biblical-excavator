@@ -1,10 +1,11 @@
-/// Derived state, input routing, and presentation for the persistent Q/I/M rail.
+/// Derived state, input routing, and presentation for the persistent Q/I/S/M rail.
 
 function player_menu_build_read_model(
     _quest_open,
     _inventory_open,
     _map_open,
-    _build_open = false
+    _build_open = false,
+    _skills_open = false
 )
 {
     return {
@@ -12,10 +13,12 @@ function player_menu_build_read_model(
         inventory_open: _inventory_open,
         map_open: _map_open,
         build_open: _build_open,
+        skills_open: _skills_open,
         quest_frame: _quest_open ? 1 : 0,
         inventory_frame: _inventory_open ? 1 : 0,
         map_frame: _map_open ? 1 : 0,
-        build_frame: _build_open ? 1 : 0
+        build_frame: _build_open ? 1 : 0,
+        skills_frame: _skills_open ? 1 : 0
     };
 }
 
@@ -25,13 +28,22 @@ function player_menu_get_read_model()
         instance_exists(obj_quest_menu),
         instance_exists(obj_inventory_menu),
         instance_exists(obj_map_menu),
-        instance_exists(obj_build_menu)
+        instance_exists(obj_build_menu),
+        instance_exists(obj_skills_menu)
     );
 }
 
 function player_menu_rail_is_visible()
 {
     return player_menu_navigation_is_available();
+}
+
+function player_menu_skills_shortcut_from_state(
+    _shift_down,
+    _s_pressed
+)
+{
+    return _shift_down && _s_pressed;
 }
 
 function player_menu_rail_ensure()
@@ -80,6 +92,17 @@ function player_menu_rail_step(_rail)
     else if (point_in_rectangle(
         gui_mouse_x,
         gui_mouse_y,
+        layout.skills_left,
+        layout.skills_top,
+        layout.skills_right,
+        layout.skills_bottom
+    ))
+    {
+        _rail.hovered_button = 2;
+    }
+    else if (point_in_rectangle(
+        gui_mouse_x,
+        gui_mouse_y,
         layout.inventory_left,
         layout.inventory_top,
         layout.inventory_right,
@@ -97,7 +120,7 @@ function player_menu_rail_step(_rail)
         layout.map_bottom
     ))
     {
-        _rail.hovered_button = 2;
+        _rail.hovered_button = 3;
     }
     else if (point_in_rectangle(
         gui_mouse_x,
@@ -108,7 +131,7 @@ function player_menu_rail_step(_rail)
         layout.build_bottom
     ))
     {
-        _rail.hovered_button = 3;
+        _rail.hovered_button = 4;
     }
 
     if (keyboard_check_pressed(ord("Q")))
@@ -127,6 +150,14 @@ function player_menu_rail_step(_rail)
         return player_menu_toggle_map();
     }
 
+    if (player_menu_skills_shortcut_from_state(
+        keyboard_check(vk_shift),
+        keyboard_check_pressed(ord("S"))
+    ))
+    {
+        return player_menu_toggle_skills();
+    }
+
     if (keyboard_check_pressed(ord("B")))
     {
         return player_menu_toggle_build();
@@ -140,13 +171,16 @@ function player_menu_rail_step(_rail)
     if (!mouse_check_button_pressed(mb_left)) return false;
     if (_rail.hovered_button == 0) return player_menu_toggle_quest();
     if (_rail.hovered_button == 1) return player_menu_toggle_inventory();
-    if (_rail.hovered_button == 2) return player_menu_toggle_map();
-    if (_rail.hovered_button == 3) return player_menu_toggle_build();
+    if (_rail.hovered_button == 2) return player_menu_toggle_skills();
+    if (_rail.hovered_button == 3) return player_menu_toggle_map();
+    if (_rail.hovered_button == 4) return player_menu_toggle_build();
     return false;
 }
 
 function player_menu_rail_draw(_rail)
 {
+    if (cutscene_is_active()) return false;
+
     // The calendar belongs above both gameplay and full-screen player menus.
     // Draw it from this topmost persistent UI layer, not the covered HUD.
     calendar_draw_status();
@@ -174,13 +208,21 @@ function player_menu_rail_draw(_rail)
 
     draw_set_alpha(_rail.hovered_button == 2 ? 1 : 0.92);
     draw_sprite(
+        spr_skills_button,
+        model.skills_frame,
+        layout.skills_center_x,
+        layout.skills_center_y
+    );
+
+    draw_set_alpha(_rail.hovered_button == 3 ? 1 : 0.92);
+    draw_sprite(
         spr_map_button,
         model.map_frame,
         layout.map_center_x,
         layout.map_center_y
     );
 
-    draw_set_alpha(_rail.hovered_button == 3 ? 1 : 0.92);
+    draw_set_alpha(_rail.hovered_button == 4 ? 1 : 0.92);
     draw_sprite(
         spr_build_button,
         model.build_frame,

@@ -70,7 +70,9 @@ The Quest Journal groups task summaries beneath their parent quest. The Task
 Board shows detailed objectives and reward labels for one selected task. Both
 lists support keyboard/mouse selection and wheel scrolling.
 
-Quest and task state are saved in format version 3. Version-one saves migrate
+Quest, task, skill, cutscene, and water-supply state are saved in format
+version 9.
+Version-one saves migrate
 through v2; v2 saves with an already placed cabin preserve that cabin as built
 and claim the two newly inserted tutorial tasks. Pre-cabin saves resume at
 `Park the Skidsteer`.

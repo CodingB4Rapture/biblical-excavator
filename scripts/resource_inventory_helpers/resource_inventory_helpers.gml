@@ -21,6 +21,8 @@ function resource_get_definition(_resource_id)
                 can_winch: false,
                 is_finished_craft: false,
                 world_sprite: spr_fieldstone,
+                hand_skill_id: SkillId.TOOLMANSHIP,
+                hand_skill_xp: 15,
                 crush_result_id: -1,
                 crush_result_amount: 0,
                 delivery_result_id: ResourceId.FIELDSTONE
@@ -166,6 +168,27 @@ function resource_get_definition(_resource_id)
                 can_vehicle_carry: false,
                 can_winch: false,
                 is_finished_craft: true,
+                // These two authored sprite names predate their final art.
+                // spr_water_bucket is the visually empty frame.
+                world_sprite: spr_water_bucket,
+                crush_result_id: -1,
+                crush_result_amount: 0,
+                delivery_result_id: -1
+            };
+        }
+
+        case ResourceId.WATER_BUCKET:
+        {
+            return {
+                name: "Water Bucket",
+                world_name: "Water Bucket",
+                category: ResourceCategory.CRAFTED,
+                size: ResourceSize.SMALL,
+                can_pocket: true,
+                can_vehicle_carry: false,
+                can_winch: false,
+                is_finished_craft: false,
+                // spr_empty_bucket contains the blue, water-filled art.
                 world_sprite: spr_empty_bucket,
                 crush_result_id: -1,
                 crush_result_amount: 0,
@@ -233,6 +256,8 @@ function inventory_create_player()
     inventory.resource_capacities[ResourceId.FENCE_GATE] =
         PLAYER_FENCE_GATE_CAPACITY;
     inventory.resource_capacities[ResourceId.EMPTY_BUCKET] =
+        PLAYER_BUCKET_CAPACITY;
+    inventory.resource_capacities[ResourceId.WATER_BUCKET] =
         PLAYER_BUCKET_CAPACITY;
     return inventory;
 }

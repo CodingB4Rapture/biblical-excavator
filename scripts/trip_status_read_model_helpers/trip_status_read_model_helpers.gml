@@ -125,7 +125,38 @@ function trip_status_get_read_model(_game_state, _vehicle, _pocket_planks)
 {
     var model = trip_status_get_tutorial_read_model(_game_state);
 
-    if (task_get_status(
+    if (water_tutorial_is_active(_game_state))
+    {
+        var water_step = water_tutorial_next_step(_game_state);
+        var water_objective = "Make 1 Empty Bucket at the lathe";
+        switch (water_step.kind)
+        {
+            case "wait":
+                water_objective = "Wait for the lathe to finish the Empty Bucket";
+                break;
+
+            case "collect":
+                water_objective = "Collect the Empty Bucket from the middle Finished Crafts chest";
+                break;
+
+            case "fill":
+                water_objective = "Fill the Empty Bucket at the pond";
+                break;
+
+            case "deposit":
+                water_objective = "Pour the Water Bucket into the tank ("
+                    + string(_game_state.water_tank_amount)
+                    + "/"
+                    + string(WATER_TANK_CAPACITY)
+                    + ")";
+                break;
+        }
+        model = trip_status_make_read_model(
+            "Water for the Cabin",
+            water_objective
+        );
+    }
+    else if (task_get_status(
         TaskId.BUILD_CABIN_FENCE,
         _game_state
     ) == TaskStatus.COMPLETE)
@@ -248,7 +279,10 @@ function trip_status_get_read_model(_game_state, _vehicle, _pocket_planks)
     {
         model = trip_status_make_read_model(
             "Cabin Site",
-            "Rest at the cabin site to begin morning"
+            task_get_status(TaskId.PLACE_CABIN, _game_state)
+                == TaskStatus.CLAIMED
+                ? "Rest at the cabin site to begin morning"
+                : "Claim the completed cabin task, then rest at the cabin"
         );
     }
     else if (_game_state.homestead_stage == HomesteadStage.HUB_OPEN

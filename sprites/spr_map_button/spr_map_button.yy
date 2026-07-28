@@ -26,8 +26,8 @@
   "nineSlice":null,
   "origin":4,
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Buttons",
+    "path":"folders/Buttons.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

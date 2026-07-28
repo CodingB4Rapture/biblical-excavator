@@ -30,9 +30,11 @@ function task_start(_task_id)
 function task_claim_reward(_task_id)
 {
     var game_state = game_state_ensure();
+    var skill_levels_before = skill_capture_levels_state(game_state);
     if (!progression_claim_task_state(_task_id, game_state))
         return false;
 
+    skill_queue_level_changes_state(skill_levels_before, game_state);
     progression_present_task_claimed(_task_id);
     return true;
 }

@@ -88,24 +88,7 @@ function tutorial_report_hand_collection(_resource_id)
         return false;
     }
 
-    var wife = instance_find(obj_farmers_wife, 0);
-    notification_show_dialogue(
-        [
-            "Six good Fieldstones. The Farmer has gifted you an axe for the next part of the work.",
-            "Your assignment is complete. Return to the Task Board to record it and accept the next work."
-        ],
-        wife,
-        0,
-        NotificationStyle.PROMPT,
-        "FARMER'S WIFE"
-    );
-
-    notification_show_hint(
-        "Task complete - return to the Task Board to claim it.",
-        game_get_speed(gamespeed_fps) * 6,
-        false
-    );
-
+    cutscene_request(CUTSCENE_AXE_HANDOFF);
     save_write();
     return true;
 }

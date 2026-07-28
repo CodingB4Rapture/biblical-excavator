@@ -1,10 +1,11 @@
-/// Explicit runtime transitions for the Quest, Inventory, and Map menus.
+/// Explicit runtime transitions for the Quest, Inventory, Skills, and Map menus.
 /// Open state is derived from live menu instances and is never saved.
 
 function player_menu_is_open()
 {
     return instance_exists(obj_quest_menu)
         || instance_exists(obj_inventory_menu)
+        || instance_exists(obj_skills_menu)
         || instance_exists(obj_map_menu)
         || instance_exists(obj_build_menu);
 }
@@ -19,6 +20,7 @@ function player_menu_day_transition_is_active()
 function player_menu_navigation_is_available()
 {
     if (room == rm_main_menu
+    || cutscene_is_active()
     || dialogue_is_active()
     || player_menu_day_transition_is_active()
     || instance_exists(obj_pause_menu)
@@ -38,6 +40,7 @@ function player_menu_close()
 {
     with (obj_quest_menu) instance_destroy();
     with (obj_inventory_menu) instance_destroy();
+    with (obj_skills_menu) instance_destroy();
     with (obj_map_menu) instance_destroy();
     with (obj_build_menu) instance_destroy();
     gameplay_set_paused(false);
@@ -49,6 +52,7 @@ function player_menu_open_quest()
     if (!player_menu_navigation_is_available()) return false;
 
     with (obj_inventory_menu) instance_destroy();
+    with (obj_skills_menu) instance_destroy();
     with (obj_map_menu) instance_destroy();
     with (obj_build_menu) instance_destroy();
     if (!instance_exists(obj_quest_menu))
@@ -65,6 +69,7 @@ function player_menu_open_inventory()
     if (!player_menu_navigation_is_available()) return false;
 
     with (obj_quest_menu) instance_destroy();
+    with (obj_skills_menu) instance_destroy();
     with (obj_map_menu) instance_destroy();
     with (obj_build_menu) instance_destroy();
     if (!instance_exists(obj_inventory_menu))
@@ -90,12 +95,37 @@ function player_menu_toggle_inventory()
     return player_menu_open_inventory();
 }
 
+function player_menu_open_skills()
+{
+    if (!player_menu_navigation_is_available()) return false;
+
+    with (obj_quest_menu) instance_destroy();
+    with (obj_inventory_menu) instance_destroy();
+    with (obj_map_menu) instance_destroy();
+    with (obj_build_menu) instance_destroy();
+    if (!instance_exists(obj_skills_menu))
+    {
+        instance_create_depth(0, 0, -5000, obj_skills_menu);
+    }
+
+    gameplay_set_paused(true);
+    return true;
+}
+
+function player_menu_toggle_skills()
+{
+    if (!player_menu_navigation_is_available()) return false;
+    if (instance_exists(obj_skills_menu)) return player_menu_close();
+    return player_menu_open_skills();
+}
+
 function player_menu_open_map()
 {
     if (!player_menu_navigation_is_available()) return false;
 
     with (obj_quest_menu) instance_destroy();
     with (obj_inventory_menu) instance_destroy();
+    with (obj_skills_menu) instance_destroy();
     with (obj_build_menu) instance_destroy();
     if (!instance_exists(obj_map_menu))
     {

@@ -10,6 +10,17 @@ function save_slot_exists()
     return file_exists(save_file_name());
 }
 
+function save_room_startup_pending()
+{
+    return (
+        variable_global_exists("save_restore_pending")
+        && global.save_restore_pending
+    ) || (
+        variable_global_exists("save_new_game_pending")
+        && global.save_new_game_pending
+    );
+}
+
 function save_build_snapshot()
 {
     var game_state = game_state_ensure();
@@ -26,15 +37,19 @@ function save_build_snapshot()
         vehicle_x: instance_exists(vehicle) ? vehicle.x : 0,
         vehicle_y: instance_exists(vehicle) ? vehicle.y : 0,
         vehicle_angle: instance_exists(vehicle) ? vehicle.image_angle : 0,
-        vehicle_has_driver: instance_exists(vehicle) ? vehicle.has_driver : false,
-        vehicle_cargo: instance_exists(vehicle)
-            ? save_copy_amounts(vehicle.cargo_inventory)
-            : array_create(ResourceId.COUNT, 0),
+        vehicle_has_driver: instance_exists(vehicle)
+            && variable_instance_exists(vehicle, "has_driver")
+            ? vehicle.has_driver
+            : false,
+        vehicle_cargo: save_copy_vehicle_cargo(vehicle),
         dialogue_active: instance_exists(dialogue),
         dialogue_pages: instance_exists(dialogue)
             ? save_clone_array(dialogue.pages)
             : [],
         dialogue_page_index: instance_exists(dialogue) ? dialogue.page_index : 0,
+        dialogue_choice_index: instance_exists(dialogue)
+            ? dialogue.choice_index
+            : 0,
         dialogue_speaker: instance_exists(dialogue) ? dialogue.speaker_name : "",
         dialogue_completion_action: instance_exists(dialogue)
             ? dialogue_action_normalize(dialogue.completion_action)
@@ -54,7 +69,12 @@ function save_build_snapshot()
             finished_crafts_inventory:
                 save_copy_amounts(game_state.finished_crafts_inventory),
             tools: {
-                axe_owned: game_state.tools.axe_owned
+                axe_owned: game_state.tools.axe_owned,
+                axe_notching_preference:
+                    game_state.tools.axe_notching_preference,
+                axe_notching_prompt_pending:
+                    game_state.tools.axe_notching_prompt_pending,
+                axe_notch_count: game_state.tools.axe_notch_count
             },
             tutorial_fieldstones_collected: game_state.tutorial_fieldstones_collected,
             tutorial_fieldrocks_crushed: game_state.tutorial_fieldrocks_crushed,
@@ -65,9 +85,12 @@ function save_build_snapshot()
             trip_xp_gained: game_state.trip_xp_gained,
             daily_resources_gathered: save_clone_array(game_state.daily_resources_gathered),
             equipment_xp: game_state.equipment_xp,
+            skill_xp: save_clone_array(game_state.skill_xp),
             completed_deliveries: game_state.completed_deliveries,
             winch_attachment_state: game_state.winch_attachment_state,
             tutorial_intro_seen: game_state.tutorial_intro_seen,
+            cutscene_records:
+                save_clone_array(game_state.cutscene_records),
             tutorial_stage: game_state.tutorial_stage,
             tutorial_hand_stones_spawned: game_state.tutorial_hand_stones_spawned,
             tutorial_board_assignment_pending: game_state.tutorial_board_assignment_pending,
@@ -91,6 +114,9 @@ function save_build_snapshot()
             ),
             free_build_unlocked: game_state.free_build_unlocked,
             homestead_stage: game_state.homestead_stage,
+            water_tutorial_stage:
+                game_state.water_tutorial_stage,
+            water_tank_amount: game_state.water_tank_amount,
             first_hub_hint_pending: game_state.first_hub_hint_pending,
             day_number: game_state.day_number,
             time_of_day: game_state.time_of_day,
@@ -213,6 +239,8 @@ function save_hydrate_game_state(_saved_state)
         "day_number",
         "time_of_day",
         "homestead_stage",
+        "water_tutorial_stage",
+        "water_tank_amount",
         "first_hub_hint_pending"
     ];
     for (var scalar_index = 0;
@@ -225,10 +253,34 @@ function save_hydrate_game_state(_saved_state)
     }
 
     if (variable_struct_exists(_saved_state, "tools")
-    && is_struct(_saved_state.tools)
-    && variable_struct_exists(_saved_state.tools, "axe_owned"))
+    && is_struct(_saved_state.tools))
     {
-        game_state.tools.axe_owned = _saved_state.tools.axe_owned;
+        if (variable_struct_exists(_saved_state.tools, "axe_owned"))
+            game_state.tools.axe_owned = _saved_state.tools.axe_owned;
+        else
+            game_state.tools.axe_owned =
+                tutorial_stage_implies_axe(game_state.tutorial_stage);
+        if (variable_struct_exists(
+            _saved_state.tools,
+            "axe_notching_preference"
+        ))
+        {
+            game_state.tools.axe_notching_preference =
+                _saved_state.tools.axe_notching_preference;
+        }
+        if (variable_struct_exists(
+            _saved_state.tools,
+            "axe_notching_prompt_pending"
+        ))
+        {
+            game_state.tools.axe_notching_prompt_pending =
+                _saved_state.tools.axe_notching_prompt_pending;
+        }
+        if (variable_struct_exists(_saved_state.tools, "axe_notch_count"))
+        {
+            game_state.tools.axe_notch_count =
+                _saved_state.tools.axe_notch_count;
+        }
     }
     else
     {
@@ -241,6 +293,18 @@ function save_hydrate_game_state(_saved_state)
     {
         game_state.daily_resources_gathered =
             save_clone_array(_saved_state.daily_resources_gathered);
+    }
+
+    if (variable_struct_exists(_saved_state, "skill_xp")
+    && is_array(_saved_state.skill_xp))
+    {
+        game_state.skill_xp = save_clone_array(_saved_state.skill_xp);
+    }
+    if (variable_struct_exists(_saved_state, "cutscene_records")
+    && is_array(_saved_state.cutscene_records))
+    {
+        game_state.cutscene_records =
+            save_clone_array(_saved_state.cutscene_records);
     }
 
     if (variable_struct_exists(_saved_state, "production_jobs")
@@ -481,6 +545,10 @@ function save_restore_room_state()
             scene.dialogue_page_index,
             0,
             array_length(dialogue.pages) - 1
+        );
+        dialogue.choice_index = max(
+            0,
+            floor(scene.dialogue_choice_index)
         );
     }
 }

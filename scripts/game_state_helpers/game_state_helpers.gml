@@ -66,7 +66,10 @@ function game_state_create_default()
         home_inventory: inventory_create(-1),
         finished_crafts_inventory: inventory_create_finished_crafts(),
         tools: {
-            axe_owned: false
+            axe_owned: false,
+            axe_notching_preference: AxeNotchingPreference.UNDECIDED,
+            axe_notching_prompt_pending: false,
+            axe_notch_count: 0
         },
         tutorial_fieldstones_collected: 0,
         tutorial_fieldrocks_crushed: 0,
@@ -78,9 +81,11 @@ function game_state_create_default()
         trip_xp_gained: 0,
         daily_resources_gathered: array_create(ResourceId.COUNT, 0),
         equipment_xp: 0,
+        skill_xp: skill_state_create_default_xp(),
         completed_deliveries: 0,
         winch_attachment_state: AttachmentState.LOCKED,
         tutorial_intro_seen: false,
+        cutscene_records: cutscene_state_create_default_records(),
         tutorial_stage: TutorialStage.TALK_TO_FARMER,
         tutorial_hand_stones_spawned: false,
         tutorial_board_assignment_pending: false,
@@ -97,20 +102,13 @@ function game_state_create_default()
         cabin_site_flags_taken: 0,
         cabin_fence_marked: false,
         cabin_built: false,
-        production_jobs: [
-            production_job_create(
-                PRODUCTION_MACHINE_SAWMILL,
-                ProductionMachineType.SAWMILL
-            ),
-            production_job_create(
-                PRODUCTION_MACHINE_LATHE,
-                ProductionMachineType.LATHE
-            )
-        ],
+        production_jobs: production_state_create_default_jobs(),
         production_completed_batches:
             array_create(ProductionRecipeId.COUNT, 0),
         free_build_unlocked: false,
         homestead_stage: HomesteadStage.TUTORIAL,
+        water_tutorial_stage: WaterTutorialStage.LOCKED,
+        water_tank_amount: WATER_TANK_START_AMOUNT,
         first_hub_hint_pending: false,
         day_number: 1,
         // Minutes since midnight; 1080 is 6:00 PM.
@@ -127,16 +125,22 @@ function homestead_stage_infer(_game_state)
         return HomesteadStage.TUTORIAL;
     }
 
-    return (_game_state.day_number > 1)
-        ? HomesteadStage.HUB_OPEN
-        : HomesteadStage.FIRST_REST_REQUIRED;
+    if (_game_state.day_number > 1) return HomesteadStage.HUB_OPEN;
+    if (variable_struct_exists(_game_state, "water_tutorial_stage")
+    && _game_state.water_tutorial_stage == WaterTutorialStage.ACTIVE)
+    {
+        return HomesteadStage.WATER_SUPPLY_REQUIRED;
+    }
+    return HomesteadStage.FIRST_REST_REQUIRED;
 }
 
 function homestead_stage_sanitize(_stage, _game_state)
 {
-    if (!is_real(_stage)
-    || _stage < HomesteadStage.TUTORIAL
-    || _stage > HomesteadStage.HUB_OPEN)
+    if (!is_numeric(_stage)
+    || (_stage != HomesteadStage.TUTORIAL
+        && _stage != HomesteadStage.FIRST_REST_REQUIRED
+        && _stage != HomesteadStage.HUB_OPEN
+        && _stage != HomesteadStage.WATER_SUPPLY_REQUIRED))
     {
         return homestead_stage_infer(_game_state);
     }
@@ -234,6 +238,11 @@ function game_state_normalize(_game_state)
         ResourceId.EMPTY_BUCKET,
         PLAYER_BUCKET_CAPACITY
     );
+    inventory_apply_minimum_resource_capacity(
+        _game_state.player_inventory,
+        ResourceId.WATER_BUCKET,
+        PLAYER_BUCKET_CAPACITY
+    );
 
     if (!variable_struct_exists(_game_state, "home_inventory")
     || !is_struct(_game_state.home_inventory))
@@ -279,6 +288,7 @@ function game_state_normalize(_game_state)
         _game_state.tools.axe_owned =
             tutorial_stage_implies_axe(_game_state.tutorial_stage);
     }
+    skill_axe_notching_state_ensure(_game_state);
 
     if (!variable_struct_exists(_game_state, "tutorial_fieldstones_collected"))
     {
@@ -305,6 +315,8 @@ function game_state_normalize(_game_state)
         _game_state.trip_xp_gained = 0;
     if (!variable_struct_exists(_game_state, "equipment_xp"))
         _game_state.equipment_xp = 0;
+    skill_state_ensure(_game_state);
+    cutscene_state_ensure(_game_state);
     if (!variable_struct_exists(_game_state, "completed_deliveries"))
         _game_state.completed_deliveries = 0;
 
@@ -521,6 +533,7 @@ function game_state_normalize(_game_state)
             _game_state
         );
     }
+    water_supply_state_ensure(_game_state);
 
     task_state_ensure(_game_state);
     return _game_state;

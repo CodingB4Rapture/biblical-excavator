@@ -432,11 +432,14 @@ function cabin_build_at_site(_site, _actor = noone)
     }
 
     _site.sprite_index = spr_cabin_after;
-    notification_show_hint(
-        "Cabin raised. Return to the Task Board.",
-        game_get_speed(gamespeed_fps) * 5,
-        true
-    );
-    save_write();
+    if (!cutscene_request(CUTSCENE_WATER_SUPPLY))
+    {
+        notification_show_hint(
+            "Cabin raised. The Farmer has one last thing to show you.",
+            game_get_speed(gamespeed_fps) * 5,
+            true
+        );
+        save_write();
+    }
     return true;
 }

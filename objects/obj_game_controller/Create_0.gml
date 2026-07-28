@@ -41,9 +41,6 @@ if (!instance_exists(obj_camera_controller))
 
 player_menu_rail_ensure();
 
-// First playable beat: free movement, with a gentle direction toward the Farmer.
-if (!game_state.tutorial_intro_seen)
-{
-    game_state.tutorial_intro_seen = true;
-    notification_show_hint("Talk to the Farmer near Home Delivery. Press Q for your Quest Journal.", game_get_speed(gamespeed_fps) * 6, false);
-}
+// New games and interrupted authored scenes enter through the reusable
+// cutscene owner. Existing saves migrate these story records as complete.
+cutscene_begin_room_story();

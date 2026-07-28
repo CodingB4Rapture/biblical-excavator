@@ -318,6 +318,43 @@ function tutorial_guidance_target()
     var target = noone;
     var label = "NEXT TASK";
 
+    if (water_tutorial_is_active(game_state))
+    {
+        var water_step = water_tutorial_next_step(game_state);
+        switch (water_step.kind)
+        {
+            case "make":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_lathe, 0),
+                    "MAKE 1 EMPTY BUCKET"
+                );
+
+            case "wait":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_lathe, 0),
+                    "LATHE IS WORKING"
+                );
+
+            case "collect":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_finished_crafts_chest, 0),
+                    "COLLECT EMPTY BUCKET"
+                );
+
+            case "fill":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_pond, 0),
+                    "FILL BUCKET AT POND"
+                );
+
+            case "deposit":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_water_tank, 0),
+                    "FILL WATER TANK"
+                );
+        }
+    }
+
     var board_attention_id = task_get_attention_id(game_state);
     if (game_state.tutorial_board_assignment_pending
     || board_attention_id >= 0)

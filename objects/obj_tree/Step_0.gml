@@ -57,6 +57,18 @@ switch (tree_state)
             image_angle = 90;
             var tree_record = tree_record_mark_felled(world_id, original_x, original_y);
             tree_spawn_felled_pieces(tree_record);
+            var axe_was_notched = skill_record_axe_notch_state(
+                game_state_ensure()
+            );
+            skill_award_xp(SkillId.TOOLMANSHIP, 25);
+            if (axe_was_notched)
+            {
+                notification_show_hint(
+                    "You add a new notch to the axe handle.",
+                    game_get_speed(gamespeed_fps) * 3,
+                    false
+                );
+            }
             tutorial_report_tree_felled();
             instance_destroy();
         }

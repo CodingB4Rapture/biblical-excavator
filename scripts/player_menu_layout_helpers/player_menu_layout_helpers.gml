@@ -13,20 +13,24 @@ function player_menu_get_rail_layout(_gui_w = -1, _gui_h = -1)
     var quest_height = sprite_get_height(spr_quest_button);
     var inventory_width = sprite_get_width(spr_inventory_button);
     var inventory_height = sprite_get_height(spr_inventory_button);
+    var skills_width = sprite_get_width(spr_skills_button);
+    var skills_height = sprite_get_height(spr_skills_button);
     var map_width = sprite_get_width(spr_map_button);
     var map_height = sprite_get_height(spr_map_button);
     var build_width = sprite_get_width(spr_build_button);
     var build_height = sprite_get_height(spr_build_button);
     var rail_width = max(
-        max(quest_width, inventory_width),
+        max(max(quest_width, inventory_width), skills_width),
         max(map_width, build_width)
     );
     var quest_left = margin + (rail_width - quest_width) * 0.5;
     var quest_top = margin;
     var inventory_left = margin + (rail_width - inventory_width) * 0.5;
     var inventory_top = quest_top + quest_height + button_gap;
+    var skills_left = margin + (rail_width - skills_width) * 0.5;
+    var skills_top = inventory_top + inventory_height + button_gap;
     var map_left = margin + (rail_width - map_width) * 0.5;
-    var map_top = inventory_top + inventory_height + button_gap;
+    var map_top = skills_top + skills_height + button_gap;
     var build_left = margin + (rail_width - build_width) * 0.5;
     var build_top = map_top + map_height + button_gap;
     var rail_right = margin + rail_width;
@@ -46,6 +50,12 @@ function player_menu_get_rail_layout(_gui_w = -1, _gui_h = -1)
         inventory_bottom: inventory_top + inventory_height,
         inventory_center_x: inventory_left + inventory_width * 0.5,
         inventory_center_y: inventory_top + inventory_height * 0.5,
+        skills_left: skills_left,
+        skills_top: skills_top,
+        skills_right: skills_left + skills_width,
+        skills_bottom: skills_top + skills_height,
+        skills_center_x: skills_left + skills_width * 0.5,
+        skills_center_y: skills_top + skills_height * 0.5,
         map_left: map_left,
         map_top: map_top,
         map_right: map_left + map_width,
@@ -125,5 +135,29 @@ function player_menu_get_inventory_layout(_gui_w = -1, _gui_h = -1)
         content_right: panel.panel_right - 18,
         content_top: tabs_bottom + 16,
         content_bottom: panel.panel_bottom - 38
+    };
+}
+
+function player_menu_get_skills_layout(_gui_w = -1, _gui_h = -1)
+{
+    var panel = player_menu_get_panel_bounds(_gui_w, _gui_h);
+    var list_width = clamp(
+        (panel.panel_right - panel.panel_left) * 0.36,
+        210,
+        300
+    );
+    return {
+        gui_w: panel.gui_w,
+        gui_h: panel.gui_h,
+        panel_left: panel.panel_left,
+        panel_top: panel.panel_top,
+        panel_right: panel.panel_right,
+        panel_bottom: panel.panel_bottom,
+        list_left: panel.panel_left + 18,
+        list_right: panel.panel_left + list_width,
+        content_top: panel.panel_top + 58,
+        content_bottom: panel.panel_bottom - 42,
+        detail_left: panel.panel_left + list_width + 22,
+        detail_right: panel.panel_right - 18
     };
 }

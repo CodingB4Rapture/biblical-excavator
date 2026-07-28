@@ -11,7 +11,10 @@
     "name":"Resources",
     "path":"folders/World/Resources.yy",
   },
-  "parentObjectId":null,
+  "parentObjectId":{
+    "name":"obj_interactable_parent",
+    "path":"objects/obj_interactable_parent/obj_interactable_parent.yy",
+  },
   "persistent":false,
   "physicsAngularDamping":0.1,
   "physicsDensity":0.5,

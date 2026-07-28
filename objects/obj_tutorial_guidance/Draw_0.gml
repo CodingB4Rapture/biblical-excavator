@@ -2,6 +2,7 @@
 /// Draw the in-world marker only while the target is inside Camera 0.
 
 if (gameplay_is_paused()
+|| cutscene_is_active()
 || dialogue_is_active()
 || instance_exists(obj_task_board_menu)
 || instance_exists(obj_quest_menu)

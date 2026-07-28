@@ -5,9 +5,12 @@ function progression_update_announcements()
     var queue = progression_announcement_ensure();
 
     if (array_length(queue) == 0
+    || cutscene_is_active()
     || instance_exists(obj_task_board_menu)
     || instance_exists(obj_quest_menu)
     || instance_exists(obj_inventory_menu)
+    || instance_exists(obj_skills_menu)
+    || instance_exists(obj_map_menu)
     || instance_exists(obj_finished_crafts_menu)
     || instance_exists(obj_build_menu)
     || instance_exists(obj_production_menu)

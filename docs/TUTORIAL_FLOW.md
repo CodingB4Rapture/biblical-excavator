@@ -18,6 +18,8 @@ This document is the plain-language map for changing the tutorial.
   and `scripts/progression_presentation_helpers/progression_presentation_helpers.gml`
 - Read-only guidance descriptors:
   `scripts/tutorial_guidance_helpers/tutorial_guidance_helpers.gml`
+- Post-cabin water state, derived next steps, and bucket/tank transactions:
+  `scripts/water_supply_helpers/water_supply_helpers.gml`
 - Missing durable room objects:
   `scripts/room_reconciliation_helpers/room_reconciliation_helpers.gml`
 
@@ -26,21 +28,49 @@ Winch mechanics remain in `winch_helpers`. Dialogue dispatch remains in
 
 ## Player-facing sequence
 
-1. Talk to the Farmer; `A Firm Foundation` starts.
+1. Start a new game. The authored rescue cutscene shows the Farmer finding the
+   player unconscious through two eyelid blinks and staged approach movement,
+   fading to the homestead, and greeting the player after they wake just west
+   of the cabin door. `A Firm Foundation` starts when the greeting completes.
 2. Talk to the Farmer's Wife; she posts the first board assignment.
-3. Accept `Fieldstone by Hand`, gather six loose Fieldstones, then claim it.
-4. Accept `A Fallen Tree`, fell and inspect a tree, then claim it.
+3. Accept `Fieldstone by Hand` and gather six loose Fieldstones for 15
+   Toolmanship XP each. The Farmer walks to the player and presents his
+   notched axe through the reusable axe handoff cutscene. Then claim the task.
+4. Accept `A Fallen Tree`, fell it for 25 Toolmanship XP, and inspect it. The
+   tree raises Toolmanship to Level 2. The first dialogue congratulates the
+   player; the second asks whether future trees should add notches to the axe.
+   Then claim the task.
 5. Accept `Stone Haul`, crush ten Fieldrocks, deliver all sixteen Fieldstones,
-   then claim it to trigger the mailed winch.
-6. Accept `Fit the Winch`, collect and install the attachment, then claim it.
+   and reach at least 100 Heavy Equipment XP. Its Level 2 dialogue unlocks
+   Utility Vehicle Winches. Then claim the task to trigger the mailed winch.
+6. Accept `Fit the Winch`, collect and install the attachment using the
+   Heavy Equipment Level 2 unlock, then claim it.
 7. Accept `Timber Delivery`, deliver the log and stump, then claim it.
 8. `A Firm Foundation` completes and `A Place of Your Own` starts.
 9. Accept `Park the Skidsteer`; park inside the pad, stop, detach any tow, exit,
    and claim the task.
-10. Accept `Mark the Cabin Site`; choose the site, create the fixed boundary,
-    add one front gate, and claim the task.
-11. Accept `Build the Cabin`; build at the marked site and claim the task.
-12. Rest at the finished cabin to open the first homestead day.
+10. Accept `Mark the Cabin Site`; take one corner flag at authored Site I or
+    Site II. Selection and task completion happen atomically. Claim the task.
+11. Accept `Build the Cabin Boundary`. Use the sawmill to turn the delivered
+    Timber Log into Timber Planks, collect them from Finished Crafts, and use
+    the sawmill recipes for 10 straight pieces, 4 corners, and 1 two-cell gate.
+12. Collect each finished batch and fill the selected site's fixed blueprint
+    sockets. Claim the boundary task after the complete enclosure and front
+    gate reconcile.
+13. Accept `Build the Cabin` and raise it. The thirsty player speaks, then the
+    Farmer walks up to praise the day's work and explain the water supply.
+14. Turn 1 Small Lumber into 1 Empty Bucket at the lathe, collect it from
+    Finished Crafts, fill it at the pond, and pour it into the authored tank.
+    Its durable counter starts at `10/40` and becomes `11/40`. The filled
+    bucket returns to the player's inventory as an Empty Bucket.
+15. Claim the cabin task. Open Skills with `Shift+S` or the authored left-rail
+    button. Heavy Equipment XP
+    comes from powered work, Toolmanship XP from hand-gathered Fieldstones and
+    axe work, and Woodwork XP from timber construction rewards.
+16. Rest at the finished cabin after the water lesson. The first rest advances
+    to Day 2 at 6:00 AM,
+    opens the homestead hub, completes active production jobs, and displays
+    the persistent Day/Time card.
 
 ## Communication rules
 
@@ -76,4 +106,4 @@ explicit predicate.
 - Keep guidance and journal/task read models free of world mutation.
 - Add room restoration to the reconciler rather than a per-frame Draw query.
 - Preserve the one-active-task invariant.
-- Add v3 migration before changing the v2 schema incompatibly.
+- Add a new migration before changing the format-9 schema incompatibly.

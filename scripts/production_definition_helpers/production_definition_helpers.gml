@@ -1,5 +1,60 @@
 /// Stable machine and recipe definitions.
 
+function production_machine_definitions()
+{
+    return [
+        {
+            id: PRODUCTION_MACHINE_SAWMILL,
+            machine_type: ProductionMachineType.SAWMILL,
+            display_name: "Sawmill",
+            room_name: "Room1",
+            x: 496,
+            y: 32,
+            object_type: obj_sawmill,
+            unlock_rule: "cabin_boundary",
+            recipe_ids: [
+                ProductionRecipeId.SAW_TIMBER_PLANKS,
+                ProductionRecipeId.CUT_STRAIGHT_FENCE,
+                ProductionRecipeId.CUT_FENCE_CORNERS,
+                ProductionRecipeId.CUT_FENCE_GATE
+            ]
+        },
+        {
+            id: PRODUCTION_MACHINE_LATHE,
+            machine_type: ProductionMachineType.LATHE,
+            display_name: "Lathe",
+            room_name: "Room1",
+            x: 400,
+            y: 32,
+            object_type: obj_lathe,
+            unlock_rule: "cabin_built",
+            recipe_ids: [ProductionRecipeId.TURN_EMPTY_BUCKET]
+        }
+    ];
+}
+
+function production_machine_definition(_machine_id)
+{
+    var definitions = production_machine_definitions();
+    for (var index = 0; index < array_length(definitions); index++)
+    {
+        if (definitions[index].id == _machine_id)
+            return definitions[index];
+    }
+    return undefined;
+}
+
+function production_machine_definition_for_type(_machine_type)
+{
+    var definitions = production_machine_definitions();
+    for (var index = 0; index < array_length(definitions); index++)
+    {
+        if (definitions[index].machine_type == _machine_type)
+            return definitions[index];
+    }
+    return undefined;
+}
+
 function production_recipe_definition(_recipe_id)
 {
     switch (_recipe_id)
@@ -85,28 +140,16 @@ function production_recipe_definition(_recipe_id)
 
 function production_machine_recipe_ids(_machine_type)
 {
-    switch (_machine_type)
-    {
-        case ProductionMachineType.SAWMILL:
-            return [
-                ProductionRecipeId.SAW_TIMBER_PLANKS,
-                ProductionRecipeId.CUT_STRAIGHT_FENCE,
-                ProductionRecipeId.CUT_FENCE_CORNERS,
-                ProductionRecipeId.CUT_FENCE_GATE
-            ];
-
-        case ProductionMachineType.LATHE:
-            return [ProductionRecipeId.TURN_EMPTY_BUCKET];
-    }
-
-    return [];
+    var definition = production_machine_definition_for_type(_machine_type);
+    return is_undefined(definition) ? [] : definition.recipe_ids;
 }
 
 function production_machine_name(_machine_type)
 {
-    return _machine_type == ProductionMachineType.LATHE
-        ? "Lathe"
-        : "Sawmill";
+    var definition = production_machine_definition_for_type(_machine_type);
+    return is_undefined(definition)
+        ? "Unknown Machine"
+        : definition.display_name;
 }
 
 function production_recipe_is_unlocked(_recipe_id, _game_state)

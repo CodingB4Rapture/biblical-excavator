@@ -1,6 +1,6 @@
 # Cabin Site and Construction
 
-The cabin arc introduces parking, bounded fence planning, and the transition
+The cabin arc introduces parking, authored blueprint construction, and the transition
 from a marked construction site to the finished cabin.
 
 ## Player flow
@@ -14,11 +14,12 @@ from a marked construction site to the finished cabin.
    blue Site II in Farmer's Workfield.
 6. Use `Take Flag` at either site's corner to commit that site. The other
    site's flags are removed and cannot be selected afterward.
-7. Use `Place Fence` at the cleared corner. The bounded fence lesson begins
-   with that exact corner selected.
-8. Click the opposite highlighted corner to create the exact boundary.
-9. Press `G` and install one gate on the front/south side.
-10. Press `F` to validate and finish, then claim the task.
+7. Claim `Mark the Cabin Site` and accept `Build the Cabin Boundary`.
+8. Mill the delivered Timber Log into Timber Planks at the sawmill. Collect
+   output from Finished Crafts, then make 10 straights, 4 corners, and 1 gate.
+9. Collect the crafted pieces and press `E` at each matching blueprint socket.
+   The gate occupies the authored two-cell opening on the front/south side.
+10. Claim the boundary task after all sockets reconcile as completed.
 11. Accept `Build the Cabin`, return to the site, and press `E` to replace
     `spr_cabin_before` with `spr_cabin_after`.
 12. Claim the build task and rest at the cabin to begin the first homestead
@@ -53,8 +54,10 @@ TUTORIAL
 ```
 
 Durable state records parking, the selected site ID and room/position, taken
-flag mask, marked boundary, built cabin, and purpose-tagged fence records.
+flag mask, marked boundary, built cabin, purpose-tagged fence records, crafted
+piece type/rotation/socket IDs, and cabin blueprint completion.
 Selection is one-way: committing either predefined site disables the other.
 
-This pass does not spend resources or introduce construction recipes, damage,
-livestock, NPC automation, or other crafting behavior.
+Legacy free-form planning helpers remain only where old-save/free-build
+compatibility still references them. The tutorial's canonical path is the
+authored socket blueprint above; there is no `B` cabin-placement step.

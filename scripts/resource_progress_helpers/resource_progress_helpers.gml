@@ -85,14 +85,22 @@ function progress_award_crushed_resource(_resource_id, _xp_amount, _source_insta
     }
     game_state.daily_resources_gathered[reward_id] += reward_amount;
     game_state.trip_xp_gained += _xp_amount;
-    game_state.equipment_xp += _xp_amount;
+    var heavy_skill_result = skill_award_xp_state(
+        game_state,
+        SkillId.HEAVY_EQUIPMENT,
+        _xp_amount
+    );
+    skill_queue_levelup_result(
+        SkillId.HEAVY_EQUIPMENT,
+        heavy_skill_result
+    );
 
     var reward_name = resource_get_name(reward_id);
     if (reward_amount != 1) reward_name += "s";
     progress_show_reward_summary(
         "Crushed " + definition.name + ": loaded "
         + string(reward_amount) + " " + reward_name,
-        "+" + string(_xp_amount) + " Equipment XP"
+        "+" + string(_xp_amount) + " Heavy Equipment XP"
     );
 
     var drop_x = vehicle.x + random_range(-5, 5);
@@ -152,6 +160,21 @@ function progress_collect_resource_by_hand(_resource_instance)
     game_state.trip_rocks_gathered += 1;
     game_state.daily_resources_gathered[resource_id] += 1;
 
+    var hand_skill_result = undefined;
+    if (variable_struct_exists(definition, "hand_skill_id")
+    && variable_struct_exists(definition, "hand_skill_xp"))
+    {
+        hand_skill_result = skill_award_xp_state(
+            game_state,
+            definition.hand_skill_id,
+            definition.hand_skill_xp
+        );
+        skill_queue_levelup_result(
+            definition.hand_skill_id,
+            hand_skill_result
+        );
+    }
+
     if (is_renewable_fieldstone)
     {
         fieldstone_record_mark_collected(_resource_instance.world_id);
@@ -163,15 +186,23 @@ function progress_collect_resource_by_hand(_resource_instance)
 
     progress_show_reward_summary(
         "Pocketed 1 " + definition.name,
-        "Backpack " + string(
-            inventory_get_amount(game_state.player_inventory, resource_id)
-        )
-        + " / " + string(
-            inventory_get_resource_capacity(
-                game_state.player_inventory,
-                resource_id
+        !is_undefined(hand_skill_result) && hand_skill_result.changed
+            ? "+" + string(hand_skill_result.amount) + " "
+                + skill_definition(
+                    definition.hand_skill_id
+                ).display_name + " XP"
+            : "Backpack " + string(
+                inventory_get_amount(
+                    game_state.player_inventory,
+                    resource_id
+                )
             )
-        )
+            + " / " + string(
+                inventory_get_resource_capacity(
+                    game_state.player_inventory,
+                    resource_id
+                )
+            )
     );
 
     if (game_state.tutorial_stage == TutorialStage.TRIP_ONE_HAND_FIELDSTONE)
@@ -184,7 +215,8 @@ function progress_collect_resource_by_hand(_resource_instance)
         instance_destroy();
     }
 
-    if (is_renewable_fieldstone)
+    if (is_renewable_fieldstone
+    || (!is_undefined(hand_skill_result) && hand_skill_result.changed))
     {
         save_write();
     }

@@ -177,17 +177,23 @@ function task_complete(_task_id)
 function progression_complete_hand_gathering_state(_game_state)
 {
     if (!task_is_active(TaskId.FIELDSTONE_BY_HAND, _game_state)
-    || _game_state.tutorial_fieldstones_collected < 6
-    || _game_state.tools.axe_owned)
+    || _game_state.tutorial_fieldstones_collected < 6)
     {
         return false;
     }
 
-    _game_state.tools.axe_owned = true;
-    return progression_complete_task_state(
+    var completed = progression_complete_task_state(
         TaskId.FIELDSTONE_BY_HAND,
         _game_state
     );
+    if (completed)
+    {
+        cutscene_state_activate(
+            _game_state,
+            CUTSCENE_AXE_HANDOFF
+        );
+    }
+    return completed;
 }
 
 function progression_collect_winch_package_state(_game_state)
@@ -209,7 +215,12 @@ function progression_install_winch_state(_game_state)
 {
     if (!task_is_active(TaskId.FIT_THE_WINCH, _game_state)
     || _game_state.winch_attachment_state
-        != AttachmentState.STORED_AT_HOME)
+        != AttachmentState.STORED_AT_HOME
+    || !skill_unlock_is_available_state(
+        _game_state,
+        SkillId.HEAVY_EQUIPMENT,
+        SKILL_UNLOCK_UTILITY_VEHICLE_WINCH
+    ))
     {
         return false;
     }
@@ -364,7 +375,11 @@ function progression_build_cabin_state(_game_state)
     }
 
     _game_state.cabin_built = true;
-    _game_state.homestead_stage = HomesteadStage.FIRST_REST_REQUIRED;
+    _game_state.water_tank_amount = WATER_TANK_START_AMOUNT;
+    _game_state.water_tutorial_stage = WaterTutorialStage.ACTIVE;
+    _game_state.homestead_stage =
+        HomesteadStage.WATER_SUPPLY_REQUIRED;
+    cutscene_state_activate(_game_state, CUTSCENE_WATER_SUPPLY);
     return progression_complete_task_state(
         TaskId.PLACE_CABIN,
         _game_state
@@ -375,6 +390,8 @@ function progression_open_homestead_hub_state(_game_state)
 {
     if (_game_state.homestead_stage
         != HomesteadStage.FIRST_REST_REQUIRED
+    || _game_state.water_tutorial_stage
+        != WaterTutorialStage.COMPLETE
     || !_game_state.cabin_built
     || _game_state.task_statuses[TaskId.PLACE_CABIN]
         != TaskStatus.CLAIMED)

@@ -2,12 +2,15 @@
 
 draw_set_font(-1);
 
-world_draw_location_marker(
-    x,
-    y + 16,
-    "FARMER'S WIFE",
-    make_color_rgb(190, 128, 196)
-);
+if (!cutscene_is_active())
+{
+    world_draw_location_marker(
+        x,
+        y + 16,
+        "FARMER'S WIFE",
+        make_color_rgb(190, 128, 196)
+    );
+}
 draw_self();
 
 draw_set_halign(fa_left);

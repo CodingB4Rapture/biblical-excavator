@@ -26,8 +26,8 @@
   "nineSlice":null,
   "origin":0,
   "parent":{
-    "name":"Biblical Excavation",
-    "path":"Biblical Excavation.yyp",
+    "name":"Homestead",
+    "path":"folders/World/Homestead.yy",
   },
   "preMultiplyAlpha":false,
   "resourceType":"GMSprite",

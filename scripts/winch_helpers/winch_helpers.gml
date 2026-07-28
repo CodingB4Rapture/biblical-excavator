@@ -41,6 +41,25 @@ function winch_install_attachment(_vehicle)
 {
     var game_state = game_state_ensure();
 
+    if (!skill_unlock_is_available_state(
+        game_state,
+        SkillId.HEAVY_EQUIPMENT,
+        SKILL_UNLOCK_UTILITY_VEHICLE_WINCH
+    ))
+    {
+        var unlock = skill_unlock_definition(
+            SkillId.HEAVY_EQUIPMENT,
+            SKILL_UNLOCK_UTILITY_VEHICLE_WINCH
+        );
+        notification_show_hint(
+            "Requires Heavy Equipment Level " + string(unlock.level)
+                + ": " + unlock.title + ".",
+            game_get_speed(gamespeed_fps) * 4,
+            false
+        );
+        return false;
+    }
+
     if (!progression_install_winch_state(game_state))
         return false;
 

@@ -24,14 +24,17 @@ function player_menu_run_tests()
             == sprite_get_width(spr_quest_button)
         && rail.inventory_right - rail.inventory_left
             == sprite_get_width(spr_inventory_button)
+        && rail.skills_right - rail.skills_left
+            == sprite_get_width(spr_skills_button)
         && rail.map_right - rail.map_left
             == sprite_get_width(spr_map_button)
         && rail.build_right - rail.build_left
             == sprite_get_width(spr_build_button)
         && rail.inventory_top > rail.quest_bottom
-        && rail.map_top > rail.inventory_bottom
+        && rail.skills_top > rail.inventory_bottom
+        && rail.map_top > rail.skills_bottom
         && rail.build_top > rail.map_bottom,
-        "the rail gives all four authored sprites separate padded hitboxes"
+        "the rail gives all five authored sprites separate padded hitboxes"
     ) && passed;
 
     passed = player_menu_test_expect(
@@ -49,11 +52,78 @@ function player_menu_run_tests()
         "the calendar card stays top-right and clear of the menu rail"
     ) && passed;
 
+    var viewport_sizes = [
+        {width: 1280, height: 720},
+        {width: 1100, height: 984},
+        {width: 1920, height: 1080}
+    ];
+    var safe_layouts = true;
+    for (var viewport_index = 0;
+        viewport_index < array_length(viewport_sizes);
+        viewport_index++)
+    {
+        var viewport = viewport_sizes[viewport_index];
+        var viewport_rail = player_menu_get_rail_layout(
+            viewport.width,
+            viewport.height
+        );
+        var viewport_calendar = calendar_get_status_layout(
+            viewport.width,
+            viewport.height
+        );
+        safe_layouts = safe_layouts
+            && viewport_calendar.right == viewport.width - 14
+            && viewport_calendar.top == 14
+            && viewport_calendar.left > viewport_rail.rail_right;
+    }
+    passed = player_menu_test_expect(
+        safe_layouts,
+        "the calendar safe area holds at 1280x720, 1100x984, and 1920x1080"
+    ) && passed;
+
+    var dialogue_sample =
+        "A wrapped notification remains readable while this dialogue page is visible.";
+    var dialogue_wide = dialogue_get_layout(
+        dialogue_sample,
+        1280,
+        720
+    );
+    var dialogue_tall = dialogue_get_layout(
+        dialogue_sample,
+        1100,
+        984
+    );
+    var dialogue_hd = dialogue_get_layout(
+        dialogue_sample,
+        1920,
+        1080
+    );
+    passed = player_menu_test_expect(
+        dialogue_wide.panel_left >= 22
+        && dialogue_wide.panel_right <= 1258
+        && dialogue_tall.panel_left >= 22
+        && dialogue_tall.panel_right <= 1078
+        && dialogue_hd.panel_left >= 22
+        && dialogue_hd.panel_right <= 1898
+        && dialogue_wide.body_line_sep
+            == font_get_size(dialogue_font) + 10
+        && dialogue_tall.body_scale >= 0.7
+        && dialogue_hd.body_scale >= 0.7,
+        "dialogue wrapping and line spacing stay inside all target viewports"
+    ) && passed;
+
     var closed_model = player_menu_build_read_model(false, false, false);
     var quest_model = player_menu_build_read_model(true, false, false);
     var inventory_model = player_menu_build_read_model(false, true, false);
     var map_model = player_menu_build_read_model(false, false, true);
     var build_model = player_menu_build_read_model(
+        false,
+        false,
+        false,
+        true
+    );
+    var skills_model = player_menu_build_read_model(
+        false,
         false,
         false,
         false,
@@ -73,6 +143,55 @@ function player_menu_run_tests()
         && build_model.build_frame == 1
         && build_model.quest_frame == 0,
         "button frames derive from the active menu without durable state"
+    ) && passed;
+
+    passed = player_menu_test_expect(
+        skills_model.skills_frame == 1
+        && skills_model.quest_frame == 0
+        && skills_model.inventory_frame == 0
+        && skills_model.map_frame == 0
+        && skills_model.build_frame == 0,
+        "the authored Skills button derives its selected frame from the live menu"
+    ) && passed;
+
+    passed = player_menu_test_expect(
+        input_move_down_from_state(true, false, false)
+        && !input_move_down_from_state(true, false, true)
+        && input_move_down_from_state(false, true, true)
+        && !player_menu_skills_shortcut_from_state(false, true)
+        && player_menu_skills_shortcut_from_state(true, true),
+        "Shift+S opens Skills without stealing downward movement"
+    ) && passed;
+
+    var skills_state = game_state_create_default();
+    skill_award_xp_state(
+        skills_state,
+        SkillId.WOODWORK,
+        100
+    );
+    var skills_read_model = skill_get_read_model(
+        SkillId.WOODWORK,
+        skills_state
+    );
+    passed = player_menu_test_expect(
+        skills_read_model.name == "Woodwork"
+        && skills_read_model.max_level == 50
+        && skills_read_model.level == 2
+        && skills_read_model.xp == 100
+        && skills_read_model.progress == 0,
+        "the Skills menu reads level and XP without owning durable state"
+    ) && passed;
+
+    var equipment_read_model = skill_get_read_model(
+        SkillId.HEAVY_EQUIPMENT,
+        game_state_create_default()
+    );
+    passed = player_menu_test_expect(
+        !is_undefined(equipment_read_model.next_unlock)
+        && equipment_read_model.next_unlock.level == 2
+        && equipment_read_model.next_unlock.title
+            == "Utility Vehicle Winches",
+        "the Skills menu previews the next authored skill unlock"
     ) && passed;
 
     var map_layout = map_get_layout(1280, 720, 1280, 720);

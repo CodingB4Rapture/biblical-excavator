@@ -38,7 +38,7 @@ function task_get_definition(_task_id)
             return {
                 quest_id: QuestId.FIRM_FOUNDATION,
                 title: "Fit the Winch",
-                summary: "Collect the delivered attachment and install it on the skidsteer.",
+                summary: "Use Heavy Equipment Level 2 to install the delivered winch attachment on the skidsteer.",
                 completion_summary: "The skidsteer was fitted with a working winch.",
                 reward_labels: ["Access to Skidsteer"],
                 rewards: []
@@ -90,8 +90,17 @@ function task_get_definition(_task_id)
                 title: "Build the Cabin Boundary",
                 summary: "Mill the delivered timber, retrieve the finished fence pieces, and fill the selected site's silhouette piece by piece.",
                 completion_summary: "The selected cabin site now has its complete boundary and front gate.",
-                reward_labels: ["Cabin Construction", "Build Practice"],
-                rewards: []
+                reward_labels: [
+                    "Cabin Construction",
+                    "50 Woodwork XP"
+                ],
+                rewards: [
+                    task_reward_skill_xp(
+                        SkillId.WOODWORK,
+                        50,
+                        "50 Woodwork XP"
+                    )
+                ]
             };
     }
 
@@ -165,6 +174,20 @@ function task_reward_home_resource(_resource_id, _amount, _label)
     return {
         type: TaskRewardType.HOME_RESOURCE,
         resource_id: _resource_id,
+        amount: max(0, floor(_amount)),
+        label: _label
+    };
+}
+
+function task_reward_skill_xp(
+    _skill_id,
+    _amount,
+    _label
+)
+{
+    return {
+        type: TaskRewardType.SKILL_XP,
+        skill_id: _skill_id,
         amount: max(0, floor(_amount)),
         label: _label
     };

@@ -1,6 +1,6 @@
 /// Pure save-data migrations. These functions only transform plain structs.
 
-#macro SAVE_FORMAT_CURRENT 5
+#macro SAVE_FORMAT_CURRENT 9
 #macro SAVE_V2_TASK_COUNT 6
 
 function save_migrate_v1_to_v2(_data)
@@ -189,6 +189,8 @@ function save_migrate_v1_to_v2(_data)
         scene.dialogue_pages = [];
     if (!variable_struct_exists(scene, "dialogue_page_index"))
         scene.dialogue_page_index = 0;
+    if (!variable_struct_exists(scene, "dialogue_choice_index"))
+        scene.dialogue_choice_index = 0;
     if (!variable_struct_exists(scene, "dialogue_speaker"))
         scene.dialogue_speaker = "";
     if (!variable_struct_exists(scene, "dialogue_style"))
@@ -417,6 +419,356 @@ function save_migrate_v4_to_v5(_data)
     return _data;
 }
 
+/// Version six introduces the append-only skill XP array and durable authored
+/// cutscene checkpoints. Existing saves retain equipment XP and do not replay
+/// story presentations whose durable outcomes already happened.
+function save_migrate_v5_to_v6(_data)
+{
+    if (!is_struct(_data)
+    || !variable_struct_exists(_data, "game_state")
+    || !is_struct(_data.game_state))
+    {
+        return undefined;
+    }
+
+    var saved_state = _data.game_state;
+    var equipment_xp =
+        variable_struct_exists(saved_state, "equipment_xp")
+        && is_numeric(saved_state.equipment_xp)
+            ? max(0, floor(saved_state.equipment_xp))
+            : 0;
+    saved_state.skill_xp = skill_state_create_default_xp();
+    saved_state.skill_xp[SkillId.HEAVY_EQUIPMENT] = equipment_xp;
+
+    var intro_complete =
+        variable_struct_exists(saved_state, "tutorial_intro_seen")
+        && saved_state.tutorial_intro_seen;
+    if (variable_struct_exists(saved_state, "tutorial_stage")
+    && saved_state.tutorial_stage != TutorialStage.TALK_TO_FARMER)
+    {
+        intro_complete = true;
+    }
+    var axe_complete =
+        variable_struct_exists(saved_state, "tools")
+        && is_struct(saved_state.tools)
+        && variable_struct_exists(saved_state.tools, "axe_owned")
+        && saved_state.tools.axe_owned;
+    saved_state.cutscene_records = [
+        cutscene_record_create(
+            CUTSCENE_INTRO_RESCUE,
+            intro_complete
+                ? CutsceneStatus.COMPLETE
+                : CutsceneStatus.NOT_STARTED
+        ),
+        cutscene_record_create(
+            CUTSCENE_AXE_HANDOFF,
+            axe_complete
+                ? CutsceneStatus.COMPLETE
+                : CutsceneStatus.NOT_STARTED
+        )
+    ];
+
+    _data.format_version = 6;
+    return _data;
+}
+
+/// Version seven credits the Toolmanship XP attached to completed tutorial
+/// gathering and axe work.
+function save_migrate_v6_to_v7(_data)
+{
+    if (!is_struct(_data)
+    || !variable_struct_exists(_data, "game_state")
+    || !is_struct(_data.game_state))
+    {
+        return undefined;
+    }
+
+    var saved_state = _data.game_state;
+    if (!variable_struct_exists(saved_state, "skill_xp")
+    || !is_array(saved_state.skill_xp))
+    {
+        saved_state.skill_xp = skill_state_create_default_xp();
+    }
+    while (array_length(saved_state.skill_xp) < SkillId.COUNT)
+        array_push(saved_state.skill_xp, 0);
+
+    var gathered_stones =
+        variable_struct_exists(
+            saved_state,
+            "tutorial_fieldstones_collected"
+        )
+        && is_numeric(saved_state.tutorial_fieldstones_collected)
+            ? clamp(
+                floor(saved_state.tutorial_fieldstones_collected),
+                0,
+                6
+            )
+            : 0;
+    var minimum_toolmanship_xp = gathered_stones * 15;
+
+    var has_axe =
+        variable_struct_exists(saved_state, "tools")
+        && is_struct(saved_state.tools)
+        && variable_struct_exists(saved_state.tools, "axe_owned")
+        && saved_state.tools.axe_owned;
+    if (has_axe)
+        minimum_toolmanship_xp = max(minimum_toolmanship_xp, 90);
+
+    if (variable_struct_exists(saved_state, "tutorial_stage")
+    && tutorial_stage_rank(saved_state.tutorial_stage) >= 4)
+    {
+        minimum_toolmanship_xp = max(minimum_toolmanship_xp, 115);
+    }
+
+    saved_state.skill_xp[SkillId.TOOLMANSHIP] = max(
+        is_numeric(saved_state.skill_xp[SkillId.TOOLMANSHIP])
+            ? floor(saved_state.skill_xp[SkillId.TOOLMANSHIP])
+            : 0,
+        minimum_toolmanship_xp
+    );
+
+    _data.format_version = 7;
+    return _data;
+}
+
+/// Version eight moves Utility Vehicle Winches to Heavy Equipment Level 2 and
+/// adds the durable axe-notching choice introduced at Toolmanship Level 2.
+function save_migrate_v7_to_v8(_data)
+{
+    if (!is_struct(_data)
+    || !variable_struct_exists(_data, "game_state")
+    || !is_struct(_data.game_state))
+    {
+        return undefined;
+    }
+
+    var saved_state = _data.game_state;
+    if (!variable_struct_exists(saved_state, "skill_xp")
+    || !is_array(saved_state.skill_xp))
+    {
+        saved_state.skill_xp = skill_state_create_default_xp();
+    }
+    while (array_length(saved_state.skill_xp) < SkillId.COUNT)
+        array_push(saved_state.skill_xp, 0);
+
+    var crushed_fieldrocks =
+        variable_struct_exists(
+            saved_state,
+            "tutorial_fieldrocks_crushed"
+        )
+        && is_numeric(saved_state.tutorial_fieldrocks_crushed)
+            ? clamp(
+                floor(saved_state.tutorial_fieldrocks_crushed),
+                0,
+                10
+            )
+            : 0;
+    var minimum_equipment_xp = crushed_fieldrocks * 10;
+    if (variable_struct_exists(saved_state, "tutorial_stage")
+    && tutorial_stage_rank(saved_state.tutorial_stage) >= 6)
+    {
+        minimum_equipment_xp = max(
+            minimum_equipment_xp,
+            skill_xp_for_level(2)
+        );
+    }
+    if (variable_struct_exists(saved_state, "winch_attachment_state")
+    && saved_state.winch_attachment_state != AttachmentState.LOCKED)
+    {
+        minimum_equipment_xp = max(
+            minimum_equipment_xp,
+            skill_xp_for_level(2)
+        );
+    }
+
+    saved_state.skill_xp[SkillId.HEAVY_EQUIPMENT] = max(
+        is_numeric(saved_state.skill_xp[SkillId.HEAVY_EQUIPMENT])
+            ? floor(saved_state.skill_xp[SkillId.HEAVY_EQUIPMENT])
+            : 0,
+        minimum_equipment_xp
+    );
+    saved_state.equipment_xp = max(
+        variable_struct_exists(saved_state, "equipment_xp")
+        && is_numeric(saved_state.equipment_xp)
+            ? floor(saved_state.equipment_xp)
+            : 0,
+        saved_state.skill_xp[SkillId.HEAVY_EQUIPMENT]
+    );
+
+    if (!variable_struct_exists(saved_state, "tools")
+    || !is_struct(saved_state.tools))
+    {
+        saved_state.tools = {axe_owned: false};
+    }
+    if (!variable_struct_exists(
+        saved_state.tools,
+        "axe_notching_preference"
+    ))
+    {
+        saved_state.tools.axe_notching_preference =
+            AxeNotchingPreference.UNDECIDED;
+    }
+    if (!variable_struct_exists(saved_state.tools, "axe_notch_count"))
+        saved_state.tools.axe_notch_count = 0;
+    saved_state.tools.axe_notching_prompt_pending =
+        saved_state.tools.axe_notching_preference
+            == AxeNotchingPreference.UNDECIDED
+        && skill_level_from_xp(
+            SkillId.TOOLMANSHIP,
+            saved_state.skill_xp[SkillId.TOOLMANSHIP]
+        ) >= 2;
+
+    // Replace the short-lived development version of this active level-up if
+    // a save happened while its old Toolmanship winch page was onscreen.
+    if (variable_struct_exists(_data, "scene")
+    && is_struct(_data.scene)
+    && variable_struct_exists(_data.scene, "dialogue_speaker")
+    && _data.scene.dialogue_speaker == "SKILL LEVEL UP"
+    && variable_struct_exists(_data.scene, "dialogue_pages")
+    && is_array(_data.scene.dialogue_pages))
+    {
+        var old_winch_page_found = false;
+        for (var page_index = 0;
+            page_index < array_length(_data.scene.dialogue_pages);
+            page_index++)
+        {
+            if (string_pos(
+                "Utility Vehicle Winches",
+                dialogue_page_text(_data.scene.dialogue_pages[page_index])
+            ) > 0)
+            {
+                old_winch_page_found = true;
+            }
+        }
+        if (old_winch_page_found)
+        {
+            _data.scene.dialogue_pages = skill_levelup_pages(
+                SkillId.TOOLMANSHIP,
+                2
+            );
+            _data.scene.dialogue_page_index = 0;
+            _data.scene.dialogue_choice_index = 0;
+        }
+    }
+
+    _data.format_version = 8;
+    return _data;
+}
+
+/// Version nine inserts the post-cabin water lesson. Established homesteads
+/// keep their unlocked day loop; cabins still waiting on their first rest
+/// resume at the Farmer's water-supply visit.
+function save_migrate_v8_to_v9(_data)
+{
+    if (!is_struct(_data)
+    || !variable_struct_exists(_data, "game_state")
+    || !is_struct(_data.game_state))
+    {
+        return undefined;
+    }
+
+    var saved_state = _data.game_state;
+    var cabin_built =
+        variable_struct_exists(saved_state, "cabin_built")
+        && saved_state.cabin_built;
+    var day_number =
+        variable_struct_exists(saved_state, "day_number")
+        && is_numeric(saved_state.day_number)
+            ? max(1, floor(saved_state.day_number))
+            : 1;
+    var hub_open =
+        variable_struct_exists(saved_state, "homestead_stage")
+        && saved_state.homestead_stage == HomesteadStage.HUB_OPEN;
+    var water_complete = cabin_built
+        && (hub_open || day_number > 1);
+
+    saved_state.water_tank_amount = water_complete
+        ? WATER_TANK_START_AMOUNT + 1
+        : WATER_TANK_START_AMOUNT;
+    saved_state.water_tutorial_stage =
+        !cabin_built
+            ? WaterTutorialStage.LOCKED
+            : (
+                water_complete
+                    ? WaterTutorialStage.COMPLETE
+                    : WaterTutorialStage.ACTIVE
+            );
+    if (cabin_built && !water_complete)
+    {
+        saved_state.homestead_stage =
+            HomesteadStage.WATER_SUPPLY_REQUIRED;
+    }
+
+    if (!variable_struct_exists(saved_state, "cutscene_records")
+    || !is_array(saved_state.cutscene_records))
+    {
+        saved_state.cutscene_records = [];
+    }
+    var water_record_index = -1;
+    for (var record_index = 0;
+        record_index < array_length(saved_state.cutscene_records);
+        record_index++)
+    {
+        var record = saved_state.cutscene_records[record_index];
+        if (is_struct(record)
+        && variable_struct_exists(record, "id")
+        && record.id == CUTSCENE_WATER_SUPPLY)
+        {
+            water_record_index = record_index;
+            break;
+        }
+    }
+    var water_cutscene_status = water_complete
+        ? CutsceneStatus.COMPLETE
+        : (
+            cabin_built
+                ? CutsceneStatus.ACTIVE
+                : CutsceneStatus.NOT_STARTED
+        );
+    if (water_record_index < 0)
+    {
+        array_push(
+            saved_state.cutscene_records,
+            cutscene_record_create(
+                CUTSCENE_WATER_SUPPLY,
+                water_cutscene_status
+            )
+        );
+    }
+    else
+    {
+        saved_state.cutscene_records[water_record_index].status =
+            water_cutscene_status;
+        saved_state.cutscene_records[water_record_index].checkpoint = 0;
+    }
+
+    var inventory_fields = [
+        "player_inventory",
+        "home_inventory",
+        "finished_crafts_inventory"
+    ];
+    for (var field_index = 0;
+        field_index < array_length(inventory_fields);
+        field_index++)
+    {
+        var field_name = inventory_fields[field_index];
+        if (!variable_struct_exists(saved_state, field_name)
+        || !is_array(saved_state[$ field_name]))
+        {
+            saved_state[$ field_name] =
+                array_create(ResourceId.COUNT, 0);
+        }
+        while (array_length(saved_state[$ field_name])
+            < ResourceId.COUNT)
+        {
+            array_push(saved_state[$ field_name], 0);
+        }
+    }
+
+    _data.format_version = 9;
+    return _data;
+}
+
 function save_migrate_to_current(_data)
 {
     if (!is_struct(_data)
@@ -427,7 +779,7 @@ function save_migrate_to_current(_data)
     }
 
     var safety = 0;
-    while (_data.format_version < SAVE_FORMAT_CURRENT && safety < 8)
+    while (_data.format_version < SAVE_FORMAT_CURRENT && safety < 9)
     {
         switch (_data.format_version)
         {
@@ -445,6 +797,22 @@ function save_migrate_to_current(_data)
 
             case 4:
                 _data = save_migrate_v4_to_v5(_data);
+                break;
+
+            case 5:
+                _data = save_migrate_v5_to_v6(_data);
+                break;
+
+            case 6:
+                _data = save_migrate_v6_to_v7(_data);
+                break;
+
+            case 7:
+                _data = save_migrate_v7_to_v8(_data);
+                break;
+
+            case 8:
+                _data = save_migrate_v8_to_v9(_data);
                 break;
 
             default:
@@ -481,6 +849,8 @@ function save_migrate_to_current(_data)
         scene.dialogue_pages = [];
     if (!variable_struct_exists(scene, "dialogue_page_index"))
         scene.dialogue_page_index = 0;
+    if (!variable_struct_exists(scene, "dialogue_choice_index"))
+        scene.dialogue_choice_index = 0;
     if (!variable_struct_exists(scene, "dialogue_speaker"))
         scene.dialogue_speaker = "";
     if (!variable_struct_exists(scene, "dialogue_completion_action"))

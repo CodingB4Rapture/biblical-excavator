@@ -1,6 +1,7 @@
 /// obj_main_menu - Create Event
 
 progression_announcement_reset();
+skill_levelup_queue_reset();
 
 var run_fence_tests = environment_get_variable("BIBLICAL_FENCE_TESTS") == "1";
 var run_task_tests = environment_get_variable("BIBLICAL_TASK_TESTS") == "1";
@@ -64,7 +65,7 @@ menu_show_main = function()
 {
     menu_screen = "main";
     menu_buttons = [
-        {label: "NEW GAME", description: "Begin a fresh farmhand application.", action: "new_game"},
+        {label: "NEW GAME", description: "Begin a new life at the homestead.", action: "new_game"},
         {label: "CONTINUE", description: save_slot_exists() ? "Continue from the last save." : "No save exists yet.", action: "continue"},
         {label: "SETTINGS", description: "Adjust fullscreen and master volume.", action: "settings"},
         {label: "QUIT", description: "Close the game.", action: "quit"}

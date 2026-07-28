@@ -100,7 +100,9 @@ enum TaskStatus
 enum TaskRewardType
 {
     EQUIPMENT_XP = 0,
-    HOME_RESOURCE = 1
+    HOME_RESOURCE = 1,
+    // Append-only: task definitions may persist this descriptor in future.
+    SKILL_XP = 2
 }
 
 /// Stable string IDs are persisted when a dialogue is saved mid-conversation.
@@ -110,6 +112,8 @@ enum TaskRewardType
 #macro DIALOGUE_ACTION_UNLOCK_CABIN "tutorial.unlock_cabin.v1"
 #macro DIALOGUE_ACTION_BEGIN_CABIN "tutorial.begin_cabin.v1"
 #macro DIALOGUE_ACTION_MOVE_CABIN "tutorial.move_cabin.v1"
+#macro DIALOGUE_ACTION_ENABLE_AXE_NOTCHING "skills.axe_notching.enable.v1"
+#macro DIALOGUE_ACTION_DISABLE_AXE_NOTCHING "skills.axe_notching.disable.v1"
 
 enum CameraMode
 {
@@ -130,6 +134,7 @@ enum ResourceId
     FENCE_CORNER = 6,
     FENCE_GATE = 7,
     EMPTY_BUCKET = 8,
+    WATER_BUCKET = 9,
     COUNT
 }
 
@@ -171,9 +176,18 @@ enum PullableState
 
 enum HomesteadStage
 {
-    TUTORIAL,
-    FIRST_REST_REQUIRED,
-    HUB_OPEN
+    TUTORIAL = 0,
+    FIRST_REST_REQUIRED = 1,
+    HUB_OPEN = 2,
+    // Appended so existing save values remain stable.
+    WATER_SUPPLY_REQUIRED = 3
+}
+
+enum WaterTutorialStage
+{
+    LOCKED = 0,
+    ACTIVE = 1,
+    COMPLETE = 2
 }
 
 enum FenceNeighbor
@@ -235,11 +249,60 @@ enum ProductionInputSource
     CARRIED = 1
 }
 
+enum SkillId
+{
+    // Append-only: skill XP is persisted by numeric ID.
+    HEAVY_EQUIPMENT = 0,
+    TOOLMANSHIP = 1,
+    WOODWORK = 2,
+    COUNT = 3
+}
+
+enum AxeNotchingPreference
+{
+    UNDECIDED = 0,
+    ENABLED = 1,
+    DISABLED = 2
+}
+
+enum CutsceneStatus
+{
+    NOT_STARTED = 0,
+    ACTIVE = 1,
+    COMPLETE = 2
+}
+
+enum CutsceneStepType
+{
+    LOCK_INPUT,
+    FADE,
+    CAPTION,
+    REPOSITION_ACTOR,
+    MOVE_ACTOR,
+    CAMERA_FOCUS,
+    DIALOGUE,
+    WAIT,
+    COMMAND,
+    CHECKPOINT,
+    COMPLETE
+}
+
 #macro FENCE_PURPOSE_CABIN_SITE "cabin_site"
 #macro FENCE_PURPOSE_FREE_BUILD "free_build"
 
 #macro PRODUCTION_MACHINE_SAWMILL "room1.sawmill"
 #macro PRODUCTION_MACHINE_LATHE "room1.lathe"
+
+#macro CUTSCENE_INTRO_RESCUE "story.intro_farmer_rescue.v1"
+#macro CUTSCENE_AXE_HANDOFF "story.farmer_axe_handoff.v1"
+#macro CUTSCENE_WATER_SUPPLY "story.farmer_water_supply.v1"
+#macro CUTSCENE_ACTOR_PLAYER "actor.player"
+#macro CUTSCENE_ACTOR_FARMER "actor.farmer"
+#macro CUTSCENE_COMMAND_FINISH_INTRO "progression.finish_farmer_intro.v1"
+#macro CUTSCENE_COMMAND_GIVE_FARMERS_AXE "progression.give_farmers_axe.v1"
+#macro CUTSCENE_COMMAND_BEGIN_WATER_TUTORIAL "progression.begin_water_tutorial.v1"
+
+#macro SKILL_UNLOCK_UTILITY_VEHICLE_WINCH "heavy_equipment.utility_vehicle_winch.v1"
 
 #macro PLAYER_FIELDSTONE_CAPACITY 6
 #macro PLAYER_TIMBER_PLANK_CAPACITY 8
@@ -247,5 +310,7 @@ enum ProductionInputSource
 #macro PLAYER_FENCE_CORNER_CAPACITY 8
 #macro PLAYER_FENCE_GATE_CAPACITY 4
 #macro PLAYER_BUCKET_CAPACITY 4
+#macro WATER_TANK_CAPACITY 40
+#macro WATER_TANK_START_AMOUNT 10
 #macro VEHICLE_FIELDSTONE_CAPACITY 10
 

@@ -1,6 +1,6 @@
 /// obj_skidsteer - Step Event
 
-if (gameplay_is_paused()) exit;
+if (gameplay_is_paused() || cutscene_is_active()) exit;
 
 if (dialogue_is_active())
 {

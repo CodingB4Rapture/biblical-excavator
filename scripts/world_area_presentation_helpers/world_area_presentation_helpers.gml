@@ -2,6 +2,8 @@
 
 function world_area_draw_enter_banner(_controller)
 {
+    if (cutscene_is_active()) return false;
+
     if (_controller.banner_timer <= 0) return;
 
     var gui_w = display_get_gui_width();

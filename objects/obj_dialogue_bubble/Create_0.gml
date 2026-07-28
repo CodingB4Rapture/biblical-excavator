@@ -2,6 +2,7 @@
 
 pages = [""];
 page_index = 0;
+choice_index = 0;
 follow_target = noone;
 notification_style = NotificationStyle.MEMORY;
 speaker_name = "HOMESTEAD";

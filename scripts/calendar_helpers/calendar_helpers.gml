@@ -183,6 +183,17 @@ function cabin_sleep_until_morning(_actor = noone)
 {
     var game_state = game_state_ensure();
 
+    if (game_state.homestead_stage
+        == HomesteadStage.WATER_SUPPLY_REQUIRED)
+    {
+        notification_show_hint(
+            "You are too thirsty to rest. Fill one bucket at the pond and add it to the water tank.",
+            game_get_speed(gamespeed_fps) * 4,
+            false
+        );
+        return false;
+    }
+
     if (game_state.homestead_stage == HomesteadStage.FIRST_REST_REQUIRED)
     {
         if (task_get_status(TaskId.PLACE_CABIN) != TaskStatus.CLAIMED)

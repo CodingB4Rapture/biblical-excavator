@@ -5,6 +5,49 @@ function dialogue_is_active()
     return instance_exists(obj_dialogue_bubble);
 }
 
+function dialogue_page_text(_page)
+{
+    if (is_struct(_page)
+    && variable_struct_exists(_page, "text"))
+    {
+        return string(_page.text);
+    }
+    return string(_page);
+}
+
+function dialogue_page_choices(_page)
+{
+    if (is_struct(_page)
+    && variable_struct_exists(_page, "choices")
+    && is_array(_page.choices))
+    {
+        return _page.choices;
+    }
+    return [];
+}
+
+function dialogue_choice_get_rect(
+    _layout,
+    _choice_index,
+    _choice_count
+)
+{
+    var gap = 10;
+    var total_width = max(1, _layout.text_right - _layout.text_left);
+    var choice_width = (
+        total_width - gap * max(0, _choice_count - 1)
+    ) / max(1, _choice_count);
+    var left = _layout.text_left
+        + _choice_index * (choice_width + gap);
+    var top = _layout.panel_bottom - _layout.inner_padding - 30;
+    return {
+        left: left,
+        top: top,
+        right: left + choice_width,
+        bottom: top + 24
+    };
+}
+
 function dialogue_get_active_layout()
 {
     var bubble = instance_find(obj_dialogue_bubble, 0);
@@ -20,7 +63,13 @@ function dialogue_get_active_layout()
         0,
         array_length(bubble.pages) - 1
     );
-    return dialogue_get_layout(bubble.pages[active_page]);
+    var page = bubble.pages[active_page];
+    return dialogue_get_layout(
+        dialogue_page_text(page),
+        -1,
+        -1,
+        array_length(dialogue_page_choices(page))
+    );
 }
 
 function dialogue_advance_pressed()
@@ -81,6 +130,17 @@ function dialogue_get_palette(_speaker_name)
             palette.shirt = make_color_rgb(86, 106, 125);
             break;
         }
+
+        case "SKILL LEVEL UP":
+        {
+            palette.panel_color = make_color_rgb(24, 39, 42);
+            palette.border_dark = make_color_rgb(45, 84, 82);
+            palette.border_gold = make_color_rgb(117, 218, 184);
+            palette.text_color = make_color_rgb(220, 247, 232);
+            palette.prompt_color = make_color_rgb(154, 231, 202);
+            palette.portrait_bg = make_color_rgb(34, 57, 58);
+            break;
+        }
     }
 
     return palette;
@@ -92,6 +152,18 @@ function dialogue_get_portrait_descriptor(_speaker_name)
 {
     switch (_speaker_name)
     {
+        case "SKILL LEVEL UP":
+        {
+            return {
+                sprite: spr_skills_button,
+                frame: 0,
+                source_x: 0,
+                source_y: 0,
+                source_width: 32,
+                source_height: 32
+            };
+        }
+
         case "FARMER":
         {
             return {
@@ -127,10 +199,15 @@ function dialogue_get_portrait_descriptor(_speaker_name)
     };
 }
 
-function dialogue_get_layout(_body_text)
+function dialogue_get_layout(
+    _body_text,
+    _gui_w = -1,
+    _gui_h = -1,
+    _choice_count = 0
+)
 {
-    var gui_w = display_get_gui_width();
-    var gui_h = display_get_gui_height();
+    var gui_w = _gui_w < 0 ? display_get_gui_width() : _gui_w;
+    var gui_h = _gui_h < 0 ? display_get_gui_height() : _gui_h;
     var margin = 22;
     var trip_hud = instance_find(obj_gui_trip_status, 0);
     var info_width = instance_exists(trip_hud)
@@ -179,6 +256,7 @@ function dialogue_get_layout(_body_text)
     var prompt_height = 18;
     var body_top = speaker_top + speaker_height + 10;
     var body_bottom = panel_bottom - inner_padding - prompt_height - 8;
+    if (_choice_count > 0) body_bottom -= 24;
     var body_width = max(220, text_right - text_left);
     var body_line_sep = font_get_size(dialogue_font) + 10;
 
@@ -391,6 +469,12 @@ function dialogue_action_normalize(_action)
         case "move_cabin_site":
         case DIALOGUE_ACTION_MOVE_CABIN:
             return DIALOGUE_ACTION_MOVE_CABIN;
+
+        case DIALOGUE_ACTION_ENABLE_AXE_NOTCHING:
+            return DIALOGUE_ACTION_ENABLE_AXE_NOTCHING;
+
+        case DIALOGUE_ACTION_DISABLE_AXE_NOTCHING:
+            return DIALOGUE_ACTION_DISABLE_AXE_NOTCHING;
     }
 
     return "";
@@ -429,6 +513,14 @@ function dialogue_run_completion_action(_action)
 
         case DIALOGUE_ACTION_MOVE_CABIN:
             cabin_begin_placement(true);
+            break;
+
+        case DIALOGUE_ACTION_ENABLE_AXE_NOTCHING:
+            skill_set_axe_notching_preference(true);
+            break;
+
+        case DIALOGUE_ACTION_DISABLE_AXE_NOTCHING:
+            skill_set_axe_notching_preference(false);
             break;
     }
 }

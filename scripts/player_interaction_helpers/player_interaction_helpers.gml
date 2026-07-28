@@ -10,10 +10,24 @@ function input_move_x()
     );
 }
 
+function input_move_down_from_state(
+    _s_down,
+    _down_arrow_down,
+    _shift_down
+)
+{
+    return _down_arrow_down || (_s_down && !_shift_down);
+}
+
 function input_move_y()
 {
+    var move_down = input_move_down_from_state(
+        keyboard_check(ord("S")),
+        keyboard_check(vk_down),
+        keyboard_check(vk_shift)
+    );
     return clamp(
-        keyboard_check(ord("S")) + keyboard_check(vk_down)
+        move_down
             - keyboard_check(ord("W")) - keyboard_check(vk_up),
         -1,
         1

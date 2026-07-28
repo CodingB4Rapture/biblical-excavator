@@ -606,7 +606,13 @@ function skidsteer_get_interaction_prompt(_vehicle, _actor)
 
     if (game_state.winch_attachment_state == AttachmentState.STORED_AT_HOME)
     {
-        return "Install winch attachment";
+        return skill_unlock_is_available_state(
+            game_state,
+            SkillId.HEAVY_EQUIPMENT,
+            SKILL_UNLOCK_UTILITY_VEHICLE_WINCH
+        )
+            ? "Install winch attachment"
+            : "Requires Heavy Equipment Level 2";
     }
 
     if (_vehicle.winch_state == WinchState.CABLE_IN_HAND
