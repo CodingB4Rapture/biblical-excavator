@@ -122,6 +122,7 @@ function progression_accept_task_state(_task_id, _game_state)
         case TaskId.PLACE_CABIN:
             if (!_game_state.cabin_placement_unlocked
             || !_game_state.cabin_site_placed
+            || !_game_state.cabin_fence_marked
             || _game_state.cabin_built)
                 return false;
             break;
@@ -136,6 +137,13 @@ function progression_accept_task_state(_task_id, _game_state)
         case TaskId.MARK_CABIN_SITE:
             if (!_game_state.cabin_placement_unlocked
             || !_game_state.skidsteer_parked
+            || _game_state.cabin_built)
+                return false;
+            break;
+
+        case TaskId.BUILD_CABIN_FENCE:
+            if (!_game_state.cabin_site_placed
+            || _game_state.cabin_fence_marked
             || _game_state.cabin_built)
                 return false;
             break;
@@ -248,31 +256,6 @@ function progression_record_cabin_site_state(
     return true;
 }
 
-function progression_take_cabin_site_flag_state(
-    _game_state,
-    _site_id,
-    _corner_index
-)
-{
-    if (!is_real(_corner_index)) return false;
-
-    var corner_index = round(_corner_index);
-    if (corner_index < 0
-    || corner_index > 3
-    || !task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
-    || !_game_state.cabin_site_placed
-    || _game_state.cabin_fence_marked
-    || _game_state.cabin_selected_site_id != _site_id)
-    {
-        return false;
-    }
-
-    _game_state.cabin_site_flags_taken =
-        _game_state.cabin_site_flags_taken
-        | cabin_site_flag_bit(corner_index);
-    return true;
-}
-
 function progression_complete_skidsteer_parking_state(_game_state)
 {
     if (!task_is_active(TaskId.PARK_SKIDSTEER, _game_state))
@@ -287,7 +270,7 @@ function progression_complete_skidsteer_parking_state(_game_state)
 
 function progression_complete_cabin_fence_state(_game_state)
 {
-    if (!task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
+    if (!task_is_active(TaskId.BUILD_CABIN_FENCE, _game_state)
     || !_game_state.cabin_site_placed
     || _game_state.cabin_built)
     {
@@ -296,22 +279,7 @@ function progression_complete_cabin_fence_state(_game_state)
 
     _game_state.cabin_fence_marked = true;
     return progression_complete_task_state(
-        TaskId.MARK_CABIN_SITE,
-        _game_state
-    );
-}
-
-function progression_complete_cabin_site_selection_state(_game_state)
-{
-    if (!task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
-    || !_game_state.cabin_site_placed
-    || _game_state.cabin_built)
-    {
-        return false;
-    }
-
-    return progression_complete_task_state(
-        TaskId.MARK_CABIN_SITE,
+        TaskId.BUILD_CABIN_FENCE,
         _game_state
     );
 }
@@ -323,7 +291,11 @@ function progression_choose_cabin_site_state(
 )
 {
     if (!task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
-    || is_undefined(_definition))
+    || !_game_state.cabin_placement_unlocked
+    || is_undefined(_definition)
+    || !is_numeric(_corner_index)
+    || _corner_index < 0
+    || _corner_index > 3)
     {
         return false;
     }
@@ -349,25 +321,48 @@ function progression_choose_cabin_site_state(
     );
 }
 
+/// Repairs the exact v4 half-selection produced by the old split transaction:
+/// the authored site was saved, but the flag bit was normalized back to zero
+/// before the marking task could complete.
+function progression_repair_cabin_site_selection_state(_game_state)
+{
+    if (!task_is_active(TaskId.MARK_CABIN_SITE, _game_state)
+    || !_game_state.cabin_site_placed
+    || _game_state.cabin_fence_marked
+    || _game_state.cabin_built)
+    {
+        return false;
+    }
+
+    var definition = cabin_site_definition(
+        _game_state.cabin_selected_site_id
+    );
+    if (is_undefined(definition)) return false;
+
+    _game_state.cabin_site_room = definition.room_name;
+    _game_state.cabin_site_x = definition.x;
+    _game_state.cabin_site_y = definition.y;
+    if (_game_state.cabin_site_flags_taken == 0)
+    {
+        _game_state.cabin_site_flags_taken = cabin_site_flag_bit(0);
+    }
+
+    return progression_complete_task_state(
+        TaskId.MARK_CABIN_SITE,
+        _game_state
+    );
+}
+
 function progression_build_cabin_state(_game_state)
 {
     if (!task_is_active(TaskId.PLACE_CABIN, _game_state)
     || !_game_state.cabin_site_placed
     || !_game_state.cabin_fence_marked
-    || _game_state.cabin_built
-    || inventory_get_amount(
-        _game_state.player_inventory,
-        ResourceId.TIMBER_PLANK
-    ) < CABIN_TIMBER_PLANK_COST)
+    || _game_state.cabin_built)
     {
         return false;
     }
 
-    inventory_remove(
-        _game_state.player_inventory,
-        ResourceId.TIMBER_PLANK,
-        CABIN_TIMBER_PLANK_COST
-    );
     _game_state.cabin_built = true;
     _game_state.homestead_stage = HomesteadStage.FIRST_REST_REQUIRED;
     return progression_complete_task_state(
@@ -464,6 +459,13 @@ function progression_apply_task_claim_effects(_task_id, _game_state)
 
         case TaskId.MARK_CABIN_SITE:
             progression_make_task_available(
+                TaskId.BUILD_CABIN_FENCE,
+                _game_state
+            );
+            break;
+
+        case TaskId.BUILD_CABIN_FENCE:
+            progression_make_task_available(
                 TaskId.PLACE_CABIN,
                 _game_state
             );
@@ -472,6 +474,7 @@ function progression_apply_task_claim_effects(_task_id, _game_state)
         case TaskId.PLACE_CABIN:
             _game_state.quest_statuses[QuestId.PLACE_OF_YOUR_OWN] =
                 QuestStatus.COMPLETE;
+            _game_state.free_build_unlocked = true;
             break;
     }
 }

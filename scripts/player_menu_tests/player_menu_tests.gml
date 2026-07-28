@@ -26,9 +26,12 @@ function player_menu_run_tests()
             == sprite_get_width(spr_inventory_button)
         && rail.map_right - rail.map_left
             == sprite_get_width(spr_map_button)
+        && rail.build_right - rail.build_left
+            == sprite_get_width(spr_build_button)
         && rail.inventory_top > rail.quest_bottom
-        && rail.map_top > rail.inventory_bottom,
-        "the rail gives all three authored sprites separate padded hitboxes"
+        && rail.map_top > rail.inventory_bottom
+        && rail.build_top > rail.map_bottom,
+        "the rail gives all four authored sprites separate padded hitboxes"
     ) && passed;
 
     passed = player_menu_test_expect(
@@ -50,6 +53,12 @@ function player_menu_run_tests()
     var quest_model = player_menu_build_read_model(true, false, false);
     var inventory_model = player_menu_build_read_model(false, true, false);
     var map_model = player_menu_build_read_model(false, false, true);
+    var build_model = player_menu_build_read_model(
+        false,
+        false,
+        false,
+        true
+    );
     passed = player_menu_test_expect(
         closed_model.quest_frame == 0
         && closed_model.inventory_frame == 0
@@ -60,7 +69,9 @@ function player_menu_run_tests()
         && inventory_model.inventory_frame == 1
         && map_model.quest_frame == 0
         && map_model.inventory_frame == 0
-        && map_model.map_frame == 1,
+        && map_model.map_frame == 1
+        && build_model.build_frame == 1
+        && build_model.quest_frame == 0,
         "button frames derive from the active menu without durable state"
     ) && passed;
 
@@ -96,6 +107,43 @@ function player_menu_run_tests()
         && third_trip_model.heading == "Current Trip - Trip 3 of 3"
         && stump_model.heading == "Stump Recovery",
         "Trip 3 appears only during the actual log-haul trip"
+    ) && passed;
+
+    var click_state = game_state_create_default();
+    click_state.cabin_site_placed = true;
+    click_state.task_statuses[TaskId.BUILD_CABIN_FENCE] =
+        TaskStatus.ACTIVE;
+    inventory_add(
+        click_state.home_inventory,
+        ResourceId.TIMBER_LOG,
+        1
+    );
+    var click_menu = {
+        recipe_ids: [
+            ProductionRecipeId.SAW_TIMBER_PLANKS,
+            ProductionRecipeId.CUT_STRAIGHT_FENCE
+        ],
+        selected_row: -1,
+        selected_batches: 1,
+        message: ""
+    };
+    var first_click = production_menu_toggle_row(
+        click_menu,
+        0,
+        click_state
+    );
+    var locked_selection = click_menu.selected_row == 0;
+    var second_click = production_menu_toggle_row(
+        click_menu,
+        0,
+        click_state
+    );
+    passed = player_menu_test_expect(
+        first_click
+        && locked_selection
+        && second_click
+        && click_menu.selected_row == -1,
+        "workshop recipes select and deselect only through an explicit toggle"
     ) && passed;
 
     show_debug_message(

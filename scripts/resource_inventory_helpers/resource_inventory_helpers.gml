@@ -100,6 +100,78 @@ function resource_get_definition(_resource_id)
                 delivery_result_id: -1
             };
         }
+
+        case ResourceId.FENCE_STRAIGHT:
+        {
+            return {
+                name: "Straight Fence",
+                world_name: "Straight Fence",
+                category: ResourceCategory.CRAFTED,
+                size: ResourceSize.SMALL,
+                can_pocket: true,
+                can_vehicle_carry: false,
+                can_winch: false,
+                is_finished_craft: true,
+                world_sprite: spr_front_fence,
+                crush_result_id: -1,
+                crush_result_amount: 0,
+                delivery_result_id: -1
+            };
+        }
+
+        case ResourceId.FENCE_CORNER:
+        {
+            return {
+                name: "Fence Corner",
+                world_name: "Fence Corner",
+                category: ResourceCategory.CRAFTED,
+                size: ResourceSize.SMALL,
+                can_pocket: true,
+                can_vehicle_carry: false,
+                can_winch: false,
+                is_finished_craft: true,
+                world_sprite: spr_top_left_fence_corner,
+                crush_result_id: -1,
+                crush_result_amount: 0,
+                delivery_result_id: -1
+            };
+        }
+
+        case ResourceId.FENCE_GATE:
+        {
+            return {
+                name: "Fence Gate",
+                world_name: "Fence Gate",
+                category: ResourceCategory.CRAFTED,
+                size: ResourceSize.SMALL,
+                can_pocket: true,
+                can_vehicle_carry: false,
+                can_winch: false,
+                is_finished_craft: true,
+                world_sprite: spr_fence_gate,
+                crush_result_id: -1,
+                crush_result_amount: 0,
+                delivery_result_id: -1
+            };
+        }
+
+        case ResourceId.EMPTY_BUCKET:
+        {
+            return {
+                name: "Empty Bucket",
+                world_name: "Empty Bucket",
+                category: ResourceCategory.CRAFTED,
+                size: ResourceSize.SMALL,
+                can_pocket: true,
+                can_vehicle_carry: false,
+                can_winch: false,
+                is_finished_craft: true,
+                world_sprite: spr_empty_bucket,
+                crush_result_id: -1,
+                crush_result_amount: 0,
+                delivery_result_id: -1
+            };
+        }
     }
 
     return {
@@ -154,6 +226,14 @@ function inventory_create_player()
         PLAYER_FIELDSTONE_CAPACITY;
     inventory.resource_capacities[ResourceId.TIMBER_PLANK] =
         PLAYER_TIMBER_PLANK_CAPACITY;
+    inventory.resource_capacities[ResourceId.FENCE_STRAIGHT] =
+        PLAYER_FENCE_STRAIGHT_CAPACITY;
+    inventory.resource_capacities[ResourceId.FENCE_CORNER] =
+        PLAYER_FENCE_CORNER_CAPACITY;
+    inventory.resource_capacities[ResourceId.FENCE_GATE] =
+        PLAYER_FENCE_GATE_CAPACITY;
+    inventory.resource_capacities[ResourceId.EMPTY_BUCKET] =
+        PLAYER_BUCKET_CAPACITY;
     return inventory;
 }
 
@@ -167,9 +247,8 @@ function inventory_create_vehicle()
 
 function inventory_create_finished_crafts()
 {
-    var inventory = inventory_create(-1);
-    inventory.amounts[ResourceId.TIMBER_PLANK] = CABIN_TIMBER_PLANK_COST;
-    return inventory;
+    // Crafts enter this inventory only through explicit production events.
+    return inventory_create(-1);
 }
 
 function resource_get_world_name(_resource_id)

@@ -141,6 +141,118 @@ function tutorial_guidance_home_delivery(_dropoff, _requires_vehicle)
     );
 }
 
+function tutorial_guidance_skidsteer_is_parked(_vehicle)
+{
+    var pad = instance_find(obj_skidsteer_parking_pad, 0);
+    return instance_exists(_vehicle)
+        && instance_exists(pad)
+        && skidsteer_parking_pad_contains(pad, _vehicle)
+        && skidsteer_is_nearly_stopped(_vehicle)
+        && skidsteer_has_no_tow_target(_vehicle)
+        && !_vehicle.has_driver;
+}
+
+function tutorial_guidance_repark_skidsteer(_vehicle)
+{
+    var pad = instance_find(obj_skidsteer_parking_pad, 0);
+    if (!instance_exists(_vehicle))
+        return tutorial_guidance_invalid();
+    if (!instance_exists(pad))
+        return tutorial_guidance_from_instance(
+            _vehicle,
+            "PARK SKIDSTEER"
+        );
+    if (!_vehicle.has_driver
+    && !skidsteer_parking_pad_contains(pad, _vehicle))
+    {
+        return tutorial_guidance_from_instance(
+            _vehicle,
+            "GET SKIDSTEER"
+        );
+    }
+    if (_vehicle.has_driver)
+    {
+        return tutorial_guidance_from_instance(
+            pad,
+            "PARK SKIDSTEER AGAIN"
+        );
+    }
+    return tutorial_guidance_from_instance(
+        _vehicle,
+        "EXIT SKIDSTEER"
+    );
+}
+
+function tutorial_guidance_recover_timber_log(_actor)
+{
+    var vehicle = instance_find(obj_skidsteer, 0);
+    var log = tutorial_find_nearest_target(obj_log, _actor);
+    if (!instance_exists(log)) log = instance_find(obj_log, 0);
+
+    if (!instance_exists(log))
+    {
+        return tutorial_guidance_from_instance(
+            tutorial_find_nearest_target(obj_tree, _actor),
+            "CHOP ANOTHER TREE"
+        );
+    }
+    if (!instance_exists(vehicle))
+    {
+        return tutorial_guidance_from_instance(log, "TIMBER LOG");
+    }
+
+    if (vehicle.winch_state == WinchState.ATTACHED
+    && instance_exists(vehicle.winch_target)
+    && vehicle.winch_target == log)
+    {
+        return tutorial_guidance_home_delivery(
+            instance_find(obj_homebase_dropoff, 0),
+            true
+        );
+    }
+
+    var in_cable_range = point_distance(
+        winch_get_hitch_x(vehicle),
+        winch_get_hitch_y(vehicle),
+        log.x,
+        log.y
+    ) <= vehicle.winch_cable_length;
+
+    if (vehicle.winch_state == WinchState.CABLE_IN_HAND)
+    {
+        return tutorial_guidance_from_instance(
+            log,
+            "ATTACH CABLE TO LOG"
+        );
+    }
+    if (vehicle.winch_state == WinchState.STOWED)
+    {
+        if (vehicle.has_driver)
+        {
+            return tutorial_guidance_from_instance(
+                log,
+                in_cable_range
+                    ? "EXIT BESIDE LOG"
+                    : "DRIVE TO TIMBER LOG"
+            );
+        }
+        if (!in_cable_range)
+        {
+            return tutorial_guidance_from_instance(
+                vehicle,
+                "GET SKIDSTEER"
+            );
+        }
+        return tutorial_guidance_at(
+            winch_get_hitch_x(vehicle),
+            winch_get_hitch_y(vehicle),
+            "TAKE WINCH CABLE"
+        );
+    }
+
+    return tutorial_guidance_from_instance(log, "TIMBER LOG");
+}
+
 function tutorial_guidance_gui_edge(
     _target_gui_x,
     _target_gui_y,
@@ -247,17 +359,9 @@ function tutorial_guidance_target()
         var site_flag = cabin_find_guidance_flag(guidance_actor);
         if (instance_exists(site_flag))
         {
-            var flag_taken = cabin_site_flag_is_taken(
-                site_flag.site_id,
-                site_flag.corner_index,
-                game_state
-            );
             return tutorial_guidance_from_instance(
                 site_flag,
-                game_state.cabin_selected_site_id == CABIN_SITE_NONE
-                || game_state.cabin_selected_site_id == CABIN_SITE_LEGACY
-                    ? "CHOOSE ONE CABIN SITE"
-                    : (flag_taken ? "CONFIRM CABIN SITE" : "TAKE FLAG")
+                "CHOOSE ONE CABIN SITE"
             );
         }
 
@@ -274,19 +378,75 @@ function tutorial_guidance_target()
         return tutorial_guidance_invalid();
     }
 
-    if (task_is_active(TaskId.PLACE_CABIN, game_state))
+    if (task_is_active(TaskId.BUILD_CABIN_FENCE, game_state))
     {
-        if (inventory_get_amount(
-            game_state.player_inventory,
-            ResourceId.TIMBER_PLANK
-        ) < CABIN_TIMBER_PLANK_COST)
+        var build_step = production_tutorial_next_step(game_state);
+        switch (build_step.kind)
         {
-            return tutorial_guidance_from_instance(
-                instance_find(obj_finished_crafts_chest, 0),
-                "FINISHED CRAFTS"
-            );
+            case "place":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_cabin_site, 0),
+                    "FILL CABIN SILHOUETTE"
+                );
+
+            case "collect":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_finished_crafts_chest, 0),
+                    "MIDDLE FINISHED CRAFTS CHEST"
+                );
+
+            case "wait":
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_sawmill, 0),
+                    "SAWMILL IS WORKING"
+                );
+
+            case "recover_log":
+                return tutorial_guidance_recover_timber_log(
+                    guidance_actor
+                );
+
+            case "craft":
+            {
+                var build_vehicle = instance_find(obj_skidsteer, 0);
+                var is_recovery_plank_batch =
+                    build_step.target.recipe_id
+                        == ProductionRecipeId.SAW_TIMBER_PLANKS
+                    && game_state.production_completed_batches[
+                        ProductionRecipeId.SAW_TIMBER_PLANKS
+                    ] >= 1;
+                if (is_recovery_plank_batch
+                && !tutorial_guidance_skidsteer_is_parked(
+                    build_vehicle
+                ))
+                {
+                    return tutorial_guidance_repark_skidsteer(
+                        build_vehicle
+                    );
+                }
+
+                return tutorial_guidance_from_instance(
+                    instance_find(obj_sawmill, 0),
+                    "MAKE "
+                        + string(build_step.target.batches)
+                        + " "
+                        + (
+                            build_step.target.batches == 1
+                                ? "BATCH"
+                                : "BATCHES"
+                        )
+                );
+            }
         }
 
+        return tutorial_guidance_from_instance(
+            instance_find(obj_task_board, 0),
+            "CLAIM TASK"
+        );
+    }
+
+    if (task_is_active(TaskId.PLACE_CABIN, game_state))
+    {
         return tutorial_guidance_from_instance(
             instance_find(obj_cabin_site, 0),
             "CABIN SITE"

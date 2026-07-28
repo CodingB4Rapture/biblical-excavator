@@ -19,14 +19,8 @@ interaction_run = function(_actor)
     var game_state = game_state_ensure();
     if (!finished_crafts_is_available(game_state))
     {
-        var cabin_task_available = task_get_status(
-            TaskId.PLACE_CABIN,
-            game_state
-        ) == TaskStatus.AVAILABLE;
         notification_show_hint(
-            cabin_task_available
-                ? "Accept Build the Cabin at the Task Board before taking the finished planks."
-                : "The finished planks are reserved until the cabin build begins.",
+            "Finished Crafts unlocks when workshop production begins.",
             game_get_speed(gamespeed_fps) * 4,
             false
         );
@@ -37,6 +31,9 @@ interaction_run = function(_actor)
     || instance_exists(obj_task_board_menu)
     || instance_exists(obj_quest_menu)
     || instance_exists(obj_inventory_menu)
+    || instance_exists(obj_map_menu)
+    || instance_exists(obj_build_menu)
+    || instance_exists(obj_production_menu)
     || dialogue_is_active())
     {
         return;

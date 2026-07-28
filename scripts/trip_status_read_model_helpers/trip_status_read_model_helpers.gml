@@ -125,7 +125,17 @@ function trip_status_get_read_model(_game_state, _vehicle, _pocket_planks)
 {
     var model = trip_status_get_tutorial_read_model(_game_state);
 
-    if (task_is_active(TaskId.PARK_SKIDSTEER, _game_state))
+    if (task_get_status(
+        TaskId.BUILD_CABIN_FENCE,
+        _game_state
+    ) == TaskStatus.COMPLETE)
+    {
+        model = trip_status_make_read_model(
+            "Cabin Boundary",
+            "Boundary complete - return to the Task Board and claim it"
+        );
+    }
+    else if (task_is_active(TaskId.PARK_SKIDSTEER, _game_state))
     {
         model = trip_status_make_read_model(
             "Cabin Work",
@@ -138,22 +148,89 @@ function trip_status_get_read_model(_game_state, _vehicle, _pocket_planks)
     {
         model = trip_status_make_read_model(
             "Cabin Site",
-            _game_state.cabin_site_placed
-                ? (cabin_site_flag_count_taken(_game_state) > 0
-                    ? "Return to the cleared flag and press E to confirm the site"
-                    : "Take one of the selected site's corner flags")
-                : "Choose a marked site and press E at one of its flags"
+            "Choose a marked site and take one of its flags"
+        );
+    }
+    else if (task_is_active(TaskId.BUILD_CABIN_FENCE, _game_state))
+    {
+        var build_step = production_tutorial_next_step(_game_state);
+        var objective = "";
+        switch (build_step.kind)
+        {
+            case "place":
+                objective = "Press B and fill the flashing cabin silhouette ("
+                    + string(build_step.blueprint.filled)
+                    + "/"
+                    + string(build_step.blueprint.total)
+                    + ")";
+                break;
+
+            case "collect":
+                objective = "Pick up the finished pieces from the middle Finished Crafts chest";
+                break;
+
+            case "wait":
+                objective = "The sawmill is working; its completed output will be delivered automatically";
+                break;
+
+            case "recover_log":
+                objective = "Out of timber: chop another tree or recover a downed log, then tow it to Home Delivery";
+                break;
+
+            case "craft":
+            {
+                var is_recovery_plank_batch =
+                    build_step.target.recipe_id
+                        == ProductionRecipeId.SAW_TIMBER_PLANKS
+                    && _game_state.production_completed_batches[
+                        ProductionRecipeId.SAW_TIMBER_PLANKS
+                    ] >= 1;
+                var parking_pad =
+                    instance_find(obj_skidsteer_parking_pad, 0);
+                var vehicle_is_reparked =
+                    instance_exists(_vehicle)
+                    && instance_exists(parking_pad)
+                    && skidsteer_parking_pad_contains(
+                        parking_pad,
+                        _vehicle
+                    )
+                    && skidsteer_is_nearly_stopped(_vehicle)
+                    && skidsteer_has_no_tow_target(_vehicle)
+                    && !_vehicle.has_driver;
+                if (is_recovery_plank_batch && !vehicle_is_reparked)
+                {
+                    objective = "Park the skidsteer back on its pad, stop, detach, and exit";
+                }
+                else
+                {
+                    objective = "At the sawmill, select the flashing "
+                        + build_step.target.definition.name
+                        + " recipe and make "
+                        + string(build_step.target.batches)
+                        + " "
+                        + (
+                            build_step.target.batches == 1
+                                ? "batch"
+                                : "batches"
+                        );
+                }
+                break;
+            }
+
+            default:
+                objective = "Return to the Task Board and claim the completed boundary task";
+                break;
+        }
+        model = trip_status_make_read_model(
+            "Cabin Boundary",
+            objective
         );
     }
     else if (task_is_active(TaskId.PLACE_CABIN, _game_state))
     {
         model = trip_status_make_read_model(
             "Cabin Build",
-            _pocket_planks < CABIN_TIMBER_PLANK_COST
-                ? "Retrieve 4 Timber Planks from the Finished Crafts chest ("
-                    + string(_pocket_planks) + "/"
-                    + string(CABIN_TIMBER_PLANK_COST) + ")"
-                : "Take the 4 Timber Planks to the marked cabin site and press E"
+            "Go to the completed cabin site and press E to raise the cabin"
         );
     }
     else if (_game_state.homestead_stage

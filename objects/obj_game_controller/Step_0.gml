@@ -18,6 +18,13 @@ if (day_transition_active)
     exit;
 }
 
+// Q/I/M/build/machine menus pause player movement, not workshop time. The
+// actual pause overlay is the one state that freezes production.
+if (!instance_exists(obj_pause_menu))
+{
+    production_update();
+}
+
 if (gameplay_is_paused()) exit;
 
 if (variable_global_exists("save_restore_pending") && global.save_restore_pending)
@@ -77,66 +84,10 @@ if (variable_global_exists("save_new_game_pending") && global.save_new_game_pend
     global.save_new_game_pending = false;
 }
 
-if (instance_exists(obj_fence_planning_controller))
+if (instance_exists(obj_fence_planning_controller)
+|| instance_exists(obj_build_placement_controller))
 {
     exit;
-}
-
-var fence_toggle_ready = !variable_global_exists("fence_toggle_ready_at")
-    || current_time >= global.fence_toggle_ready_at;
-
-if (keyboard_check_pressed(ord("F"))
-&& fence_toggle_ready
-&& !dialogue_is_active()
-&& !instance_exists(obj_quest_menu)
-&& !instance_exists(obj_inventory_menu)
-&& !instance_exists(obj_pause_menu)
-&& !instance_exists(obj_cabin_placement_controller))
-{
-    if (fence_planning_is_unlocked())
-    {
-        if (fence_planning_is_tutorial_mode(game_state_ensure()))
-        {
-            notification_show_hint(
-                "The fence is built with the cabin. Confirm the site flag first.",
-                game_get_speed(gamespeed_fps) * 3,
-                false
-            );
-        }
-        else
-        {
-            instance_create_depth(
-                0,
-                0,
-                -800,
-                obj_fence_planning_controller
-            );
-        }
-    }
-    else
-    {
-        notification_show_hint(
-            "Fence planning unlocks when you mark the cabin site.",
-            game_get_speed(gamespeed_fps) * 3,
-            false
-        );
-    }
-    exit;
-}
-
-if (keyboard_check_pressed(ord("B")) && !instance_exists(obj_cabin_placement_controller))
-{
-    var game_state = game_state_ensure();
-    var allow_relocate = game_state.cabin_site_placed
-        && task_is_active(TaskId.MARK_CABIN_SITE, game_state)
-        && !game_state.cabin_fence_marked;
-
-    cabin_begin_placement(allow_relocate);
-
-    if (instance_exists(obj_cabin_placement_controller))
-    {
-        exit;
-    }
 }
 
 if (keyboard_check_pressed(vk_escape)

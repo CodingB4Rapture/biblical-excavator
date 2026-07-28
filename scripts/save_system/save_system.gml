@@ -84,6 +84,12 @@ function save_build_snapshot()
             cabin_site_flags_taken: game_state.cabin_site_flags_taken,
             cabin_fence_marked: game_state.cabin_fence_marked,
             cabin_built: game_state.cabin_built,
+            production_jobs:
+                save_clone_array(game_state.production_jobs),
+            production_completed_batches: save_clone_array(
+                game_state.production_completed_batches
+            ),
+            free_build_unlocked: game_state.free_build_unlocked,
             homestead_stage: game_state.homestead_stage,
             first_hub_hint_pending: game_state.first_hub_hint_pending,
             day_number: game_state.day_number,
@@ -115,6 +121,12 @@ function save_write_snapshot(_snapshot)
 
 function save_write()
 {
+    if (variable_global_exists("automated_test_mode")
+    && global.automated_test_mode)
+    {
+        return true;
+    }
+
     return save_write_snapshot(save_build_snapshot());
 }
 
@@ -197,6 +209,7 @@ function save_hydrate_game_state(_saved_state)
         "cabin_site_flags_taken",
         "cabin_fence_marked",
         "cabin_built",
+        "free_build_unlocked",
         "day_number",
         "time_of_day",
         "homestead_stage",
@@ -228,6 +241,22 @@ function save_hydrate_game_state(_saved_state)
     {
         game_state.daily_resources_gathered =
             save_clone_array(_saved_state.daily_resources_gathered);
+    }
+
+    if (variable_struct_exists(_saved_state, "production_jobs")
+    && is_array(_saved_state.production_jobs))
+    {
+        game_state.production_jobs =
+            save_clone_array(_saved_state.production_jobs);
+    }
+    if (variable_struct_exists(
+        _saved_state,
+        "production_completed_batches"
+    ) && is_array(_saved_state.production_completed_batches))
+    {
+        game_state.production_completed_batches = save_clone_array(
+            _saved_state.production_completed_batches
+        );
     }
 
     var record_fields = [

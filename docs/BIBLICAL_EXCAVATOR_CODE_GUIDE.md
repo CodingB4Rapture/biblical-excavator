@@ -2,7 +2,7 @@
 
 ## How the current early-game build works, how the systems connect, and how to add a saved feature safely
 
-Prepared from the working project source on July 21, 2026.
+Prepared from the working project source on July 28, 2026.
 
 This guide explains the current code as it exists after the first vertical slice passed its human playtest. It is a system guide, not an attempt to restate every line. The purpose is to make the project understandable enough that a new feature can be added without accidentally breaking tutorial progress, world persistence, inventory, or save compatibility.
 
@@ -55,7 +55,8 @@ Important roots:
 - `sprites/`, `fonts/`, and other asset folders - GameMaker resources.
 - `docs/` - design and implementation notes.
 
-There are currently about 8,100 lines across 99 GML event/script files. That is a modest project. Complexity comes from systems touching one another, not from raw size.
+The project remains modest in raw size. Its complexity comes from systems
+touching one another, so ownership boundaries matter more than the line count.
 
 ### Object inheritance
 
@@ -226,7 +227,12 @@ The game controller should coordinate. Detailed resource, towing, quest, or inve
 
 `gameplay_set_paused()` writes a global pause flag. Player, vehicle, tree, resource, and controller Step events check it. Dialogue and overlay objects add their own input restrictions.
 
-`obj_inventory_menu`, `obj_quest_menu`, and `obj_pause_menu` pause on creation and unpause when closed. `obj_game_controller` prevents these overlays from opening on top of one another.
+`obj_inventory_menu`, `obj_quest_menu`, and the other gameplay overlays pause
+actor input on creation and unpause when closed. Workshop production is updated
+before that gameplay-pause guard, so it continues while Q, I, M, B, machine
+menus, or dialogue are open. Only `obj_pause_menu` freezes production.
+`obj_game_controller` prevents conflicting overlays from opening on top of one
+another.
 
 ## 6. Player input, movement, collision, and interaction
 
@@ -485,8 +491,12 @@ Current order:
 6. Accept, complete, and claim `Fit the Winch`.
 7. Accept, complete, and claim `Timber Delivery`.
 8. Complete `A Firm Foundation` and start `A Place of Your Own`.
-9. Accept, place, and claim the cabin-site task.
-10. Rest at the site to open the homestead hub.
+9. Park the skidsteer and choose one of the two authored cabin sites.
+10. Take a site flag, confirm that site, and claim the marking task.
+11. Mill the delivered tree into planks and the required fence pieces.
+12. Retrieve the pieces and fill the site's boundary silhouette piece by piece.
+13. Claim the boundary task, raise the cabin, and claim the cabin task.
+14. Rest at the site to open the homestead hub.
 
 Only one board task may be active. Every task must be accepted before its
 mechanics unlock. Gameplay events complete tasks, and board claims expose the
@@ -510,7 +520,8 @@ This split matters: drawing an arrow cannot accidentally complete an objective.
 
 The quest layer gives the tutorial a durable journal presentation.
 `A Firm Foundation` contains the five resource/equipment tasks.
-`A Place of Your Own` contains the cabin-site task.
+`A Place of Your Own` contains parking, site choice, boundary construction, and
+cabin construction tasks.
 
 The quest status array stores locked, active, or complete. The journal reads these definitions and objectives; it does not own them.
 
@@ -556,7 +567,7 @@ The single JSON snapshot contains three top-level parts:
 - `scene` for current room and live actor/vehicle/dialogue placement;
 - `settings` for volume and fullscreen.
 
-The current format number is 3. Older data migrates in version order before
+The current format number is 4. Older data migrates in version order before
 hydration.
 
 ### Snapshot creation
@@ -595,7 +606,8 @@ Starting from defaults is important. It gives new fields safe values even when a
 After room instances exist, `save_restore_room_state()` restores vehicle and
 player placement, cargo, and saved dialogue. It intentionally clears live
 winch pointers and restores the mechanism stowed. The room reconciler then
-restores the cabin site, fences, and mailed winch package idempotently.
+restores the cabin site, fences, machines, and mailed winch package
+idempotently.
 
 Separating state hydration from room restoration avoids trying to move instances before the room has constructed them.
 
@@ -613,12 +625,19 @@ Do not save values that can be safely reconstructed:
 
 Save durable outcomes instead: inventory, unlocks, stages, record positions, depletion and respawn days, current room, actor position, and dialogue page.
 
-### Version-one compatibility
+### Migration compatibility
 
 `save_migrate_v1_to_v2` adds the dedicated Fieldrock counter, normalizes task
 and quest states, preserves post-stump cabin access, repairs the stored-package
 edge case, and maps saved dialogue actions to stable IDs. Compatibility is
 centralized here rather than scattered through hydration.
+
+`save_migrate_v3_to_v4` adds the boundary-construction task, the two durable
+machine-job records, per-recipe completion counters, new fence-piece fields,
+and the free-building unlock. Older completed cabins receive the completed
+boundary task. Older unfinished cabin saves return to the explicit boundary
+task and discard only the tutorial planks that the former shortcut seeded
+without production.
 
 ## 13. Resource regeneration
 
@@ -667,6 +686,10 @@ Clearance checks prevent resources from appearing inside the player, vehicle, NP
 Primary files:
 
 - `scripts/cabin_placement_helpers/cabin_placement_helpers.gml`
+- `scripts/build_definition_helpers/build_definition_helpers.gml`
+- `scripts/build_read_model_helpers/build_read_model_helpers.gml`
+- `scripts/build_command_helpers/build_command_helpers.gml`
+- `scripts/build_presentation_helpers/build_presentation_helpers.gml`
 - `scripts/fence_record_helpers/fence_record_helpers.gml`
 - `scripts/fence_topology_helpers/fence_topology_helpers.gml`
 - `scripts/fence_placement_helpers/fence_placement_helpers.gml`
@@ -674,7 +697,17 @@ Primary files:
 - `scripts/fence_planning_policy_helpers/fence_planning_policy_helpers.gml`
 - `scripts/fence_planning_controller_helpers/fence_planning_controller_helpers.gml`
 - `scripts/fence_tests/fence_tests.gml`
+- `scripts/production_definition_helpers/production_definition_helpers.gml`
+- `scripts/production_state_helpers/production_state_helpers.gml`
+- `scripts/production_command_helpers/production_command_helpers.gml`
+- `scripts/production_read_model_helpers/production_read_model_helpers.gml`
+- `scripts/production_presentation_helpers/production_presentation_helpers.gml`
 - `scripts/calendar_helpers/calendar_helpers.gml`
+- `objects/obj_sawmill/`
+- `objects/obj_lathe/`
+- `objects/obj_production_menu/`
+- `objects/obj_build_menu/`
+- `objects/obj_build_placement_controller/`
 - `objects/obj_cabin_placement_controller/`
 - `objects/obj_cabin_site/`
 - `objects/obj_skidsteer_parking_pad/`
@@ -686,21 +719,62 @@ Claiming `Timber Delivery` unlocks the second quest. Its explicit story order is
 requires the whole stopped vehicle inside the 96 by 64 pad, no attached tow
 target, and the player on foot.
 
-Site placement begins only while `Mark the Cabin Site` is active. The
-controller converts mouse position through the active camera, snaps to the
-32-pixel fence grid, and validates the full fixed cabin-and-yard boundary.
+Two authored site definitions own the permitted footprints. Four `spr_marker`
+flags present each choice, but the site ID and definition remain authoritative;
+the flags do not independently define the area. `Take Flag` is the atomic
+turning-point event: it commits that site, removes both sites' remaining flags,
+and completes the marking task in one interaction. The selected site and
+construction progress survive save/load. Room reconciliation repairs the
+short-lived v4 half-selection state produced by the earlier split transaction.
 
-Validation rejects room edges, actors, NPCs, Fieldrocks, logs, ponds, the delivery area, and an existing site. Decorative asset-layer art still needs human visual checking because it has no collision objects.
+The cabin boundary is an authored socket blueprint relative to the selected
+site. It contains four corner sockets, ten straight sections, and one gate item
+that atomically occupies two front cells. A faint silhouette presents those
+sockets without owning progress. Fence records remain the durable truth and
+store piece type, orientation, blueprint socket ID, gate linkage, and purpose.
 
-On confirmation, the site room and coordinates are stored and
-`obj_cabin_site` is created with `spr_cabin_before`. Interacting with it opens
-the bounded fence lesson. The exact four-by-five-interval rectangle and one
-front gate complete the marking task. `Build the Cabin` then changes the same
-site to `spr_cabin_after` and enters `FIRST_REST_REQUIRED`. Rest remains blocked
-until the build task is claimed.
+The B rail opens the build inventory. Choosing Straight Fence, Fence Corner, or
+Fence Gate starts snapped placement; R rotates the preview, left click or E
+places, and right click, Escape, or B cancels. Invalid placement stays red and
+does not consume inventory. Remove mode refunds the complete piece, including
+both linked gate cells. Legacy tutorial fences are inferred from topology so
+they can use the same removal/refund path.
 
-The site may be relocated only while the marking task is active and before its
-fence is completed.
+While the boundary task is active, a placed piece must match the selected
+site's socket type and position. Individual valid pieces save immediately, so
+an unfinished boundary is safe. Filling every socket completes the task. After
+the boundary is claimed, interacting with the site raises the cabin and enters
+`FIRST_REST_REQUIRED`. Claiming that task unlocks free fence building; free
+placements still use topology and crossing validation but do not need a closed
+rectangle.
+
+### Workshop production
+
+`obj_sawmill` and `obj_lathe` are thin interaction/presentation objects. Recipe
+definitions own inputs, outputs, duration, machine type, and output
+destination. Production state owns one durable job per machine. Commands
+reserve all selected inputs when a job starts, complete batches in sequence,
+route output to Home inventory or Finished Crafts, and refund only unprocessed
+inputs on cancellation. Read models supply menu and progress-bar data.
+
+Current recipes are:
+
+- one Timber Log to four Timber Planks at the sawmill;
+- one Timber Plank to five Straight Fence pieces;
+- one Timber Plank to four Fence Corners;
+- one Timber Plank to one Fence Gate;
+- one Small Lumber to one Empty Bucket at the lathe after the cabin is built.
+
+The tutorial therefore turns one delivered tree into the exact ten straights,
+four corners, and one gate required by its boundary. Tutorial batch caps prevent
+accidental overproduction from consuming a required plank. Finished pieces are
+retrieved from the existing Finished Crafts chest.
+
+Machines animate and show a progress bar only while a job is active. Jobs
+continue while the player works or uses ordinary overlays, stop under the pause
+menu, save mid-batch, and finish all queued work when a day transition occurs.
+The empty bucket is an extension hook for the future water barrel; water
+collection and drinking are not implemented by this production slice.
 
 ### Calendar
 
@@ -710,6 +784,7 @@ complete, the cabin is built, and the hub is open.
 
 Sleeping at the cabin:
 
+- finishes all current workshop jobs;
 - advances the day;
 - sets time to 6:00 AM;
 - moves the player to the site exit point;
@@ -739,19 +814,22 @@ One subtle behavior: the pause snapshot represents the instant the menu opened. 
 
 ### Inventory and Quest overlays
 
-`obj_inventory_menu` draws four categories: Backpack, Vehicle, Homebase, and Tools. It reads existing state and live vehicle cargo. It does not copy or mutate inventory totals.
+`obj_inventory_menu` draws Backpack, Vehicle, Homebase, Finished Crafts, and
+Tools using the available categories. It reads existing state and live vehicle
+cargo. It does not copy or mutate inventory totals.
 
 `obj_quest_menu` renders quest definitions, statuses, objectives, and rewards. It supports keyboard selection, clicks, and scrolling for future quest growth.
 
 ### Gameplay HUD
 
-`obj_gui_trip_status` currently combines:
+`obj_gui_trip_status` and the left menu rail currently combine:
 
 - tutorial objective text;
 - backpack, vehicle, trip, and XP totals;
 - optional Homebase summary;
 - calendar clock after the hub opens;
-- Inventory, Journal, and Cabin Site control reminders.
+- constant Q, I, M, and B buttons with open/closed sprite frames;
+- Inventory, Journal, Map, and Build control reminders.
 
 This is one of the larger draw files. It is acceptable now, but future HUD panels should use reusable drawing helpers rather than adding every new feature to one event.
 
@@ -798,6 +876,10 @@ ownership at the seams that were beginning to accumulate.
 9. Fence records, topology, placement, policy, controller orchestration,
    presentation, and tests are separated.
 10. Fieldstone and Fieldrock lifecycle code lives in separate modules.
+11. Production definition, state, command, read-model, and presentation helpers
+    own workshop jobs; machine objects only configure interaction and delegate.
+12. Build definition, read-model, command, and presentation helpers adapt
+    carried pieces to the existing fence records and topology.
 
 The remaining large Draw events can be split only when a second consumer makes
 the shared panel/list behavior concrete. Avoid adding a generic framework in
@@ -1371,6 +1453,11 @@ This is what "full implementation" means in this project: data definition, live 
 - resource-specific regeneration helpers: persistent resource lifecycle.
 - `tree_persistence_helpers`: multi-piece tree lifecycle.
 - `cabin_placement_helpers`: site validation, placement, restoration.
+- build definition/read/command/presentation helpers: piece catalog, cabin
+  socket blueprint, placement transactions, build rail, and previews.
+- production definition/state/command/read/presentation helpers: recipes,
+  durable machine jobs, explicit production events, menu/progress data, and
+  machine presentation.
 - `calendar_helpers`: day/time, sleep, and day transition.
 - `dialogue_helpers` and notification objects: presentation and completion actions.
 - `farmers_wife_helpers`: pure response selection, explicit Home Delivery

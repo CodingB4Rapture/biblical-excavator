@@ -16,7 +16,10 @@ function fence_record_create(
     _x,
     _y,
     _gate_part = FenceGatePart.NONE,
-    _purpose = ""
+    _purpose = "",
+    _piece_type = FencePieceType.LEGACY,
+    _orientation = FenceRotation.FRONT,
+    _blueprint_socket_id = ""
 )
 {
     return {
@@ -24,7 +27,12 @@ function fence_record_create(
         x: round(_x),
         y: round(_y),
         gate_part: _gate_part,
-        purpose: is_string(_purpose) ? _purpose : ""
+        purpose: is_string(_purpose) ? _purpose : "",
+        piece_type: _piece_type,
+        orientation: _orientation,
+        blueprint_socket_id: is_string(_blueprint_socket_id)
+            ? _blueprint_socket_id
+            : ""
     };
 }
 
@@ -55,6 +63,48 @@ function fence_record_purpose(_record)
     return _record.purpose;
 }
 
+function fence_record_piece_type(_record)
+{
+    if (!is_struct(_record)
+    || !variable_struct_exists(_record, "piece_type")
+    || !is_numeric(_record.piece_type))
+    {
+        return fence_record_gate_part(_record) == FenceGatePart.NONE
+            ? FencePieceType.LEGACY
+            : FencePieceType.GATE;
+    }
+
+    var piece_type = round(_record.piece_type);
+    return (piece_type >= FencePieceType.LEGACY
+        && piece_type <= FencePieceType.GATE)
+            ? piece_type
+            : FencePieceType.LEGACY;
+}
+
+function fence_record_orientation(_record)
+{
+    if (!is_struct(_record)
+    || !variable_struct_exists(_record, "orientation")
+    || !is_numeric(_record.orientation))
+    {
+        return FenceRotation.FRONT;
+    }
+
+    return ((round(_record.orientation) mod 4) + 4) mod 4;
+}
+
+function fence_record_blueprint_socket_id(_record)
+{
+    if (!is_struct(_record)
+    || !variable_struct_exists(_record, "blueprint_socket_id")
+    || !is_string(_record.blueprint_socket_id))
+    {
+        return "";
+    }
+
+    return _record.blueprint_socket_id;
+}
+
 function fence_copy_record(_record)
 {
     return fence_record_create(
@@ -62,7 +112,10 @@ function fence_copy_record(_record)
         _record.x,
         _record.y,
         fence_record_gate_part(_record),
-        fence_record_purpose(_record)
+        fence_record_purpose(_record),
+        fence_record_piece_type(_record),
+        fence_record_orientation(_record),
+        fence_record_blueprint_socket_id(_record)
     );
 }
 
@@ -83,9 +136,9 @@ function fence_copy_records(_records)
         || !variable_struct_exists(record, "room_name")
         || !is_string(record.room_name)
         || !variable_struct_exists(record, "x")
-        || !is_real(record.x)
+        || !is_numeric(record.x)
         || !variable_struct_exists(record, "y")
-        || !is_real(record.y))
+        || !is_numeric(record.y))
         {
             continue;
         }

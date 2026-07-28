@@ -1,6 +1,6 @@
 /// Pure save-data migrations. These functions only transform plain structs.
 
-#macro SAVE_FORMAT_CURRENT 3
+#macro SAVE_FORMAT_CURRENT 4
 #macro SAVE_V2_TASK_COUNT 6
 
 function save_migrate_v1_to_v2(_data)
@@ -280,6 +280,94 @@ function save_migrate_v2_to_v3(_data)
     return _data;
 }
 
+function save_migrate_v3_to_v4(_data)
+{
+    if (!is_struct(_data)
+    || !variable_struct_exists(_data, "game_state")
+    || !is_struct(_data.game_state))
+    {
+        return undefined;
+    }
+
+    var saved_state = _data.game_state;
+    var old_statuses = variable_struct_exists(saved_state, "task_statuses")
+        && is_array(saved_state.task_statuses)
+            ? saved_state.task_statuses
+            : [];
+    var new_statuses = array_create(TaskId.COUNT, TaskStatus.LOCKED);
+    for (var task_id = 0;
+        task_id < min(8, array_length(old_statuses));
+        task_id++)
+    {
+        new_statuses[task_id] = task_status_is_valid(
+            old_statuses[task_id]
+        )
+            ? old_statuses[task_id]
+            : TaskStatus.LOCKED;
+    }
+
+    var cabin_built = variable_struct_exists(saved_state, "cabin_built")
+        && saved_state.cabin_built;
+    if (cabin_built)
+    {
+        new_statuses[TaskId.BUILD_CABIN_FENCE] = TaskStatus.CLAIMED;
+        saved_state.free_build_unlocked =
+            new_statuses[TaskId.PLACE_CABIN] == TaskStatus.CLAIMED;
+    }
+    else if (new_statuses[TaskId.MARK_CABIN_SITE]
+        == TaskStatus.CLAIMED)
+    {
+        // The previous version jumped straight from site selection to a
+        // pre-seeded plank/cabin action. Route that point to the new explicit
+        // workshop task without repeating the site decision.
+        new_statuses[TaskId.BUILD_CABIN_FENCE] =
+            TaskStatus.AVAILABLE;
+        new_statuses[TaskId.PLACE_CABIN] = TaskStatus.LOCKED;
+        saved_state.free_build_unlocked = false;
+
+        if (variable_struct_exists(
+            saved_state,
+            "finished_crafts_inventory"
+        ) && is_array(saved_state.finished_crafts_inventory)
+        && array_length(saved_state.finished_crafts_inventory)
+            > ResourceId.TIMBER_PLANK)
+        {
+            saved_state.finished_crafts_inventory[
+                ResourceId.TIMBER_PLANK
+            ] = 0;
+        }
+        if (variable_struct_exists(saved_state, "player_inventory")
+        && is_array(saved_state.player_inventory)
+        && array_length(saved_state.player_inventory)
+            > ResourceId.TIMBER_PLANK)
+        {
+            saved_state.player_inventory[
+                ResourceId.TIMBER_PLANK
+            ] = 0;
+        }
+    }
+    else
+    {
+        saved_state.free_build_unlocked = false;
+    }
+
+    saved_state.task_statuses = new_statuses;
+    saved_state.production_jobs = [
+        production_job_create(
+            PRODUCTION_MACHINE_SAWMILL,
+            ProductionMachineType.SAWMILL
+        ),
+        production_job_create(
+            PRODUCTION_MACHINE_LATHE,
+            ProductionMachineType.LATHE
+        )
+    ];
+    saved_state.production_completed_batches =
+        array_create(ProductionRecipeId.COUNT, 0);
+    _data.format_version = 4;
+    return _data;
+}
+
 function save_migrate_to_current(_data)
 {
     if (!is_struct(_data)
@@ -300,6 +388,10 @@ function save_migrate_to_current(_data)
 
             case 2:
                 _data = save_migrate_v2_to_v3(_data);
+                break;
+
+            case 3:
+                _data = save_migrate_v3_to_v4(_data);
                 break;
 
             default:

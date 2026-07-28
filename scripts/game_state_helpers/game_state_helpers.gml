@@ -97,6 +97,19 @@ function game_state_create_default()
         cabin_site_flags_taken: 0,
         cabin_fence_marked: false,
         cabin_built: false,
+        production_jobs: [
+            production_job_create(
+                PRODUCTION_MACHINE_SAWMILL,
+                ProductionMachineType.SAWMILL
+            ),
+            production_job_create(
+                PRODUCTION_MACHINE_LATHE,
+                ProductionMachineType.LATHE
+            )
+        ],
+        production_completed_batches:
+            array_create(ProductionRecipeId.COUNT, 0),
+        free_build_unlocked: false,
         homestead_stage: HomesteadStage.TUTORIAL,
         first_hub_hint_pending: false,
         day_number: 1,
@@ -200,6 +213,26 @@ function game_state_normalize(_game_state)
         _game_state.player_inventory,
         ResourceId.TIMBER_PLANK,
         PLAYER_TIMBER_PLANK_CAPACITY
+    );
+    inventory_apply_minimum_resource_capacity(
+        _game_state.player_inventory,
+        ResourceId.FENCE_STRAIGHT,
+        PLAYER_FENCE_STRAIGHT_CAPACITY
+    );
+    inventory_apply_minimum_resource_capacity(
+        _game_state.player_inventory,
+        ResourceId.FENCE_CORNER,
+        PLAYER_FENCE_CORNER_CAPACITY
+    );
+    inventory_apply_minimum_resource_capacity(
+        _game_state.player_inventory,
+        ResourceId.FENCE_GATE,
+        PLAYER_FENCE_GATE_CAPACITY
+    );
+    inventory_apply_minimum_resource_capacity(
+        _game_state.player_inventory,
+        ResourceId.EMPTY_BUCKET,
+        PLAYER_BUCKET_CAPACITY
     );
 
     if (!variable_struct_exists(_game_state, "home_inventory")
@@ -335,7 +368,10 @@ function game_state_normalize(_game_state)
         _game_state.cabin_selected_site_id = CABIN_SITE_NONE;
     if (!variable_struct_exists(_game_state, "cabin_site_flags_taken"))
         _game_state.cabin_site_flags_taken = 0;
-    if (!is_real(_game_state.cabin_site_flags_taken))
+    // Bitwise flag writes are stored as an integer value. is_real() rejects
+    // that numeric representation and previously reset a successfully taken
+    // flag to zero during save normalization.
+    if (!is_numeric(_game_state.cabin_site_flags_taken))
         _game_state.cabin_site_flags_taken = 0;
     _game_state.cabin_site_flags_taken = clamp(
         round(_game_state.cabin_site_flags_taken),
@@ -354,6 +390,13 @@ function game_state_normalize(_game_state)
             && variable_struct_exists(_game_state, "homestead_stage")
             && _game_state.homestead_stage
                 != HomesteadStage.TUTORIAL;
+    }
+    production_state_ensure(_game_state);
+    if (!variable_struct_exists(_game_state, "free_build_unlocked"))
+    {
+        _game_state.free_build_unlocked = _game_state.cabin_built
+            && _game_state.task_statuses[TaskId.PLACE_CABIN]
+                == TaskStatus.CLAIMED;
     }
     if (!variable_struct_exists(_game_state, "day_number"))
         _game_state.day_number = 1;

@@ -104,6 +104,30 @@ function room_reconcile_farmyard_perimeter()
 
 function room_reconcile_current()
 {
+    var game_state = game_state_ensure();
+    var repaired_site_selection =
+        progression_repair_cabin_site_selection_state(game_state);
+    var repaired_blueprint =
+        build_repair_cabin_blueprint_records(game_state);
+    var repaired_blueprint_completion = false;
+
+    if (task_is_active(TaskId.BUILD_CABIN_FENCE, game_state)
+    && cabin_blueprint_status(game_state).complete)
+    {
+        repaired_blueprint_completion =
+            progression_complete_cabin_fence_state(game_state);
+    }
+
+    if (repaired_site_selection)
+    {
+        with (obj_cabin_site_flag) instance_destroy();
+        notification_show_hint(
+            "Cabin site selection restored. Return to the Task Board.",
+            game_get_speed(gamespeed_fps) * 5,
+            true
+        );
+    }
+
     cabin_restore_site();
     cabin_restore_predefined_flags();
 
@@ -115,4 +139,20 @@ function room_reconcile_current()
     fence_restore_room();
     room_reconcile_farmyard_perimeter();
     room_reconcile_winch_package();
+
+    if (repaired_blueprint_completion)
+    {
+        notification_show_hint(
+            "Cabin boundary restored and complete. Return to the Task Board.",
+            game_get_speed(gamespeed_fps) * 5,
+            true
+        );
+    }
+
+    if (repaired_site_selection
+    || repaired_blueprint
+    || repaired_blueprint_completion)
+    {
+        save_write();
+    }
 }

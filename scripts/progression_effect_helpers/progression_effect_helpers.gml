@@ -43,15 +43,16 @@ function progression_task_start_followup(_task_id, _game_state)
             return "Enter the skidsteer and drive to the marked log.";
 
         case TaskId.PLACE_CABIN:
-            return "Retrieve 4 Timber Planks from the Finished Crafts chest.";
+            return "Go to the selected site and raise the cabin inside its completed boundary.";
 
         case TaskId.PARK_SKIDSTEER:
             return "Return the skidsteer to the marked pad beside the Farmer, stop, and hop out.";
 
         case TaskId.MARK_CABIN_SITE:
-            return _game_state.cabin_site_placed
-                ? "Return to the cleared flag and press E to confirm the cabin site."
-                : "Choose Site I or Site II. Press E at any flag to select the site.";
+            return "Choose Site I or Site II. Taking one flag commits that site.";
+
+        case TaskId.BUILD_CABIN_FENCE:
+            return "Use the sawmill, retrieve each finished fence piece, then press B to fill the site silhouette.";
     }
 
     return "";

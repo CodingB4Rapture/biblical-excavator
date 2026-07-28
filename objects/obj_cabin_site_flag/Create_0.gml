@@ -25,12 +25,10 @@ interaction_get_prompt = function(_actor)
         return "";
     }
 
-    return cabin_site_flag_is_taken(site_id, corner_index, game_state)
-        ? "Confirm Cabin Site"
-        : "Choose Cabin Site";
+    return "Take Flag";
 };
 
 interaction_run = function(_actor)
 {
-    cabin_choose_predefined_site(id, _actor);
+    cabin_take_predefined_flag(id, _actor);
 };

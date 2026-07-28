@@ -113,17 +113,10 @@ function farmers_wife_get_response(_wife, _actor, _game_state)
 
     if (task_is_active(TaskId.MARK_CABIN_SITE, _game_state))
     {
-        return farmers_wife_response_create(
-            _game_state.cabin_site_placed
-                ? [
-                    "Return to the cleared flag at your chosen cabin site.",
-                    "Press E there to confirm the location. Then claim the task and retrieve the planks."
-                ]
-                : [
-                    "Choose Site I in Eireneikos Meadows or Site II in Farmer's Workfield.",
-                    "Press E at any flag to choose that site. The overview map will help you find them."
-                ]
-        );
+        return farmers_wife_response_create([
+            "Choose Site I in Eireneikos Meadows or Site II in Farmer's Workfield.",
+            "Taking one flag commits that site. The overview map will help you find them."
+        ]);
     }
 
     if (task_get_status(TaskId.PLACE_CABIN, _game_state)

@@ -82,6 +82,9 @@ enum TaskId
     PLACE_CABIN = 5,
     PARK_SKIDSTEER = 6,
     MARK_CABIN_SITE = 7,
+    // Appended in format v4: the selected site is fenced piece by piece
+    // before the short cabin-raising interaction becomes available.
+    BUILD_CABIN_FENCE = 8,
     COUNT
 }
 
@@ -123,13 +126,18 @@ enum ResourceId
     SMALL_LUMBER = 3,
     // Append-only: inventory arrays are persisted by numeric resource ID.
     TIMBER_PLANK = 4,
+    FENCE_STRAIGHT = 5,
+    FENCE_CORNER = 6,
+    FENCE_GATE = 7,
+    EMPTY_BUCKET = 8,
     COUNT
 }
 
 enum ResourceCategory
 {
     STONE,
-    LUMBER
+    LUMBER,
+    CRAFTED
 }
 
 enum ResourceSize
@@ -183,10 +191,55 @@ enum FenceGatePart
     RIGHT = 2
 }
 
+enum FencePieceType
+{
+    LEGACY = 0,
+    STRAIGHT = 1,
+    CORNER = 2,
+    GATE = 3
+}
+
+enum FenceRotation
+{
+    FRONT = 0,
+    RIGHT = 1,
+    BACK = 2,
+    LEFT = 3
+}
+
+enum ProductionMachineType
+{
+    SAWMILL = 0,
+    LATHE = 1
+}
+
+enum ProductionRecipeId
+{
+    SAW_TIMBER_PLANKS = 0,
+    CUT_STRAIGHT_FENCE = 1,
+    CUT_FENCE_CORNERS = 2,
+    CUT_FENCE_GATE = 3,
+    TURN_EMPTY_BUCKET = 4,
+    COUNT
+}
+
+enum ProductionOutputDestination
+{
+    HOME = 0,
+    FINISHED_CRAFTS = 1
+}
+
 #macro FENCE_PURPOSE_CABIN_SITE "cabin_site"
+#macro FENCE_PURPOSE_FREE_BUILD "free_build"
+
+#macro PRODUCTION_MACHINE_SAWMILL "room1.sawmill"
+#macro PRODUCTION_MACHINE_LATHE "room1.lathe"
 
 #macro PLAYER_FIELDSTONE_CAPACITY 6
 #macro PLAYER_TIMBER_PLANK_CAPACITY 8
+#macro PLAYER_FENCE_STRAIGHT_CAPACITY 20
+#macro PLAYER_FENCE_CORNER_CAPACITY 8
+#macro PLAYER_FENCE_GATE_CAPACITY 4
+#macro PLAYER_BUCKET_CAPACITY 4
 #macro VEHICLE_FIELDSTONE_CAPACITY 10
-#macro CABIN_TIMBER_PLANK_COST 4
 

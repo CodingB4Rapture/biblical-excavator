@@ -138,7 +138,11 @@ function cabin_restore_predefined_flags()
     if (room_get_name(room) != "Room1") return 0;
 
     var game_state = game_state_ensure();
-    if (game_state.cabin_fence_marked) return 0;
+    if (game_state.cabin_fence_marked
+    || !task_is_active(TaskId.MARK_CABIN_SITE, game_state))
+    {
+        return 0;
+    }
 
     var definitions = cabin_site_definitions();
     var restored = 0;
@@ -243,29 +247,6 @@ function cabin_find_guidance_flag(_actor = noone)
     return best_flag;
 }
 
-function cabin_remove_unselected_site_flags(_selected_site_id)
-{
-    var removed_count = 0;
-
-    for (var flag_index = instance_number(obj_cabin_site_flag) - 1;
-        flag_index >= 0;
-        flag_index--)
-    {
-        var candidate_flag = instance_find(
-            obj_cabin_site_flag,
-            flag_index
-        );
-        if (instance_exists(candidate_flag)
-        && candidate_flag.site_id != _selected_site_id)
-        {
-            instance_destroy(candidate_flag);
-            removed_count += 1;
-        }
-    }
-
-    return removed_count;
-}
-
 function cabin_take_predefined_flag(_flag, _actor = noone)
 {
     if (!instance_exists(_flag)) return false;
@@ -275,7 +256,7 @@ function cabin_take_predefined_flag(_flag, _actor = noone)
     var selected_flag_corner_index = _flag.corner_index;
     var definition = cabin_site_definition(selected_flag_site_id);
     if (is_undefined(definition)
-    || !is_real(selected_flag_corner_index)
+    || !is_numeric(selected_flag_corner_index)
     || selected_flag_corner_index < 0
     || selected_flag_corner_index > 3
     || !task_is_active(TaskId.MARK_CABIN_SITE, game_state)
@@ -287,103 +268,19 @@ function cabin_take_predefined_flag(_flag, _actor = noone)
         return false;
     }
 
-    var selected_now =
-        game_state.cabin_selected_site_id == CABIN_SITE_NONE
-        || game_state.cabin_selected_site_id == CABIN_SITE_LEGACY;
-    var repairing_unselected_site =
-        selected_now && game_state.cabin_site_placed;
-    if (selected_now)
-    {
-        if (!progression_record_cabin_site_state(
-            game_state,
-            definition.room_name,
-            definition.x,
-            definition.y,
-            game_state.cabin_site_placed,
-            definition.id
-        ))
-        {
-            return false;
-        }
-    }
-
-    if (repairing_unselected_site)
-    {
-        with (obj_cabin_site) instance_destroy();
-        game_state.fence_records = fence_records_without_purpose(
-            game_state.fence_records,
-            FENCE_PURPOSE_CABIN_SITE
-        );
-        fence_restore_room();
-    }
-
-    if (!progression_take_cabin_site_flag_state(
+    // Taking a flag is the turning-point choice. Selection, flag ownership,
+    // and task completion must succeed as one durable event.
+    if (!progression_choose_cabin_site_state(
         game_state,
-        selected_flag_site_id,
+        definition,
         selected_flag_corner_index
     ))
     {
         return false;
     }
 
-    if (!instance_exists(obj_cabin_site))
-    {
-        instance_create_depth(
-            definition.x,
-            definition.y,
-            0,
-            obj_cabin_site
-        );
-    }
-
-    cabin_remove_unselected_site_flags(selected_flag_site_id);
-    return cabin_confirm_site_from_flag(_flag, _actor);
-}
-
-function cabin_choose_predefined_site(_flag, _actor = noone)
-{
-    if (!instance_exists(_flag)) return false;
-
-    var definition = cabin_site_definition(_flag.site_id);
-    if (is_undefined(definition))
-    {
-        notification_show_hint(
-            "This cabin marker has no valid site definition.",
-            game_get_speed(gamespeed_fps) * 4,
-            false
-        );
-        return false;
-    }
-
-    var game_state = game_state_ensure();
-    if (!task_is_active(TaskId.MARK_CABIN_SITE, game_state))
-    {
-        notification_show_hint(
-            "Accept Mark the Cabin Site at the Task Board first.",
-            game_get_speed(gamespeed_fps) * 4,
-            false
-        );
-        return false;
-    }
-
-    // This is an authored binary choice, so commit it atomically. Do not
-    // route through relocation/legacy guards that can leave a partial save
-    // with an active task and an unusable flag.
-    if (!progression_choose_cabin_site_state(
-        game_state,
-        definition,
-        _flag.corner_index
-    ))
-    {
-        notification_show_hint(
-            "The cabin site task could not be completed.",
-            game_get_speed(gamespeed_fps) * 4,
-            false
-        );
-        return false;
-    }
-
     with (obj_cabin_site) instance_destroy();
+    with (obj_cabin_site_flag) instance_destroy();
     fence_restore_room();
     instance_create_depth(
         definition.x,
@@ -391,114 +288,14 @@ function cabin_choose_predefined_site(_flag, _actor = noone)
         0,
         obj_cabin_site
     );
-
-    with (obj_cabin_site_flag) instance_destroy();
     notification_show_hint(
         "Site "
             + definition.symbol
-            + " selected. Claim this task, accept Build the Cabin, then retrieve 4 Timber Planks.",
-        game_get_speed(gamespeed_fps) * 7,
+            + " selected. Return to the Task Board and claim the completed site task.",
+        game_get_speed(gamespeed_fps) * 5,
         true
     );
     save_write();
-    return true;
-}
-
-function cabin_confirm_site_from_flag(_flag, _actor = noone)
-{
-    if (!instance_exists(_flag)) return false;
-
-    var game_state = game_state_ensure();
-    if (!task_is_active(TaskId.MARK_CABIN_SITE, game_state)
-    || game_state.cabin_selected_site_id != _flag.site_id
-    || !cabin_site_flag_is_taken(
-        _flag.site_id,
-        _flag.corner_index,
-        game_state
-    ))
-    {
-        return false;
-    }
-
-    if (!progression_complete_cabin_site_selection_state(game_state))
-    {
-        return false;
-    }
-
-    with (obj_cabin_site_flag) instance_destroy();
-    notification_show_hint(
-        "Site selected. Claim this task, accept Build the Cabin, then retrieve 4 Timber Planks.",
-        game_get_speed(gamespeed_fps) * 6,
-        true
-    );
-    save_write();
-    return true;
-}
-
-function cabin_create_fixed_fence(_actor = noone)
-{
-    var game_state = game_state_ensure();
-    if (!game_state.cabin_site_placed || game_state.cabin_built)
-    {
-        return false;
-    }
-
-    var room_name = game_state.cabin_site_room;
-    var bounds = cabin_fence_plot_bounds_at(
-        game_state.cabin_site_x,
-        game_state.cabin_site_y
-    );
-    var cabin_records = fence_make_rectangle_records(
-        room_name,
-        bounds.min_x,
-        bounds.min_y,
-        bounds.max_x,
-        bounds.max_y,
-        FENCE_PURPOSE_CABIN_SITE
-    );
-    var gate_result = fence_try_place_gate(
-        cabin_records,
-        room_name,
-        bounds.min_x + fence_grid_size(),
-        bounds.max_y,
-        0,
-        FENCE_PURPOSE_CABIN_SITE
-    );
-
-    if (!gate_result.valid
-    || !cabin_fence_plot_status(
-        gate_result.records,
-        room_name,
-        bounds
-    ).valid)
-    {
-        notification_show_hint(
-            "The cabin boundary could not be created. Please try the flag again.",
-            game_get_speed(gamespeed_fps) * 4,
-            false
-        );
-        return false;
-    }
-
-    var room_records = fence_records_without_purpose(
-        fence_records_for_room(game_state.fence_records, room_name),
-        FENCE_PURPOSE_CABIN_SITE
-    );
-    for (var record_index = 0;
-        record_index < array_length(gate_result.records);
-        record_index++)
-    {
-        array_push(
-            room_records,
-            fence_copy_record(gate_result.records[record_index])
-        );
-    }
-
-    game_state.cabin_fence_marked = true;
-    cabin_place_actor_at_exit(_actor);
-    fence_commit_room_records(room_name, room_records);
-    fence_refresh_room_instances(room_records, false, true);
-    with (obj_cabin_site_flag) instance_destroy();
     return true;
 }
 
@@ -629,29 +426,6 @@ function cabin_build_at_site(_site, _actor = noone)
 
     var game_state = game_state_ensure();
 
-    if (inventory_get_amount(
-        game_state.player_inventory,
-        ResourceId.TIMBER_PLANK
-    ) < CABIN_TIMBER_PLANK_COST)
-    {
-        notification_show_hint(
-            "Retrieve 4 Timber Planks from the Finished Crafts chest first.",
-            game_get_speed(gamespeed_fps) * 4,
-            false
-        );
-        return false;
-    }
-
-    if (!cabin_create_fixed_fence(_actor))
-    {
-        notification_show_hint(
-            "The cabin fence could not be built. Please try adding the planks again.",
-            game_get_speed(gamespeed_fps) * 4,
-            false
-        );
-        return false;
-    }
-
     if (!progression_build_cabin_state(game_state))
     {
         return false;
@@ -659,7 +433,7 @@ function cabin_build_at_site(_site, _actor = noone)
 
     _site.sprite_index = spr_cabin_after;
     notification_show_hint(
-        "Planks added. The fence, front gate, and cabin are complete. Return to the Task Board.",
+        "Cabin raised. Return to the Task Board.",
         game_get_speed(gamespeed_fps) * 5,
         true
     );

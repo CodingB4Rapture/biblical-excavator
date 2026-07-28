@@ -14,9 +14,7 @@ interaction_get_prompt = function(_actor)
     if (task_is_active(TaskId.MARK_CABIN_SITE, game_state)
     && !game_state.cabin_fence_marked)
     {
-        return cabin_site_flag_count_taken(game_state) > 0
-            ? "Confirm site at cleared flag"
-            : "Take a site flag first";
+        return "Finish Cabin Site Selection";
     }
 
     if (task_get_status(TaskId.MARK_CABIN_SITE) == TaskStatus.COMPLETE)
@@ -24,18 +22,26 @@ interaction_get_prompt = function(_actor)
         return "Claim site task at the Task Board";
     }
 
+    if (task_is_active(TaskId.BUILD_CABIN_FENCE, game_state))
+    {
+        var blueprint = cabin_blueprint_status(game_state);
+        return "Boundary "
+            + string(blueprint.filled)
+            + "/"
+            + string(blueprint.total)
+            + " - Press B";
+    }
+
+    if (task_get_status(TaskId.BUILD_CABIN_FENCE)
+        == TaskStatus.COMPLETE)
+    {
+        return "Claim boundary task at the Task Board";
+    }
+
     if (task_is_active(TaskId.PLACE_CABIN, game_state)
     && !game_state.cabin_built)
     {
-        if (inventory_get_amount(
-            game_state.player_inventory,
-            ResourceId.TIMBER_PLANK
-        ) < CABIN_TIMBER_PLANK_COST)
-        {
-            return "Need 4 Timber Planks";
-        }
-
-        return "Add 4 Planks";
+        return "Raise Cabin";
     }
 
     if (task_get_status(TaskId.PLACE_CABIN) == TaskStatus.COMPLETE)
@@ -60,18 +66,20 @@ interaction_run = function(_actor)
     if (task_is_active(TaskId.MARK_CABIN_SITE, game_state)
     && !game_state.cabin_fence_marked)
     {
-        if (cabin_site_flag_count_taken(game_state) == 0)
+        if (progression_repair_cabin_site_selection_state(game_state))
         {
+            with (obj_cabin_site_flag) instance_destroy();
             notification_show_hint(
-                "Take one of this site's flags to select the location.",
-                game_get_speed(gamespeed_fps) * 4,
-                false
+                "Cabin site selection restored. Return to the Task Board.",
+                game_get_speed(gamespeed_fps) * 5,
+                true
             );
+            save_write();
             return;
         }
 
         notification_show_hint(
-            "Return to the cleared flag and press E to confirm the site.",
+            "Take one flag at either authored cabin site to choose it.",
             game_get_speed(gamespeed_fps) * 4,
             false
         );
@@ -82,6 +90,27 @@ interaction_run = function(_actor)
     {
         notification_show_hint(
             "Return to the Task Board and claim the completed site task.",
+            game_get_speed(gamespeed_fps) * 4,
+            false
+        );
+        return;
+    }
+
+    if (task_is_active(TaskId.BUILD_CABIN_FENCE, game_state))
+    {
+        notification_show_hint(
+            "Retrieve crafted fence pieces, then press B to fill the silhouette.",
+            game_get_speed(gamespeed_fps) * 4,
+            false
+        );
+        return;
+    }
+
+    if (task_get_status(TaskId.BUILD_CABIN_FENCE)
+        == TaskStatus.COMPLETE)
+    {
+        notification_show_hint(
+            "Return to the Task Board and claim the completed boundary task.",
             game_get_speed(gamespeed_fps) * 4,
             false
         );

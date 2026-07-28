@@ -128,6 +128,13 @@ function player_find_interactable(_actor)
 
 function player_update_interaction(_actor)
 {
+    if (instance_exists(obj_build_placement_controller))
+    {
+        _actor.interaction_target = noone;
+        _actor.interaction_prompt = "";
+        return;
+    }
+
     _actor.interaction_target = player_find_interactable(_actor);
     _actor.interaction_prompt = "";
 

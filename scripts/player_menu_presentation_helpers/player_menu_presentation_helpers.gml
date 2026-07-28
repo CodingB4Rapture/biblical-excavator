@@ -3,16 +3,19 @@
 function player_menu_build_read_model(
     _quest_open,
     _inventory_open,
-    _map_open
+    _map_open,
+    _build_open = false
 )
 {
     return {
         quest_open: _quest_open,
         inventory_open: _inventory_open,
         map_open: _map_open,
+        build_open: _build_open,
         quest_frame: _quest_open ? 1 : 0,
         inventory_frame: _inventory_open ? 1 : 0,
-        map_frame: _map_open ? 1 : 0
+        map_frame: _map_open ? 1 : 0,
+        build_frame: _build_open ? 1 : 0
     };
 }
 
@@ -21,7 +24,8 @@ function player_menu_get_read_model()
     return player_menu_build_read_model(
         instance_exists(obj_quest_menu),
         instance_exists(obj_inventory_menu),
-        instance_exists(obj_map_menu)
+        instance_exists(obj_map_menu),
+        instance_exists(obj_build_menu)
     );
 }
 
@@ -95,6 +99,17 @@ function player_menu_rail_step(_rail)
     {
         _rail.hovered_button = 2;
     }
+    else if (point_in_rectangle(
+        gui_mouse_x,
+        gui_mouse_y,
+        layout.build_left,
+        layout.build_top,
+        layout.build_right,
+        layout.build_bottom
+    ))
+    {
+        _rail.hovered_button = 3;
+    }
 
     if (keyboard_check_pressed(ord("Q")))
     {
@@ -112,6 +127,11 @@ function player_menu_rail_step(_rail)
         return player_menu_toggle_map();
     }
 
+    if (keyboard_check_pressed(ord("B")))
+    {
+        return player_menu_toggle_build();
+    }
+
     if (keyboard_check_pressed(vk_escape) && player_menu_is_open())
     {
         return player_menu_close();
@@ -121,6 +141,7 @@ function player_menu_rail_step(_rail)
     if (_rail.hovered_button == 0) return player_menu_toggle_quest();
     if (_rail.hovered_button == 1) return player_menu_toggle_inventory();
     if (_rail.hovered_button == 2) return player_menu_toggle_map();
+    if (_rail.hovered_button == 3) return player_menu_toggle_build();
     return false;
 }
 
@@ -157,6 +178,14 @@ function player_menu_rail_draw(_rail)
         model.map_frame,
         layout.map_center_x,
         layout.map_center_y
+    );
+
+    draw_set_alpha(_rail.hovered_button == 3 ? 1 : 0.92);
+    draw_sprite(
+        spr_build_button,
+        model.build_frame,
+        layout.build_center_x,
+        layout.build_center_y
     );
 
     draw_set_alpha(1);

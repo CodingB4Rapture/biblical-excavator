@@ -15,13 +15,20 @@ function player_menu_get_rail_layout(_gui_w = -1, _gui_h = -1)
     var inventory_height = sprite_get_height(spr_inventory_button);
     var map_width = sprite_get_width(spr_map_button);
     var map_height = sprite_get_height(spr_map_button);
-    var rail_width = max(quest_width, max(inventory_width, map_width));
+    var build_width = sprite_get_width(spr_build_button);
+    var build_height = sprite_get_height(spr_build_button);
+    var rail_width = max(
+        max(quest_width, inventory_width),
+        max(map_width, build_width)
+    );
     var quest_left = margin + (rail_width - quest_width) * 0.5;
     var quest_top = margin;
     var inventory_left = margin + (rail_width - inventory_width) * 0.5;
     var inventory_top = quest_top + quest_height + button_gap;
     var map_left = margin + (rail_width - map_width) * 0.5;
     var map_top = inventory_top + inventory_height + button_gap;
+    var build_left = margin + (rail_width - build_width) * 0.5;
+    var build_top = map_top + map_height + button_gap;
     var rail_right = margin + rail_width;
 
     return {
@@ -45,6 +52,12 @@ function player_menu_get_rail_layout(_gui_w = -1, _gui_h = -1)
         map_bottom: map_top + map_height,
         map_center_x: map_left + map_width * 0.5,
         map_center_y: map_top + map_height * 0.5,
+        build_left: build_left,
+        build_top: build_top,
+        build_right: build_left + build_width,
+        build_bottom: build_top + build_height,
+        build_center_x: build_left + build_width * 0.5,
+        build_center_y: build_top + build_height * 0.5,
         rail_right: rail_right,
         panel_left: rail_right + panel_gap,
         panel_margin: margin

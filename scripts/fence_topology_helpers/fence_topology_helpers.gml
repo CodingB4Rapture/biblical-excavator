@@ -382,7 +382,7 @@ function cabin_fence_plot_bounds_at(_site_x, _site_y)
         min_x: site_x - grid * 2,
         max_x: site_x + grid * 2,
         min_y: site_y - grid * 2,
-        max_y: site_y + grid * 3
+        max_y: site_y + grid * 2
     };
 }
 

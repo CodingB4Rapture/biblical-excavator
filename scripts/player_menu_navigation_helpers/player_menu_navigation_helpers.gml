@@ -5,7 +5,8 @@ function player_menu_is_open()
 {
     return instance_exists(obj_quest_menu)
         || instance_exists(obj_inventory_menu)
-        || instance_exists(obj_map_menu);
+        || instance_exists(obj_map_menu)
+        || instance_exists(obj_build_menu);
 }
 
 function player_menu_day_transition_is_active()
@@ -21,8 +22,10 @@ function player_menu_navigation_is_available()
     || dialogue_is_active()
     || player_menu_day_transition_is_active()
     || instance_exists(obj_pause_menu)
+    || instance_exists(obj_production_menu)
     || instance_exists(obj_cabin_placement_controller)
-    || instance_exists(obj_fence_planning_controller))
+    || instance_exists(obj_fence_planning_controller)
+    || instance_exists(obj_build_placement_controller))
     {
         return false;
     }
@@ -36,6 +39,7 @@ function player_menu_close()
     with (obj_quest_menu) instance_destroy();
     with (obj_inventory_menu) instance_destroy();
     with (obj_map_menu) instance_destroy();
+    with (obj_build_menu) instance_destroy();
     gameplay_set_paused(false);
     return true;
 }
@@ -46,6 +50,7 @@ function player_menu_open_quest()
 
     with (obj_inventory_menu) instance_destroy();
     with (obj_map_menu) instance_destroy();
+    with (obj_build_menu) instance_destroy();
     if (!instance_exists(obj_quest_menu))
     {
         instance_create_depth(0, 0, -5000, obj_quest_menu);
@@ -61,6 +66,7 @@ function player_menu_open_inventory()
 
     with (obj_quest_menu) instance_destroy();
     with (obj_map_menu) instance_destroy();
+    with (obj_build_menu) instance_destroy();
     if (!instance_exists(obj_inventory_menu))
     {
         instance_create_depth(0, 0, -5000, obj_inventory_menu);
@@ -90,6 +96,7 @@ function player_menu_open_map()
 
     with (obj_quest_menu) instance_destroy();
     with (obj_inventory_menu) instance_destroy();
+    with (obj_build_menu) instance_destroy();
     if (!instance_exists(obj_map_menu))
     {
         instance_create_depth(0, 0, -5000, obj_map_menu);
@@ -104,4 +111,20 @@ function player_menu_toggle_map()
     if (!player_menu_navigation_is_available()) return false;
     if (instance_exists(obj_map_menu)) return player_menu_close();
     return player_menu_open_map();
+}
+
+function player_menu_toggle_build()
+{
+    if (!player_menu_navigation_is_available()) return false;
+    if (instance_exists(obj_build_menu)) return player_menu_close();
+    if (!build_is_unlocked())
+    {
+        notification_show_hint(
+            "Building unlocks during the cabin boundary task.",
+            game_get_speed(gamespeed_fps) * 3,
+            false
+        );
+        return false;
+    }
+    return build_menu_open();
 }

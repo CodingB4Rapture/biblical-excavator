@@ -2,7 +2,8 @@
 
 function fence_sprite_for_record(_records, _index)
 {
-    var gate_part = fence_record_gate_part(_records[_index]);
+    var record = _records[_index];
+    var gate_part = fence_record_gate_part(record);
 
     if (gate_part == FenceGatePart.LEFT)
     {
@@ -15,7 +16,42 @@ function fence_sprite_for_record(_records, _index)
     }
 
     var mask = fence_neighbor_mask(_records, _index);
-    var record = _records[_index];
+    var piece_type = fence_record_piece_type(record);
+    var orientation = fence_record_orientation(record);
+
+    if (piece_type == FencePieceType.STRAIGHT)
+    {
+        switch (orientation)
+        {
+            case FenceRotation.RIGHT: return spr_rightside_fence;
+            case FenceRotation.BACK: return spr_back_fence;
+            case FenceRotation.LEFT: return spr_leftside_fence;
+        }
+        return spr_front_fence;
+    }
+
+    if (piece_type == FencePieceType.CORNER)
+    {
+        // Neighbor topology becomes authoritative once both adjoining pieces
+        // exist, so an earlier corner rotates itself into the final shape.
+        if (mask == (FenceNeighbor.EAST | FenceNeighbor.SOUTH))
+            return spr_top_left_fence_corner;
+        if (mask == (FenceNeighbor.WEST | FenceNeighbor.SOUTH))
+            return spr_top_right_fence_corner;
+        if (mask == (FenceNeighbor.WEST | FenceNeighbor.NORTH))
+            return spr_right_fence_corner;
+        if (mask == (FenceNeighbor.EAST | FenceNeighbor.NORTH))
+            return spr_left_fence_corner;
+
+        switch (orientation)
+        {
+            case FenceRotation.RIGHT: return spr_top_right_fence_corner;
+            case FenceRotation.BACK: return spr_right_fence_corner;
+            case FenceRotation.LEFT: return spr_left_fence_corner;
+        }
+        return spr_top_left_fence_corner;
+    }
+
     var bounds = fence_component_bounds(_records, _index);
     var horizontal = FenceNeighbor.EAST | FenceNeighbor.WEST;
     var vertical = FenceNeighbor.NORTH | FenceNeighbor.SOUTH;

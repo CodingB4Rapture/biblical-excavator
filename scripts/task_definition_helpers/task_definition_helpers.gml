@@ -58,8 +58,8 @@ function task_get_definition(_task_id)
             return {
                 quest_id: QuestId.PLACE_OF_YOUR_OWN,
                 title: "Build the Cabin",
-                summary: "Retrieve four finished Timber Planks, then add them at the selected site to raise its fence, gate, and cabin.",
-                completion_summary: "Four finished planks became a fenced cabin and a place of your own.",
+                summary: "Raise the cabin inside the completed boundary at your selected site.",
+                completion_summary: "The cabin was raised inside the completed boundary.",
                 reward_labels: ["Homestead Cabin", "First Morning Unlocked"],
                 rewards: []
             };
@@ -81,6 +81,16 @@ function task_get_definition(_task_id)
                 summary: "Choose one of two marked sites and take a corner flag to claim the location.",
                 completion_summary: "A cabin site was selected and marked for construction.",
                 reward_labels: ["Cabin Construction"],
+                rewards: []
+            };
+
+        case TaskId.BUILD_CABIN_FENCE:
+            return {
+                quest_id: QuestId.PLACE_OF_YOUR_OWN,
+                title: "Build the Cabin Boundary",
+                summary: "Mill the delivered timber, retrieve the finished fence pieces, and fill the selected site's silhouette piece by piece.",
+                completion_summary: "The selected cabin site now has its complete boundary and front gate.",
+                reward_labels: ["Cabin Construction", "Build Practice"],
                 rewards: []
             };
     }
@@ -107,6 +117,7 @@ function task_get_story_order()
         TaskId.TIMBER_DELIVERY,
         TaskId.PARK_SKIDSTEER,
         TaskId.MARK_CABIN_SITE,
+        TaskId.BUILD_CABIN_FENCE,
         TaskId.PLACE_CABIN
     ];
 }

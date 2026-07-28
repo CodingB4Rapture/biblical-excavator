@@ -63,8 +63,8 @@ function task_run_tests()
         array_length(task_get_ids_for_quest(QuestId.FIRM_FOUNDATION)) == 5
         && array_length(
             task_get_ids_for_quest(QuestId.PLACE_OF_YOUR_OWN)
-        ) == 3,
-        "parking, site marking, and cabin building share the homestead quest"
+        ) == 4,
+        "parking, site marking, boundary work, and cabin building share the homestead quest"
     ) && passed;
 
     var capacity_state = game_state_create_default();
@@ -99,26 +99,197 @@ function task_run_tests()
         "player and vehicle enforce independent resource capacities"
     ) && passed;
 
+    var production_state = game_state_create_default();
+    production_state.task_board_unlocked = true;
+    production_state.cabin_site_placed = true;
+    production_state.task_statuses[TaskId.BUILD_CABIN_FENCE] =
+        TaskStatus.ACTIVE;
+    inventory_add(
+        production_state.home_inventory,
+        ResourceId.TIMBER_LOG,
+        1
+    );
+    global.game_state = production_state;
+    var planks_started = production_start_job(
+        PRODUCTION_MACHINE_SAWMILL,
+        ProductionRecipeId.SAW_TIMBER_PLANKS,
+        1
+    );
+    production_finish_all_jobs();
+    production_state = game_state_ensure();
+    var straight_started = production_start_job(
+        PRODUCTION_MACHINE_SAWMILL,
+        ProductionRecipeId.CUT_STRAIGHT_FENCE,
+        2
+    );
+    production_finish_all_jobs();
+    production_state = game_state_ensure();
+    var corner_started_then_cancelled = production_start_job(
+        PRODUCTION_MACHINE_SAWMILL,
+        ProductionRecipeId.CUT_FENCE_CORNERS,
+        1
+    ) && production_cancel_job(PRODUCTION_MACHINE_SAWMILL);
+    production_state = game_state_ensure();
+    passed = task_test_expect(
+        planks_started
+        && straight_started
+        && corner_started_then_cancelled
+        && inventory_get_amount(
+            production_state.home_inventory,
+            ResourceId.TIMBER_PLANK
+        ) == 2
+        && inventory_get_amount(
+            production_state.finished_crafts_inventory,
+            ResourceId.FENCE_STRAIGHT
+        ) == 10
+        && production_state.production_completed_batches[
+            ProductionRecipeId.SAW_TIMBER_PLANKS
+        ] == 1
+        && production_state.production_completed_batches[
+            ProductionRecipeId.CUT_STRAIGHT_FENCE
+        ] == 2,
+        "machine jobs reserve inputs, finish batches, deliver output, and refund cancelled work"
+    ) && passed;
+
+    var recovery_state = game_state_create_default();
+    recovery_state.cabin_site_placed = true;
+    recovery_state.task_statuses[TaskId.BUILD_CABIN_FENCE] =
+        TaskStatus.ACTIVE;
+    recovery_state.production_completed_batches[
+        ProductionRecipeId.SAW_TIMBER_PLANKS
+    ] = 1;
+    recovery_state.production_completed_batches[
+        ProductionRecipeId.CUT_STRAIGHT_FENCE
+    ] = 2;
+    recovery_state.production_completed_batches[
+        ProductionRecipeId.CUT_FENCE_CORNERS
+    ] = 1;
+    recovery_state.production_completed_batches[
+        ProductionRecipeId.CUT_FENCE_GATE
+    ] = 1;
+    inventory_add(
+        recovery_state.home_inventory,
+        ResourceId.TIMBER_LOG,
+        1
+    );
+    var recovery_target =
+        production_tutorial_recipe_target(recovery_state);
+    passed = task_test_expect(
+        !is_undefined(recovery_target)
+        && recovery_target.recipe_id
+            == ProductionRecipeId.SAW_TIMBER_PLANKS
+        && recovery_target.batches == 1
+        && production_recipe_max_batches(
+            ProductionRecipeId.SAW_TIMBER_PLANKS,
+            recovery_state
+        ) == 1,
+        "missing physical fence pieces permit one recovery log despite historical batch counters"
+    ) && passed;
+
+    production_state.cabin_built = true;
+    inventory_add(
+        production_state.home_inventory,
+        ResourceId.SMALL_LUMBER,
+        1
+    );
+    global.game_state = production_state;
+    var bucket_started = production_start_job(
+        PRODUCTION_MACHINE_LATHE,
+        ProductionRecipeId.TURN_EMPTY_BUCKET,
+        1
+    );
+    production_finish_all_jobs();
+    production_state = game_state_ensure();
+    passed = task_test_expect(
+        bucket_started
+        && inventory_get_amount(
+            production_state.finished_crafts_inventory,
+            ResourceId.EMPTY_BUCKET
+        ) == 1,
+        "the late-tutorial lathe hook turns Small Lumber into an Empty Bucket"
+    ) && passed;
+
+    var saved_machine_state = game_state_create_default();
+    saved_machine_state.cabin_site_placed = true;
+    saved_machine_state.task_statuses[TaskId.BUILD_CABIN_FENCE] =
+        TaskStatus.ACTIVE;
+    inventory_add(
+        saved_machine_state.home_inventory,
+        ResourceId.TIMBER_LOG,
+        1
+    );
+    global.game_state = saved_machine_state;
+    var saved_job_started = production_start_job(
+        PRODUCTION_MACHINE_SAWMILL,
+        ProductionRecipeId.SAW_TIMBER_PLANKS,
+        1
+    );
+    saved_machine_state = game_state_ensure();
+    var saved_job_index = production_state_find_job_index(
+        saved_machine_state,
+        PRODUCTION_MACHINE_SAWMILL
+    );
+    var saved_job = saved_machine_state.production_jobs[
+        saved_job_index
+    ];
+    saved_job.seconds_remaining = 4.5;
+    production_state_set_job(
+        saved_machine_state,
+        saved_job_index,
+        saved_job
+    );
+    var hydrated_machine_state = save_hydrate_game_state(
+        json_parse(json_stringify({
+            production_jobs: save_clone_array(
+                saved_machine_state.production_jobs
+            ),
+            production_completed_batches: save_clone_array(
+                saved_machine_state.production_completed_batches
+            )
+        }))
+    );
+    var hydrated_job = production_job_get(
+        PRODUCTION_MACHINE_SAWMILL,
+        hydrated_machine_state
+    );
+    passed = task_test_expect(
+        saved_job_started
+        && production_job_is_active(hydrated_job)
+        && hydrated_job.recipe_id
+            == ProductionRecipeId.SAW_TIMBER_PLANKS
+        && hydrated_job.batch_total == 1
+        && abs(hydrated_job.seconds_remaining - 4.5) < 0.01,
+        "an active machine batch survives JSON hydration"
+    ) && passed;
+
     var chest_state = game_state_create_default();
     var chest_locked_before_cabin_task =
         !finished_crafts_is_available(chest_state);
-    var chest_planks_moved = finished_crafts_take(
+    chest_state.task_statuses[TaskId.BUILD_CABIN_FENCE] =
+        TaskStatus.ACTIVE;
+    inventory_add(
+        chest_state.finished_crafts_inventory,
+        ResourceId.FENCE_STRAIGHT,
+        5
+    );
+    var chest_pieces_moved = finished_crafts_take(
         chest_state,
-        ResourceId.TIMBER_PLANK,
-        CABIN_TIMBER_PLANK_COST
+        ResourceId.FENCE_STRAIGHT,
+        5
     );
     passed = task_test_expect(
         chest_locked_before_cabin_task
-        && chest_planks_moved == CABIN_TIMBER_PLANK_COST
+        && finished_crafts_is_available(chest_state)
+        && chest_pieces_moved == 5
         && inventory_get_amount(
             chest_state.finished_crafts_inventory,
-            ResourceId.TIMBER_PLANK
+            ResourceId.FENCE_STRAIGHT
         ) == 0
         && inventory_get_amount(
             chest_state.player_inventory,
-            ResourceId.TIMBER_PLANK
-        ) == CABIN_TIMBER_PLANK_COST,
-        "finished crafts stay reserved until cabin work, then transfer once"
+            ResourceId.FENCE_STRAIGHT
+        ) == 5,
+        "finished crafts stay reserved until workshop work, then transfer once"
     ) && passed;
 
     inventory_set_resource_capacity(
@@ -141,17 +312,17 @@ function task_run_tests()
     passed = task_test_expect(
         inventory_get_amount(
             hydrated_chest_state.finished_crafts_inventory,
-            ResourceId.TIMBER_PLANK
+            ResourceId.FENCE_STRAIGHT
         ) == 0
         && inventory_get_amount(
             hydrated_chest_state.player_inventory,
-            ResourceId.TIMBER_PLANK
-        ) == CABIN_TIMBER_PLANK_COST
+            ResourceId.FENCE_STRAIGHT
+        ) == 5
         && inventory_get_resource_capacity(
             hydrated_chest_state.player_inventory,
             ResourceId.TIMBER_PLANK
         ) == PLAYER_TIMBER_PLANK_CAPACITY + 2,
-        "chest stock, carried planks, and future capacity upgrades survive JSON hydration"
+        "chest stock, carried crafts, and future capacity upgrades survive JSON hydration"
     ) && passed;
 
     var additive_save_state = save_hydrate_game_state({});
@@ -159,7 +330,7 @@ function task_run_tests()
         inventory_get_amount(
             additive_save_state.finished_crafts_inventory,
             ResourceId.TIMBER_PLANK
-        ) == CABIN_TIMBER_PLANK_COST
+        ) == 0
         && inventory_get_resource_capacity(
             additive_save_state.player_inventory,
             ResourceId.FIELDSTONE
@@ -168,7 +339,7 @@ function task_run_tests()
             additive_save_state.player_inventory,
             ResourceId.TIMBER_PLANK
         ) == PLAYER_TIMBER_PLANK_CAPACITY,
-        "older saves receive chest stock and the new per-item limits"
+        "additive hydration creates empty production stock and per-item limits"
     ) && passed;
 
     var completed_additive_save_state = save_hydrate_game_state({
@@ -180,6 +351,41 @@ function task_run_tests()
             ResourceId.TIMBER_PLANK
         ) == 0,
         "completed older saves do not receive duplicate cabin planks"
+    ) && passed;
+
+    var v3_task_statuses = array_create(8, TaskStatus.LOCKED);
+    v3_task_statuses[TaskId.MARK_CABIN_SITE] = TaskStatus.CLAIMED;
+    v3_task_statuses[TaskId.PLACE_CABIN] = TaskStatus.AVAILABLE;
+    var v3_player_inventory = array_create(5, 0);
+    var v3_finished_inventory = array_create(5, 0);
+    v3_player_inventory[ResourceId.TIMBER_PLANK] = 2;
+    v3_finished_inventory[ResourceId.TIMBER_PLANK] = 4;
+    var migrated_v3 = save_migrate_to_current({
+        format_version: 3,
+        game_state: {
+            task_statuses: v3_task_statuses,
+            cabin_built: false,
+            player_inventory: v3_player_inventory,
+            finished_crafts_inventory: v3_finished_inventory
+        },
+        scene: {},
+        settings: {}
+    });
+    passed = task_test_expect(
+        migrated_v3.format_version == SAVE_FORMAT_CURRENT
+        && migrated_v3.game_state.task_statuses[
+            TaskId.BUILD_CABIN_FENCE
+        ] == TaskStatus.AVAILABLE
+        && migrated_v3.game_state.task_statuses[TaskId.PLACE_CABIN]
+            == TaskStatus.LOCKED
+        && migrated_v3.game_state.player_inventory[
+            ResourceId.TIMBER_PLANK
+        ] == 0
+        && migrated_v3.game_state.finished_crafts_inventory[
+            ResourceId.TIMBER_PLANK
+        ] == 0
+        && array_length(migrated_v3.game_state.production_jobs) == 2,
+        "v3 cabin progress migrates to the workshop boundary without seeded planks"
     ) && passed;
 
     global.game_state = game_state_create_default();
@@ -408,33 +614,38 @@ function task_run_tests()
         TaskId.MARK_CABIN_SITE,
         story_state
     );
-    var site_recorded = progression_record_cabin_site_state(
+    var story_site = cabin_site_definition(CABIN_SITE_EIRENEIKOS);
+    var site_chosen = progression_choose_cabin_site_state(
         story_state,
-        "Room1",
-        400,
-        300
+        story_site,
+        0
     );
-    var marking_completed =
-        progression_complete_cabin_site_selection_state(story_state);
-    var fence_waited_for_planks = !story_state.cabin_fence_marked;
+    var fence_waited_for_building = !story_state.cabin_fence_marked;
     var marking_claimed = progression_claim_task_state(
         TaskId.MARK_CABIN_SITE,
+        story_state
+    );
+    var boundary_accepted = progression_accept_task_state(
+        TaskId.BUILD_CABIN_FENCE,
+        story_state
+    );
+    var chest_available_for_cabin_task =
+        finished_crafts_is_available(story_state);
+    var cabin_blocked_before_boundary =
+        !progression_accept_task_state(
+            TaskId.PLACE_CABIN,
+            story_state
+        );
+    var boundary_completed =
+        progression_complete_cabin_fence_state(story_state);
+    var boundary_claimed = progression_claim_task_state(
+        TaskId.BUILD_CABIN_FENCE,
         story_state
     );
     var cabin_accepted = progression_accept_task_state(
         TaskId.PLACE_CABIN,
         story_state
     );
-    var chest_available_for_cabin_task =
-        finished_crafts_is_available(story_state);
-    var cabin_blocked_without_planks =
-        !progression_build_cabin_state(story_state);
-    inventory_add(
-        story_state.player_inventory,
-        ResourceId.TIMBER_PLANK,
-        CABIN_TIMBER_PLANK_COST
-    );
-    story_state.cabin_fence_marked = true;
     var cabin_completed = progression_build_cabin_state(story_state);
     var cabin_claimed = progression_claim_task_state(
         TaskId.PLACE_CABIN,
@@ -446,19 +657,18 @@ function task_run_tests()
         && parking_completed
         && parking_claimed
         && marking_accepted
-        && site_recorded
-        && marking_completed
-        && fence_waited_for_planks
+        && site_chosen
+        && fence_waited_for_building
         && marking_claimed
+        && boundary_accepted
         && cabin_accepted
         && chest_available_for_cabin_task
-        && cabin_blocked_without_planks
+        && cabin_blocked_before_boundary
+        && boundary_completed
+        && boundary_claimed
         && cabin_completed
         && cabin_claimed
-        && inventory_get_amount(
-            story_state.player_inventory,
-            ResourceId.TIMBER_PLANK
-        ) == 0
+        && story_state.free_build_unlocked
         && story_state.quest_statuses[QuestId.FIRM_FOUNDATION]
             == QuestStatus.COMPLETE
         && story_state.quest_statuses[QuestId.PLACE_OF_YOUR_OWN]
@@ -502,26 +712,17 @@ function task_run_tests()
         workfield_site.y
     );
     var site_state = game_state_create_default();
-    site_state.cabin_site_placed = true;
-    site_state.cabin_site_room = northwest_site.room_name;
-    site_state.cabin_site_x = northwest_site.x;
-    site_state.cabin_site_y = northwest_site.y;
-    site_state.cabin_selected_site_id = northwest_site.id;
+    site_state.cabin_placement_unlocked = true;
     site_state.task_statuses[TaskId.MARK_CABIN_SITE] =
         TaskStatus.ACTIVE;
-    var took_first_site_flag = progression_take_cabin_site_flag_state(
+    var took_site_flag = progression_choose_cabin_site_state(
         site_state,
-        northwest_site.id,
+        northwest_site,
         0
     );
-    var took_second_site_flag = progression_take_cabin_site_flag_state(
+    var rejected_other_site_flag = !progression_choose_cabin_site_state(
         site_state,
-        northwest_site.id,
-        2
-    );
-    var rejected_other_site_flag = !progression_take_cabin_site_flag_state(
-        site_state,
-        workfield_site.id,
+        workfield_site,
         0
     );
     site_state.cabin_fence_marked = true;
@@ -539,25 +740,19 @@ function task_run_tests()
         northwest_bounds.min_x == 48
         && northwest_bounds.max_x == 176
         && northwest_bounds.min_y == 80
-        && northwest_bounds.max_y == 240
+        && northwest_bounds.max_y == 208
         && workfield_bounds.min_x == 656
         && workfield_bounds.max_x == 784
         && workfield_bounds.min_y == 528
-        && workfield_bounds.max_y == 688,
+        && workfield_bounds.max_y == 656,
         "predefined cabin sites keep their fixed footprints"
     ) && passed;
     passed = task_test_expect(
-        took_first_site_flag
-        && took_second_site_flag
+        took_site_flag
         && rejected_other_site_flag
         && cabin_site_flag_is_taken(
             northwest_site.id,
             0,
-            site_state
-        )
-        && cabin_site_flag_is_taken(
-            northwest_site.id,
-            2,
             site_state
         )
         && !cabin_site_flag_is_taken(
@@ -565,34 +760,33 @@ function task_run_tests()
             0,
             site_state
         )
-        && cabin_site_flag_count_taken(site_state) == 2,
-        "predefined cabin-site flag progress belongs to the selected site"
+        && cabin_site_flag_count_taken(site_state) == 1
+        && site_state.task_statuses[TaskId.MARK_CABIN_SITE]
+            == TaskStatus.COMPLETE,
+        "taking one flag atomically commits the selected site"
     ) && passed;
 
-    var selected_flag_instance = instance_create_depth(
-        0,
-        0,
-        0,
-        obj_cabin_site_flag
-    );
-    selected_flag_instance.site_id = northwest_site.id;
-    var unselected_flag_instance = instance_create_depth(
-        0,
-        0,
-        0,
-        obj_cabin_site_flag
-    );
-    unselected_flag_instance.site_id = workfield_site.id;
-    var removed_unselected_flags =
-        cabin_remove_unselected_site_flags(northwest_site.id);
+    var partial_site_state = game_state_create_default();
+    partial_site_state.cabin_placement_unlocked = true;
+    partial_site_state.cabin_site_placed = true;
+    partial_site_state.cabin_site_room = northwest_site.room_name;
+    partial_site_state.cabin_site_x = northwest_site.x;
+    partial_site_state.cabin_site_y = northwest_site.y;
+    partial_site_state.cabin_selected_site_id = northwest_site.id;
+    partial_site_state.cabin_site_flags_taken = 0;
+    partial_site_state.task_statuses[TaskId.MARK_CABIN_SITE] =
+        TaskStatus.ACTIVE;
+    var partial_site_repaired =
+        progression_repair_cabin_site_selection_state(
+            partial_site_state
+        );
     passed = task_test_expect(
-        instance_exists(selected_flag_instance)
-        && !instance_exists(unselected_flag_instance)
-        && removed_unselected_flags == 1,
-        "site commitment preserves the interacted site's flags"
+        partial_site_repaired
+        && partial_site_state.task_statuses[TaskId.MARK_CABIN_SITE]
+            == TaskStatus.COMPLETE
+        && cabin_site_flag_count_taken(partial_site_state) == 1,
+        "the v4 half-selected flag save repairs to one completed site choice"
     ) && passed;
-    if (instance_exists(selected_flag_instance))
-        instance_destroy(selected_flag_instance);
 
     passed = task_test_expect(
         hydrated_site_state.cabin_selected_site_id == northwest_site.id

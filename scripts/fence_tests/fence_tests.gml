@@ -45,6 +45,116 @@ function fence_planning_run_tests()
         4,
         3
     );
+
+    var blueprint_sockets = cabin_blueprint_sockets_at(112, 144);
+    var blueprint_straights = 0;
+    var blueprint_corners = 0;
+    var blueprint_gates = 0;
+    for (var blueprint_index = 0;
+        blueprint_index < array_length(blueprint_sockets);
+        blueprint_index++)
+    {
+        switch (blueprint_sockets[blueprint_index].piece_type)
+        {
+            case FencePieceType.STRAIGHT:
+                blueprint_straights += 1;
+                break;
+            case FencePieceType.CORNER:
+                blueprint_corners += 1;
+                break;
+            case FencePieceType.GATE:
+                blueprint_gates += 1;
+                break;
+        }
+    }
+    if (!fence_test_expect(
+        array_length(blueprint_sockets) == 15
+        && blueprint_straights == 10
+        && blueprint_corners == 4
+        && blueprint_gates == 1,
+        "the cabin blueprint uses 10 straights, 4 corners, and one two-cell gate"
+    )) failures += 1;
+
+    var legacy_blueprint_state = game_state_create_default();
+    legacy_blueprint_state.cabin_site_placed = true;
+    legacy_blueprint_state.cabin_site_room = room_name;
+    legacy_blueprint_state.cabin_site_x = 112;
+    legacy_blueprint_state.cabin_site_y = 144;
+    legacy_blueprint_state.task_statuses[
+        TaskId.BUILD_CABIN_FENCE
+    ] = TaskStatus.ACTIVE;
+    for (var legacy_socket_index = 0;
+        legacy_socket_index < array_length(blueprint_sockets);
+        legacy_socket_index++)
+    {
+        var legacy_socket = blueprint_sockets[legacy_socket_index];
+        array_push(
+            legacy_blueprint_state.fence_records,
+            fence_record_create(
+                room_name,
+                legacy_socket.x,
+                legacy_socket.y,
+                legacy_socket.piece_type == FencePieceType.GATE
+                    ? FenceGatePart.LEFT
+                    : FenceGatePart.NONE,
+                FENCE_PURPOSE_CABIN_SITE,
+                FencePieceType.LEGACY,
+                FenceRotation.FRONT,
+                legacy_socket.id
+            )
+        );
+        if (legacy_socket.piece_type == FencePieceType.GATE)
+        {
+            array_push(
+                legacy_blueprint_state.fence_records,
+                fence_record_create(
+                    room_name,
+                    legacy_socket.x + grid,
+                    legacy_socket.y,
+                    FenceGatePart.RIGHT,
+                    FENCE_PURPOSE_CABIN_SITE,
+                    FencePieceType.LEGACY,
+                    FenceRotation.FRONT,
+                    legacy_socket.id
+                )
+            );
+        }
+    }
+    var legacy_blueprint_repaired =
+        build_repair_cabin_blueprint_records(
+            legacy_blueprint_state
+        );
+    if (!fence_test_expect(
+        legacy_blueprint_repaired
+        && cabin_blueprint_status(legacy_blueprint_state).complete
+        && fence_record_piece_type(
+            legacy_blueprint_state.fence_records[0]
+        ) == blueprint_sockets[0].piece_type,
+        "socket IDs repair legacy piece metadata without moving the saved boundary"
+    )) failures += 1;
+
+    var crafted_record = fence_record_create(
+        room_name,
+        min_x,
+        min_y,
+        FenceGatePart.NONE,
+        FENCE_PURPOSE_CABIN_SITE,
+        FencePieceType.CORNER,
+        FenceRotation.RIGHT,
+        "top_right"
+    );
+    var restored_crafted_record = fence_copy_record(
+        json_parse(json_stringify(crafted_record))
+    );
+    if (!fence_test_expect(
+        fence_record_piece_type(restored_crafted_record)
+            == FencePieceType.CORNER
+        && fence_record_orientation(restored_crafted_record)
+            == FenceRotation.RIGHT
+        && fence_record_blueprint_socket_id(restored_crafted_record)
+            == "top_right",
+        "crafted piece type, rotation, and blueprint socket survive persistence"
+    )) failures += 1;
     var rectangle_result = fence_try_add_rectangle(
         [],
         room_name,

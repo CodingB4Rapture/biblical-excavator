@@ -42,6 +42,9 @@ function calendar_show_day_transition()
     if (!instance_exists(controller) || controller.day_transition_active) return false;
 
     var game_state = game_state_ensure();
+    // Advancing a day is an explicit workshop progression event. Players may
+    // intentionally use it to finish both active machine jobs.
+    production_finish_all_jobs();
     controller.day_transition_active = true;
     controller.day_transition_timer = 0;
     controller.day_transition_day = game_state.day_number;

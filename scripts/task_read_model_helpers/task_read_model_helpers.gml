@@ -50,10 +50,16 @@ function task_is_active(_task_id, _game_state = undefined)
     return task_get_active_id(_game_state) == _task_id;
 }
 
-/// Finished cabin materials become interactable only during the cabin build.
+/// Finished crafts become interactable when production is part of the active
+/// tutorial or after free building has been earned.
 function finished_crafts_is_available(_game_state = undefined)
 {
-    return task_is_active(TaskId.PLACE_CABIN, _game_state);
+    var game_state = is_undefined(_game_state)
+        ? game_state_read()
+        : _game_state;
+    return task_is_active(TaskId.BUILD_CABIN_FENCE, game_state)
+        || game_state.free_build_unlocked
+        || game_state.cabin_built;
 }
 
 function task_get_attention_id(_game_state = undefined)
@@ -177,26 +183,9 @@ function task_get_objectives(_task_id, _game_state = undefined)
             ];
 
         case TaskId.PLACE_CABIN:
-            var carried_planks = inventory_get_amount(
-                game_state.player_inventory,
-                ResourceId.TIMBER_PLANK
-            );
             return [
                 {
-                    text: "Retrieve 4 Timber Planks from Finished Crafts ("
-                        + string(min(
-                            CABIN_TIMBER_PLANK_COST,
-                            carried_planks
-                        ))
-                        + "/"
-                        + string(CABIN_TIMBER_PLANK_COST)
-                        + ")",
-                    complete: task_finished
-                        || game_state.cabin_built
-                        || carried_planks >= CABIN_TIMBER_PLANK_COST
-                },
-                {
-                    text: "Add the planks; raise the fence, gate, and cabin",
+                    text: "Raise the cabin inside the finished boundary",
                     complete: task_finished || game_state.cabin_built
                 }
             ];
@@ -218,6 +207,81 @@ function task_get_objectives(_task_id, _game_state = undefined)
                 {
                     text: "Choose one predefined site and take one of its flags",
                     complete: task_finished || game_state.cabin_site_placed
+                }
+            ];
+
+        case TaskId.BUILD_CABIN_FENCE:
+            var blueprint = cabin_blueprint_status(game_state);
+            var missing_straight =
+                production_tutorial_missing_output(
+                    ResourceId.FENCE_STRAIGHT,
+                    game_state
+                );
+            var missing_corners =
+                production_tutorial_missing_output(
+                    ResourceId.FENCE_CORNER,
+                    game_state
+                );
+            var missing_gate =
+                production_tutorial_missing_output(
+                    ResourceId.FENCE_GATE,
+                    game_state
+                );
+            var finished_piece_count =
+                production_tutorial_usable_piece_count(
+                    game_state.finished_crafts_inventory,
+                    game_state
+                );
+            var fence_crafting_started =
+                game_state.production_completed_batches[
+                    ProductionRecipeId.CUT_STRAIGHT_FENCE
+                ] > 0
+                || game_state.production_completed_batches[
+                    ProductionRecipeId.CUT_FENCE_CORNERS
+                ] > 0
+                || game_state.production_completed_batches[
+                    ProductionRecipeId.CUT_FENCE_GATE
+                ] > 0
+                || blueprint.filled > 0;
+            return [
+                {
+                    text: "Saw 1 Timber Log into 4 Timber Planks",
+                    complete: task_finished
+                        || production_tutorial_recipe_remaining_batches(
+                            ProductionRecipeId.SAW_TIMBER_PLANKS,
+                            game_state
+                        ) <= 0
+                },
+                {
+                    text: "Cut the remaining Straight Fence pieces ("
+                        + string(max(0, 10 - missing_straight))
+                        + "/10 covered)",
+                    complete: task_finished || missing_straight <= 0
+                },
+                {
+                    text: "Cut Fence Corners and the Fence Gate ("
+                        + string(max(0, 4 - missing_corners))
+                        + "/4 corners, "
+                        + string(max(0, 1 - missing_gate))
+                        + "/1 gate covered)",
+                    complete: task_finished
+                        || (missing_corners <= 0 && missing_gate <= 0)
+                },
+                {
+                    text: "Collect completed fence pieces from the middle Finished Crafts chest",
+                    complete: task_finished
+                        || (
+                            fence_crafting_started
+                            && finished_piece_count <= 0
+                        )
+                },
+                {
+                    text: "Fill the cabin boundary silhouette ("
+                        + string(blueprint.filled)
+                        + "/"
+                        + string(blueprint.total)
+                        + ")",
+                    complete: task_finished || blueprint.complete
                 }
             ];
     }

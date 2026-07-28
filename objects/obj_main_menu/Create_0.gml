@@ -26,7 +26,10 @@ for (var argument_index = 1;
     }
 }
 
-if (run_fence_tests || run_task_tests || run_menu_tests)
+global.automated_test_mode =
+    run_fence_tests || run_task_tests || run_menu_tests;
+
+if (global.automated_test_mode)
 {
     if (run_fence_tests) fence_planning_run_tests();
     if (run_task_tests) task_run_tests();
