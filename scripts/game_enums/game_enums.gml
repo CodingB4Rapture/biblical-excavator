@@ -298,6 +298,7 @@ enum CutsceneStepType
 #macro CUTSCENE_WATER_SUPPLY "story.farmer_water_supply.v1"
 #macro CUTSCENE_ACTOR_PLAYER "actor.player"
 #macro CUTSCENE_ACTOR_FARMER "actor.farmer"
+#macro CUTSCENE_ACTOR_CABIN_SITE "actor.cabin_site"
 #macro CUTSCENE_COMMAND_FINISH_INTRO "progression.finish_farmer_intro.v1"
 #macro CUTSCENE_COMMAND_GIVE_FARMERS_AXE "progression.give_farmers_axe.v1"
 #macro CUTSCENE_COMMAND_BEGIN_WATER_TUTORIAL "progression.begin_water_tutorial.v1"

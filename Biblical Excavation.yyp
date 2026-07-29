@@ -120,6 +120,7 @@
     {"id":{"name":"cutscene_presentation_helpers","path":"scripts/cutscene_presentation_helpers/cutscene_presentation_helpers.yy",},},
     {"id":{"name":"cutscene_state_helpers","path":"scripts/cutscene_state_helpers/cutscene_state_helpers.yy",},},
     {"id":{"name":"dialogue_helpers","path":"scripts/dialogue_helpers/dialogue_helpers.yy",},},
+    {"id":{"name":"farmer_schedule_helpers","path":"scripts/farmer_schedule_helpers/farmer_schedule_helpers.yy",},},
     {"id":{"name":"farmers_wife_helpers","path":"scripts/farmers_wife_helpers/farmers_wife_helpers.yy",},},
     {"id":{"name":"fence_placement_helpers","path":"scripts/fence_placement_helpers/fence_placement_helpers.yy",},},
     {"id":{"name":"fence_planning_controller_helpers","path":"scripts/fence_planning_controller_helpers/fence_planning_controller_helpers.yy",},},

@@ -28,31 +28,31 @@ function progression_task_start_followup(_task_id, _game_state)
     switch (_task_id)
     {
         case TaskId.FIELDSTONE_BY_HAND:
-            return "Gather 6 loose Fieldstones by hand.";
+            return "Loose Fieldstones can be gathered without machinery. Search the nearby ground.";
 
         case TaskId.FALLEN_TREE:
-            return "Find a standing tree and press E to chop it.";
+            return "Explore for a suitable standing tree. Its trunk and stump will matter later.";
 
         case TaskId.STONE_HAUL:
-            return "Crush 10 Fieldrocks and deliver all 16 Fieldstones.";
+            return "The remaining foundation stone is too heavy by hand. Use the skidsteer in the rocky field.";
 
         case TaskId.FIT_THE_WINCH:
-            return "Collect the marked winch package.";
+            return "The mailed attachment is waiting beside Home Delivery.";
 
         case TaskId.TIMBER_DELIVERY:
-            return "Enter the skidsteer and drive to the marked log.";
+            return "The winch can recover the trunk and stump you inspected earlier.";
 
         case TaskId.PLACE_CABIN:
-            return "Go to the selected site and raise the cabin inside its completed boundary.";
+            return "The finished boundary is ready to become a home.";
 
         case TaskId.PARK_SKIDSTEER:
-            return "Return the skidsteer to the marked pad beside the Farmer, stop, and hop out.";
+            return "Settle the heavy equipment before choosing where to build.";
 
         case TaskId.MARK_CABIN_SITE:
-            return "Choose Site I or Site II. Taking one flag commits that site.";
+            return "Explore both surveyed sites. Taking one flag commits your choice.";
 
         case TaskId.BUILD_CABIN_FENCE:
-            return "Use the sawmill, retrieve each finished fence piece, then press B to fill the site silhouette.";
+            return "Turn the recovered timber into a safe boundary for the site you chose.";
     }
 
     return "";

@@ -68,17 +68,17 @@ function farmers_wife_get_response(_wife, _actor, _game_state)
         if (_game_state.tutorial_board_assignment_pending)
         {
             return farmers_wife_response_create([
-                "Your first assignment is waiting on the Task Board beside us.",
-                "Walk up to the board, press E, select Fieldstone by Hand, and accept the task. Your work marker will lead you from there."
+                "The first part of the homestead plan is waiting on the board beside us.",
+                "It begins with learning what this land can provide. Take your time and look around."
             ]);
         }
 
         return farmers_wife_response_create(
             [
                 "We're glad to have another pair of hands.",
-                "For your cabin foundation, we'll need 16 Fieldstones and one good log.",
-                "Begin with 6 loose Fieldstones gathered by hand. I've posted the assignment on the Task Board beside us.",
-                "Press E at the board and accept Fieldstone by Hand. Your work marker will guide you from there."
+                "Before anyone raises a cabin here, we need to understand the ground and gather what will make the foundation last.",
+                "Begin with the loose stone nearby. It is work you can do by hand, and it will teach you what is worth bringing home.",
+                "I've divided the homestead plan into larger sections on the board beside us. Start with Know the Land, and take your time."
             ],
             0,
             DIALOGUE_ACTION_POST_FIRST_TASK

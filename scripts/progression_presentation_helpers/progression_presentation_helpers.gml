@@ -65,7 +65,13 @@ function progression_present_task_claimed(_task_id)
     // The board may claim one task and accept the next before closing.
     // Keep completion banners free of "accept next" hints that could already
     // be stale by the time the queued presentation reaches the world.
-    progression_queue_task_completed(_task_id);
+    // A quest-ending notice already carries more meaning than a duplicate
+    // work-chapter banner.
+    if (_task_id != TaskId.TIMBER_DELIVERY
+    && _task_id != TaskId.PLACE_CABIN)
+    {
+        progression_queue_task_completed(_task_id);
+    }
 
     switch (_task_id)
     {

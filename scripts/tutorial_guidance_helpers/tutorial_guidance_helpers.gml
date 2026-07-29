@@ -69,6 +69,37 @@ function tutorial_guidance_at(
     };
 }
 
+/// Exploration guidance leads to a useful area, then gets out of the way once
+/// the player arrives. Contextual interaction prompts still own exact actions.
+function tutorial_guidance_explore_area(
+    _area_id,
+    _label,
+    _actor = noone
+)
+{
+    var definition = world_area_definition(_area_id);
+    if (is_undefined(definition))
+        return tutorial_guidance_invalid();
+
+    if (instance_exists(_actor)
+    && world_area_id_at_position(
+        room_get_name(room),
+        _actor.x,
+        _actor.y
+    ) == _area_id)
+    {
+        return tutorial_guidance_invalid();
+    }
+
+    return tutorial_guidance_at(
+        (definition.min_x + definition.max_x) * 0.5,
+        (definition.min_y + definition.max_y) * 0.5,
+        _label,
+        definition.room_name,
+        "area"
+    );
+}
+
 function tutorial_guidance_from_instance(_target, _label)
 {
     if (!instance_exists(_target)) return tutorial_guidance_invalid();
@@ -546,10 +577,11 @@ function tutorial_guidance_target()
             }
             else
             {
-                var actor = instance_find(obj_player, 0);
-                if (instance_exists(actor))
-                    target = tutorial_find_nearest_hand_fieldstone(actor);
-                label = "LOOSE FIELDSTONE";
+                return tutorial_guidance_explore_area(
+                    WORLD_AREA_HOMESTEAD,
+                    "SEARCH NEARBY GROUND",
+                    guidance_actor
+                );
             }
             break;
         }
@@ -575,19 +607,33 @@ function tutorial_guidance_target()
             }
             else
             {
-                target = instance_nearest(vehicle.x, vehicle.y, obj_fieldrock);
-                label = "FIELDROCK";
+                return tutorial_guidance_explore_area(
+                    WORLD_AREA_MINEFIELD,
+                    "SEARCH THE ROCKY FIELD",
+                    vehicle
+                );
             }
             break;
         }
 
         case TutorialStage.CHOP_TREE:
-            target = tutorial_find_nearest_target(
+        {
+            var nearby_tree = tutorial_find_nearest_target(
                 obj_tree,
                 guidance_actor
             );
-            label = "STANDING TREE";
-            break;
+            if (!instance_exists(nearby_tree))
+                return tutorial_guidance_invalid();
+            return tutorial_guidance_explore_area(
+                world_area_id_at_position(
+                    room_get_name(room),
+                    nearby_tree.x,
+                    nearby_tree.y
+                ),
+                "SEARCH FOR A TREE",
+                guidance_actor
+            );
+        }
 
         case TutorialStage.INSPECT_FALLEN_TREE:
         {

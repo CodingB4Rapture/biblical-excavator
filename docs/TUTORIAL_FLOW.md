@@ -28,6 +28,19 @@ Winch mechanics remain in `winch_helpers`. Dialogue dispatch remains in
 
 ## Player-facing sequence
 
+The Task Board presents this sequence as three work chapters rather than one
+undifferentiated list:
+
+1. **Know the Land** - learn what the nearby ground can provide safely.
+2. **Lay the Foundation** - recover the heavy stone and timber needed for a
+   lasting cabin.
+3. **Make a Home** - choose a site and turn those supplies into a visible
+   homestead.
+
+The chapters are presentation-only groupings. Existing task statuses, rewards,
+cutscene triggers, save compatibility, and the one-active-task invariant remain
+unchanged.
+
 1. Start a new game. The authored rescue cutscene shows the Farmer finding the
    player unconscious through two eyelid blinks and staged approach movement,
    fading to the homestead, and greeting the player after they wake just west
@@ -79,14 +92,26 @@ performs the durable transition. A completed task returns guidance to the Task
 Board; claiming it applies its complete reward transaction and exposes the next
 assignment.
 
-Task start/completion presentations queue while the board is open and play only
-after the world is visible. Objective completion in the world uses the smaller
-return-to-board hint.
+The gameplay HUD names the broad work chapter and desired outcome. Exact
+button-level actions remain contextual interaction prompts or temporary hints;
+they are not promoted into separate narrative goals.
+
+Task-start presentations queue while the board is open and play only after the
+world is visible. The first task in a chapter introduces the chapter purpose;
+later tasks use a smaller `NEXT STEP` framing. Completion banners appear at
+chapter boundaries rather than after every claimed task. Objective completion
+in the world still uses the smaller return-to-board hint.
 
 Guidance returns a descriptor containing room, target kind, stable world ID
 when available, coordinates, and label. `obj_tutorial_guidance` owns the world
 marker and the labeled edge arrow. Guidance never advances progression or
 creates objects.
+
+Hand gathering, finding a tree, and powered stone collection use area-level
+exploration guidance. The arrow leads toward useful ground and disappears once
+the player enters that area, leaving nearby resources to be discovered.
+Installation, delivery, construction, and winch interactions retain exact
+guidance because those actions depend on a precise world object.
 
 The room reconciler reconstructs the mailed winch package beside Home Delivery
 when durable state requires it. Cabin and fence restoration use the same

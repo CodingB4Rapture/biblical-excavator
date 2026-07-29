@@ -6,6 +6,16 @@ interaction_radius = 32;
 // make her impossible to select after the Farmer sends the player to her.
 interaction_priority = 45;
 
+farmer_home_x = x;
+farmer_home_y = y;
+farmer_route_mode = FARMER_ROUTE_IDLE;
+farmer_route_points = [];
+farmer_route_index = 0;
+farmer_story_return_pending = false;
+farmer_schedule_day = game_state_ensure().day_number;
+farmer_pond_trip_day = -1;
+image_speed = 0;
+
 interaction_get_prompt = function(_actor)
 {
     return "Talk to Farmer";

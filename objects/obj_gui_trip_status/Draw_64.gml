@@ -209,10 +209,11 @@ if (show_homebase && !dialogue_is_active())
         + string(home_logs) + " / 1 log"
     );
 
+    var current_work_section = task_get_current_work_section(game_state);
     draw_text(
         home_left + 12,
         home_top + 68,
-        "Deliveries: " + string(game_state.completed_deliveries)
+        "Work chapter: " + current_work_section.title
     );
 
     draw_text(

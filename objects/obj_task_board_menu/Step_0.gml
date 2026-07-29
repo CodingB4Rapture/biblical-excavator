@@ -16,13 +16,7 @@ var selection_move = keyboard_check_pressed(vk_down)
 
 if (selection_move != 0)
 {
-    selected_row = clamp(
-        selected_row + selection_move,
-        0,
-        array_length(task_order) - 1
-    );
-    selected_task = task_order[selected_row];
-    action_message = "";
+    task_board_menu_move_selection(selection_move);
 }
 
 var layout = task_board_menu_get_layout();
@@ -33,8 +27,8 @@ var visible_rows = max(
             / task_row_height
     )
 );
-var task_count = array_length(task_order);
-var max_scroll = max(0, task_count - visible_rows);
+var board_row_count = array_length(board_rows);
+var max_scroll = max(0, board_row_count - visible_rows);
 var mouse_gui_x = device_mouse_x_to_gui(0);
 var mouse_gui_y = device_mouse_y_to_gui(0);
 var mouse_over_list = point_in_rectangle(
@@ -45,7 +39,7 @@ var mouse_over_list = point_in_rectangle(
     layout.list_right,
     min(
         layout.content_bottom,
-        layout.content_top + task_count * task_row_height
+        layout.content_top + board_row_count * task_row_height
     )
 );
 
@@ -59,17 +53,21 @@ if (mouse_over_list)
 
     if (mouse_check_button_pressed(mb_left))
     {
-        selected_row = clamp(
+        var clicked_row = clamp(
             list_scroll
                 + floor(
                     (mouse_gui_y - layout.content_top)
                         / task_row_height
                 ),
             0,
-            task_count - 1
+            board_row_count - 1
         );
-        selected_task = task_order[selected_row];
-        action_message = "";
+        if (board_rows[clicked_row].kind == "task")
+        {
+            selected_row = clicked_row;
+            selected_task = board_rows[selected_row].task_id;
+            action_message = "";
+        }
     }
 }
 

@@ -4,6 +4,9 @@ draw_set_font(-1);
 
 var layout = task_board_menu_get_layout();
 var definition = task_get_definition(selected_task);
+var work_section = task_get_work_section_definition(
+    task_get_work_section_id(selected_task)
+);
 var status = task_get_status(selected_task);
 var objectives = task_get_objectives(selected_task);
 var panel_color = make_color_rgb(39, 30, 23);
@@ -49,7 +52,7 @@ draw_set_color(make_color_rgb(255, 216, 112));
 draw_text(
     layout.panel_left + 16,
     layout.panel_top + 14,
-    "HOMESTEAD TASK BOARD"
+    "HOMESTEAD WORK PLAN"
 );
 
 draw_set_color(make_color_rgb(92, 66, 39));
@@ -70,10 +73,38 @@ var visible_rows = max(
 for (var row = 0; row < visible_rows; row++)
 {
     var order_index = list_scroll + row;
-    if (order_index >= array_length(task_order)) break;
-    var task_id = task_order[order_index];
+    if (order_index >= array_length(board_rows)) break;
+    var board_row = board_rows[order_index];
 
     var row_top = layout.content_top + row * task_row_height;
+    if (board_row.kind == "section")
+    {
+        var row_section = task_get_work_section_definition(
+            board_row.section_id
+        );
+        draw_set_color(make_color_rgb(92, 66, 39));
+        draw_line(
+            layout.list_left,
+            row_top + 4,
+            layout.list_right,
+            row_top + 4
+        );
+        draw_set_color(make_color_rgb(255, 216, 112));
+        draw_text(
+            layout.list_left + 4,
+            row_top + 10,
+            row_section.number + ". " + string_upper(row_section.title)
+        );
+        draw_set_color(muted_color);
+        draw_text(
+            layout.list_left + 4,
+            row_top + 26,
+            row_section.short_purpose
+        );
+        continue;
+    }
+
+    var task_id = board_row.task_id;
     var row_status = task_get_status(task_id);
     var status_color = make_color_rgb(130, 117, 96);
 
@@ -130,28 +161,71 @@ if (status == TaskStatus.CLAIMED)
     status_color = make_color_rgb(103, 168, 96);
 
 draw_set_color(status_color);
-draw_text(layout.detail_left, layout.content_top, definition.title);
+draw_text(
+    layout.detail_left,
+    layout.content_top,
+    work_section.number + ". " + string_upper(work_section.title)
+);
 draw_set_halign(fa_right);
 draw_text(
     layout.panel_right - 18,
-    layout.content_top,
+    layout.content_top + 24,
     task_get_status_text(selected_task)
 );
 draw_set_halign(fa_left);
 
 draw_set_color(text_color);
-var summary_text = status >= TaskStatus.COMPLETE
-    ? definition.completion_summary
-    : definition.summary;
+var compact_detail = layout.gui_h < 600;
+var task_title_top = layout.content_top + (compact_detail ? 18 : 24);
+draw_text(layout.detail_left, task_title_top, definition.title);
+
+draw_set_color(make_color_rgb(255, 216, 112));
+var purpose_heading_top = layout.content_top
+    + (compact_detail ? 38 : 50);
+draw_text(layout.detail_left, purpose_heading_top, "WHY THIS MATTERS");
+draw_set_color(text_color);
+var purpose_top = purpose_heading_top + 20;
 draw_text_ext(
     layout.detail_left,
-    layout.content_top + 28,
-    summary_text,
+    purpose_top,
+    work_section.purpose,
     15,
     detail_width
 );
 
-var objective_top = layout.content_top + 102;
+var purpose_height = string_height_ext(
+    work_section.purpose,
+    15,
+    detail_width
+);
+var current_work_top = purpose_top + purpose_height + 8;
+var summary_text = status >= TaskStatus.COMPLETE
+    ? definition.completion_summary
+    : definition.summary;
+var objective_top = current_work_top;
+
+if (!compact_detail)
+{
+    draw_set_color(make_color_rgb(255, 216, 112));
+    draw_text(layout.detail_left, current_work_top, "CURRENT WORK");
+    draw_set_color(text_color);
+    var summary_top = current_work_top + 20;
+    draw_text_ext(
+        layout.detail_left,
+        summary_top,
+        summary_text,
+        15,
+        detail_width
+    );
+
+    var summary_height = string_height_ext(
+        summary_text,
+        15,
+        detail_width
+    );
+    objective_top = summary_top + summary_height + 12;
+}
+
 draw_set_color(make_color_rgb(255, 216, 112));
 draw_text(layout.detail_left, objective_top, "OBJECTIVES");
 
@@ -190,9 +264,9 @@ for (var reward_index = 0;
 }
 
 var action_text = "LOCKED";
-if (status == TaskStatus.AVAILABLE) action_text = "ACCEPT TASK";
-if (status == TaskStatus.ACTIVE) action_text = "TASK ACTIVE";
-if (status == TaskStatus.COMPLETE) action_text = "CLAIM / ARCHIVE";
+if (status == TaskStatus.AVAILABLE) action_text = "BEGIN THIS WORK";
+if (status == TaskStatus.ACTIVE) action_text = "WORK UNDERWAY";
+if (status == TaskStatus.COMPLETE) action_text = "ARCHIVE WORK";
 if (status == TaskStatus.CLAIMED) action_text = "COMPLETED";
 
 draw_set_color(make_color_rgb(83, 55, 29));

@@ -13,8 +13,8 @@ interaction_get_prompt = function(_actor)
 {
     var game_state = game_state_ensure();
     if (!game_state.task_board_unlocked) return "Inspect Task Board";
-    if (game_state.tutorial_board_assignment_pending) return "Accept First Task";
-    return "Read Task Board";
+    if (game_state.tutorial_board_assignment_pending) return "Begin Work Plan";
+    return "Review Work Plan";
 };
 
 interaction_run = function(_actor)

@@ -123,5 +123,17 @@ remain idempotent: replaying the axe command leaves one owned axe.
 4. Grants the axe through one idempotent command.
 5. Returns guidance to the Task Board.
 
+`story.farmer_water_supply.v1`:
+
+1. Stages the Farmer south of the selected cabin.
+2. Walks him north to the cabin's front edge without crossing its sprite.
+3. Begins the first water-supply lesson through an idempotent command.
+
+When any current Farmer cutscene releases the camera and player controls, the
+Farmer follows a transient route back to his authored home position. Once the
+calendar is running, he also makes one daily round trip to the pond beginning
+at 3:00 PM. He approaches from the pond's east lane and retraces that safe
+route home after reaching the bank.
+
 Future quest scenes should reuse these steps and add a new step type only when
 real shipped content cannot be represented by the existing vocabulary.

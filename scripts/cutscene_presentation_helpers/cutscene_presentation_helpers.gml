@@ -17,6 +17,8 @@ function cutscene_actor_resolve(_actor_id)
             return instance_find(obj_player, 0);
         case CUTSCENE_ACTOR_FARMER:
             return instance_find(obj_farmer, 0);
+        case CUTSCENE_ACTOR_CABIN_SITE:
+            return instance_find(obj_cabin_site, 0);
     }
     return noone;
 }
@@ -91,6 +93,16 @@ function cutscene_controller_finish(_controller)
 {
     var game_state = game_state_ensure();
     cutscene_state_complete(game_state, _controller.cutscene_id);
+    switch (_controller.cutscene_id)
+    {
+        case CUTSCENE_INTRO_RESCUE:
+        case CUTSCENE_AXE_HANDOFF:
+        case CUTSCENE_WATER_SUPPLY:
+            farmer_schedule_request_story_return(
+                instance_find(obj_farmer, 0)
+            );
+            break;
+    }
     camera_follow_gameplay();
     input_lock_interaction(3);
     save_write();

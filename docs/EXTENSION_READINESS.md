@@ -111,9 +111,11 @@ post-format-9 empty-record migration.
 Water filtration economy, drinking/needs simulation, the ten-unit vehicle
 bucket, its forty-plank recipe,
 attachment visuals, animal damage events, locusts/beavers, random destruction,
-general NPC pathfinding, Farmer schedules, and time-based Farmer dialogue are
-not implemented here. Future Farmer schedules must resolve dialogue by stable
-NPC identity/location fallback so progression never depends on one coordinate.
+general NPC pathfinding, more complex NPC schedules, and time-based Farmer
+dialogue are not implemented here. The Farmer now has one authored 3:00 PM
+pond round trip and post-cutscene return routes. Future schedules must still
+resolve dialogue by stable NPC identity/location fallback so progression never
+depends on one coordinate.
 
 ## Verification and playtest
 

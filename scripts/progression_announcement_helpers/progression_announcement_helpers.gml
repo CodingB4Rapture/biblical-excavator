@@ -39,8 +39,23 @@ function progression_queue_announcement(
 
 function progression_queue_task_started(_task_id, _followup_hint = "")
 {
+    var section = task_get_work_section_definition(
+        task_get_work_section_id(_task_id)
+    );
+
+    if (task_work_section_is_first_task(_task_id))
+    {
+        progression_queue_announcement(
+            "NEW WORK CHAPTER",
+            section.title,
+            [],
+            _followup_hint
+        );
+        return;
+    }
+
     progression_queue_announcement(
-        "TASK STARTED",
+        "NEXT STEP",
         task_get_definition(_task_id).title,
         [],
         _followup_hint
@@ -50,9 +65,16 @@ function progression_queue_task_started(_task_id, _followup_hint = "")
 function progression_queue_task_completed(_task_id, _followup_hint = "")
 {
     var definition = task_get_definition(_task_id);
+    var section = task_get_work_section_definition(
+        task_get_work_section_id(_task_id)
+    );
+
+    if (!task_work_section_is_last_task(_task_id))
+        return;
+
     progression_queue_announcement(
-        "TASK COMPLETE",
-        definition.title,
+        "WORK CHAPTER COMPLETE",
+        section.title,
         definition.reward_labels,
         _followup_hint
     );

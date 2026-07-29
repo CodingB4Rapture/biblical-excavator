@@ -3,8 +3,21 @@
 ## Quest, task, and objective roles
 
 - A **quest** is a larger story arc shown in the Quest Journal.
+- A **work chapter** groups related tasks by purpose and explains why that
+  section of the homestead plan matters.
 - A **task** is one board-sized assignment within a quest.
 - An **objective** is a checklist item within a task.
+
+Current work chapters are:
+
+1. `Know the Land`: hand gathering and learning what a felled tree provides.
+2. `Lay the Foundation`: powered stone collection, winch preparation, and
+   heavy timber recovery.
+3. `Make a Home`: equipment parking, site choice, boundary construction, and
+   raising the cabin.
+
+Work chapters are read-only presentation metadata. They add no saved enum,
+status array, reward transaction, or alternate progression path.
 
 The Task Board uses one explicit state flow:
 

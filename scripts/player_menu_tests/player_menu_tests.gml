@@ -246,11 +246,11 @@ function player_menu_run_tests()
     var stump_model = trip_status_get_tutorial_read_model(stage_state);
 
     passed = player_menu_test_expect(
-        winch_model.heading == "Winch Setup"
-        && log_model.heading == "Log Recovery"
-        && third_trip_model.heading == "Current Trip - Trip 3 of 3"
-        && stump_model.heading == "Stump Recovery",
-        "Trip 3 appears only during the actual log-haul trip"
+        winch_model.heading == "Lay the Foundation"
+        && log_model.heading == "Lay the Foundation"
+        && third_trip_model.heading == "Lay the Foundation"
+        && stump_model.heading == "Lay the Foundation",
+        "winch interactions stay beneath one broad work chapter"
     ) && passed;
 
     var click_state = game_state_create_default();

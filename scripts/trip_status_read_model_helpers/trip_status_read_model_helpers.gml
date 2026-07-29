@@ -30,90 +30,87 @@ function trip_status_get_tutorial_read_model(_game_state)
 
         case TutorialStage.TRIP_ONE_HAND_FIELDSTONE:
             model = trip_status_make_read_model(
-                "Trip 1 of 3",
-                "Collect 6 Fieldstones by hand ("
+                "Know the Land",
+                "Explore nearby and gather 6 loose Fieldstones ("
                     + string(_game_state.tutorial_fieldstones_collected)
-                    + "/6)",
-                true
+                    + "/6)"
             );
             break;
 
         case TutorialStage.CHOP_TREE:
             model = trip_status_make_read_model(
-                "Axe Work",
-                "Use the gifted axe on a standing tree"
+                "Know the Land",
+                "Choose and safely fell one standing tree"
             );
             break;
 
         case TutorialStage.INSPECT_FALLEN_TREE:
             model = trip_status_make_read_model(
-                "Axe Work",
-                "Inspect the fallen tree and stump"
+                "Know the Land",
+                "Inspect what the felled tree can provide"
             );
             break;
 
         case TutorialStage.TRIP_TWO_VEHICLE_FIELDSTONE:
             model = trip_status_make_read_model(
-                "Trip 2 of 3",
-                "Crush 10 Fieldrocks, then deliver all 16 Fieldstones",
-                true
+                "Lay the Foundation",
+                "Use the skidsteer to bring home enough foundation stone"
             );
             break;
 
         case TutorialStage.WINCH_PACKAGE_READY:
             model = trip_status_make_read_model(
-                "Winch Setup",
-                "Collect the winch package"
+                "Lay the Foundation",
+                "Prepare the skidsteer to recover material too heavy to lift"
             );
             break;
 
         case TutorialStage.WINCH_INSTALL_REQUIRED:
             model = trip_status_make_read_model(
-                "Winch Setup",
-                "Install the winch on the skidsteer"
+                "Lay the Foundation",
+                "Prepare the skidsteer to recover material too heavy to lift"
             );
             break;
 
         case TutorialStage.INSPECT_FIRST_LOG:
             model = trip_status_make_read_model(
-                "Log Recovery",
-                "Inspect the large log"
+                "Lay the Foundation",
+                "Recover the felled timber for the homestead"
             );
             break;
 
         case TutorialStage.TAKE_WINCH_CABLE:
             model = trip_status_make_read_model(
-                "Log Recovery",
-                "Take the cable from the rear hitch"
+                "Lay the Foundation",
+                "Recover the felled timber for the homestead"
             );
             break;
 
         case TutorialStage.ATTACH_CABLE_TO_LOG:
             model = trip_status_make_read_model(
-                "Log Recovery",
-                "Attach the cable to the log"
+                "Lay the Foundation",
+                "Recover the felled timber for the homestead"
             );
             break;
 
         case TutorialStage.HAUL_FIRST_LOG:
             model = trip_status_make_read_model(
-                "Trip 3 of 3",
-                "Winch the log to Home Delivery",
-                true
+                "Lay the Foundation",
+                "Bring the felled timber home"
             );
             break;
 
         case TutorialStage.PULL_STUMP:
             model = trip_status_make_read_model(
-                "Stump Recovery",
-                "Winch the stump to Home Delivery for Small Lumber"
+                "Lay the Foundation",
+                "Recover the rest of the felled tree"
             );
             break;
 
         case TutorialStage.COMPLETE:
             model = trip_status_make_read_model(
-                "Tutorial Complete",
-                "Cabin materials delivered"
+                "Foundation Ready",
+                "The gathered materials can now become a home"
             );
             break;
     }

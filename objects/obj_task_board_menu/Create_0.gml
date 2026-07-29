@@ -2,8 +2,9 @@
 
 game_state_ensure();
 task_order = task_get_story_order();
+board_rows = task_get_board_rows();
 selected_task = task_get_preferred_selection();
-selected_row = max(0, task_order_index_of(selected_task, task_order));
+selected_row = task_board_row_index_of_task(selected_task, board_rows);
 task_row_height = 44;
 list_scroll = 0;
 input_lock_frames = 2;
@@ -19,9 +20,9 @@ task_board_menu_get_layout = function()
     var panel_right = gui_w - margin;
     var panel_bottom = gui_h - margin;
     var list_width = clamp(
-        (panel_right - panel_left) * 0.31,
-        220,
-        310
+        (panel_right - panel_left) * 0.34,
+        250,
+        340
     );
 
     return {
@@ -61,8 +62,8 @@ task_board_menu_perform_action = function()
         {
             changed = task_start(selected_task);
             action_message = changed
-                ? "Task accepted. Press E to close."
-                : "That task cannot be accepted yet.";
+                ? "Work added to your plan. Press E to close."
+                : "That work cannot begin yet.";
             break;
         }
 
@@ -70,21 +71,21 @@ task_board_menu_perform_action = function()
         {
             changed = task_claim_reward(selected_task);
             action_message = changed
-                ? "Task reward recorded."
+                ? "Work archived."
                 : "That reward has already been claimed.";
             break;
         }
 
         case TaskStatus.ACTIVE:
-            action_message = "This task is already active.";
+            action_message = "This work is already underway.";
             break;
 
         case TaskStatus.CLAIMED:
-            action_message = "This task is complete.";
+            action_message = "This work is complete.";
             break;
 
         default:
-            action_message = "Finish the earlier work to unlock this task.";
+            action_message = "Finish the earlier work in this plan first.";
             break;
     }
 
@@ -92,10 +93,38 @@ task_board_menu_perform_action = function()
     {
         save_write();
         selected_task = task_get_preferred_selection();
-        selected_row = max(
-            0,
-            task_order_index_of(selected_task, task_order)
+        selected_row = task_board_row_index_of_task(
+            selected_task,
+            board_rows
         );
+    }
+};
+
+task_board_menu_move_selection = function(_direction)
+{
+    var next_row = selected_row;
+
+    repeat (array_length(board_rows))
+    {
+        next_row = clamp(
+            next_row + _direction,
+            0,
+            array_length(board_rows) - 1
+        );
+
+        if (board_rows[next_row].kind == "task")
+        {
+            selected_row = next_row;
+            selected_task = board_rows[selected_row].task_id;
+            action_message = "";
+            return;
+        }
+
+        if (next_row == 0
+        || next_row == array_length(board_rows) - 1)
+        {
+            return;
+        }
     }
 };
 

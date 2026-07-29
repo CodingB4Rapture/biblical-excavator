@@ -67,6 +67,29 @@ function task_run_tests()
         "parking, site marking, boundary work, and cabin building share the homestead quest"
     ) && passed;
 
+    var work_plan_rows = task_get_board_rows();
+    var foundation_sections = task_get_work_sections_for_quest(
+        QuestId.FIRM_FOUNDATION
+    );
+    var home_sections = task_get_work_sections_for_quest(
+        QuestId.PLACE_OF_YOUR_OWN
+    );
+    passed = task_test_expect(
+        array_length(work_plan_rows) == TaskId.COUNT
+            + WORK_SECTION_COUNT
+        && work_plan_rows[0].kind == "section"
+        && work_plan_rows[1].task_id == TaskId.FIELDSTONE_BY_HAND
+        && task_get_work_section_id(TaskId.FALLEN_TREE)
+            == WORK_SECTION_KNOW_LAND
+        && task_get_work_section_id(TaskId.TIMBER_DELIVERY)
+            == WORK_SECTION_FOUNDATION
+        && task_get_work_section_id(TaskId.PLACE_CABIN)
+            == WORK_SECTION_HOME
+        && array_length(foundation_sections) == 2
+        && array_length(home_sections) == 1,
+        "the work plan groups every task into three why-driven chapters"
+    ) && passed;
+
     var capacity_state = game_state_create_default();
     var player_stones_added = inventory_add(
         capacity_state.player_inventory,
@@ -334,6 +357,34 @@ function task_run_tests()
         && cutscene_approach_value(1, 0, 0.25) == 0.75
         && cutscene_approach_value(0.9, 1, 0.25) == 1,
         "cutscene fades approach either target without a runtime builtin"
+    ) && passed;
+
+    var water_visit_definition =
+        cutscene_definition(CUTSCENE_WATER_SUPPLY);
+    passed = task_test_expect(
+        water_visit_definition.steps[1].type
+            == CutsceneStepType.REPOSITION_ACTOR
+        && water_visit_definition.steps[1].target_actor_id
+            == CUTSCENE_ACTOR_CABIN_SITE
+        && water_visit_definition.steps[1].offset_y == 160
+        && water_visit_definition.steps[5].type
+            == CutsceneStepType.MOVE_ACTOR
+        && water_visit_definition.steps[5].target_actor_id
+            == CUTSCENE_ACTOR_CABIN_SITE
+        && water_visit_definition.steps[5].offset_y == 64,
+        "the post-build Farmer visit approaches from south of the cabin"
+    ) && passed;
+
+    passed = task_test_expect(
+        !farmer_schedule_should_begin_pond_trip(899, 3, 2)
+        && farmer_schedule_should_begin_pond_trip(900, 3, 2)
+        && !farmer_schedule_should_begin_pond_trip(900, 3, 3)
+        && !farmer_schedule_should_begin_pond_trip(
+            CALENDAR_NIGHT_MINUTE,
+            3,
+            2
+        ),
+        "the Farmer begins one pond round trip per day at 3 PM"
     ) && passed;
 
     var axe_scene_state = game_state_create_default();
@@ -1000,6 +1051,18 @@ function task_run_tests()
         && abs(right_edge_guidance.x - 90) < 0.01
         && abs(right_edge_guidance.y - 50) < 0.01,
         "off-camera guidance reaches the correct screen edge"
+    ) && passed;
+
+    var minefield_exploration = tutorial_guidance_explore_area(
+        WORLD_AREA_MINEFIELD,
+        "SEARCH THE ROCKY FIELD"
+    );
+    passed = task_test_expect(
+        minefield_exploration.valid
+        && minefield_exploration.target_kind == "area"
+        && minefield_exploration.x == 1080
+        && minefield_exploration.y == 616,
+        "exploration guidance points to an area instead of an exact resource"
     ) && passed;
 
     var v1_data = {

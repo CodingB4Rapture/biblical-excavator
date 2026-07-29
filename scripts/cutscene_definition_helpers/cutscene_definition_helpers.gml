@@ -213,9 +213,9 @@ function cutscene_definition(_cutscene_id)
                     {
                         type: CutsceneStepType.REPOSITION_ACTOR,
                         actor_id: CUTSCENE_ACTOR_FARMER,
-                        target_actor_id: CUTSCENE_ACTOR_PLAYER,
+                        target_actor_id: CUTSCENE_ACTOR_CABIN_SITE,
                         offset_x: 0,
-                        offset_y: -96,
+                        offset_y: 160,
                         angle: 0
                     },
                     {
@@ -241,9 +241,9 @@ function cutscene_definition(_cutscene_id)
                     {
                         type: CutsceneStepType.MOVE_ACTOR,
                         actor_id: CUTSCENE_ACTOR_FARMER,
-                        target_actor_id: CUTSCENE_ACTOR_PLAYER,
-                        offset_x: 28,
-                        offset_y: 0,
+                        target_actor_id: CUTSCENE_ACTOR_CABIN_SITE,
+                        offset_x: 0,
+                        offset_y: 64,
                         speed: 0.45,
                         tolerance: 3,
                         timeout_frames: 300
